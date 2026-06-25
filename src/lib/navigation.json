@@ -1,0 +1,37 @@
+[
+  {
+    "id": "eventos",
+    "label": "Eventos",
+    "icon": "CalendarRange",
+    "to": "/eventos",
+    "children": [
+      {
+        "id": "eventos-activos",
+        "label": "Activos",
+        "to": "/eventos/activos"
+      },
+      {
+        "id": "eventos-borradores",
+        "label": "Borradores",
+        "to": "/eventos/borradores"
+      },
+      {
+        "id": "eventos-finalizados",
+        "label": "Finalizados",
+        "to": "/eventos/finalizados"
+      }
+    ]
+  },
+  {
+    "id": "organizacion",
+    "label": "Organización",
+    "icon": "Building2",
+    "to": "/organizacion"
+  },
+  {
+    "id": "miembros",
+    "label": "Miembros",
+    "icon": "Users",
+    "to": "/miembros"
+  }
+]
