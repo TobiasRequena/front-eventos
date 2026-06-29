@@ -1,5 +1,11 @@
 [
   {
+    "id": "dashboard",
+    "label": "Dashboard",
+    "icon": "House",
+    "to": "/dashboard"
+  },
+  {
     "id": "eventos",
     "label": "Eventos",
     "icon": "CalendarRange",
@@ -9,11 +15,6 @@
         "id": "eventos-activos",
         "label": "Activos",
         "to": "/eventos/activos"
-      },
-      {
-        "id": "eventos-borradores",
-        "label": "Borradores",
-        "to": "/eventos/borradores"
       },
       {
         "id": "eventos-finalizados",

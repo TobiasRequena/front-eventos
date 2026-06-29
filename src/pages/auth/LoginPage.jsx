@@ -102,7 +102,7 @@ export default function LoginPage() {
         <p className="text-center text-sm text-muted-foreground">
           ¿No tenés cuenta?{' '}
           <Link to="/register" className="font-medium text-foreground underline-offset-4 hover:underline">
-            Creá una organización
+            ¡Creala!
           </Link>
         </p>
       </div>
