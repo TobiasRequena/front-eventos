@@ -3,7 +3,7 @@ import axios from 'axios'
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1'
 
 export const TOKEN_KEY = 'puerta_token'
-const ORG_ACTIVA_KEY = 'puerta_org_activa_id'
+const ORG_ACTIVA_KEY = 'org_activa_id'
 
 export const httpClient = axios.create({
     baseURL: BASE_URL,

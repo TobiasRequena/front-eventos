@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import * as authApi from '@/api/auth.api'
 import { TOKEN_KEY, setOnUnauthorized } from '@/api/httpClient'
 
-const ORG_ACTIVA_KEY = 'puerta_org_activa_id'
+const ORG_ACTIVA_KEY = 'org_activa_id'
 
 const AuthContext = createContext(null)
 
@@ -15,10 +15,10 @@ export function AuthProvider({ children }) {
 
     const limpiarSesion = useCallback(() => {
         localStorage.removeItem(TOKEN_KEY)
-        localStorage.removeItem(ORG_ACTIVA_KEY)
+        // No borramos ORG_ACTIVA_KEY para que al volver a iniciar sesión
+        // se recupere la última org activa (se valida en aplicarSesion).
         setUsuario(null)
         setOrganizaciones([])
-        setOrgActivaId(null)
         setStatus('unauthenticated')
     }, [])
 
