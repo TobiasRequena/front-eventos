@@ -1,47 +1,83 @@
 import { useEffect, useState } from 'react'
-import { useFieldArray, useFormContext, Controller } from 'react-hook-form'
-import { ChevronDown, Plus, Lock } from 'lucide-react'
+import { useFieldArray, useFormContext } from 'react-hook-form'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable'
+import { ChevronDown, Lock, Plus, CalendarX2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { TallerItem } from '@/components/eventos/TallerItem'
+import { BloqueTallerCard } from '@/components/eventos/BloqueTallerCard'
+import { BloqueTallerFormDialog } from '@/components/eventos/BloqueTallerFormDialog'
 import { cn } from '@/lib/utils'
-
-const OPCIONES_MODO_TALLER = [
-  { value: 'paralelos', label: 'Paralelos' },
-  { value: 'secuenciales', label: 'Secuenciales' },
-]
 
 export function SeccionTalleres() {
   const form = useFormContext()
   const [abierto, setAbierto] = useState(false)
+  const [dialogoAbierto, setDialogoAbierto] = useState(false)
+  const [indiceEditando, setIndiceEditando] = useState(null)
 
   const tieneTalleres = form.watch('tieneTalleres')
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, move, update } = useFieldArray({
     control: form.control,
-    name: 'talleres',
+    name: 'bloquesTaller',
   })
 
   useEffect(() => {
-    if (tieneTalleres && form.getValues('modoTaller') === 'ninguno') {
-      form.setValue('modoTaller', 'paralelos')
-    }
-    if (!tieneTalleres) {
-      form.setValue('modoTaller', 'ninguno')
-      setAbierto(false)
-    }
-  }, [tieneTalleres, form])
+    if (!tieneTalleres) setAbierto(false)
+  }, [tieneTalleres])
 
-  function agregarTaller() {
-    append({ nombre: '', descripcion: '', inicio: '', fin: '', capacidad: 30 })
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+
+  function handleDragEnd(event) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const indexActivo = fields.findIndex((f) => f.id === active.id)
+    const indexDestino = fields.findIndex((f) => f.id === over.id)
+    move(indexActivo, indexDestino)
   }
+
+  function abrirDialogoCrear() {
+    setIndiceEditando(null)
+    setDialogoAbierto(true)
+  }
+
+  function abrirDialogoEditar(index) {
+    setIndiceEditando(index)
+    setDialogoAbierto(true)
+  }
+
+  function handleConfirmarDialogo(valores) {
+    if (indiceEditando === null) {
+      append({
+        nombre: valores.nombre,
+        cantidadElegible: valores.cantidadElegible,
+        esObligatorio: valores.esObligatorio,
+        orden: fields.length,
+        talleres: [],
+      })
+    } else {
+      const bloqueActual = form.getValues(`bloquesTaller.${indiceEditando}`)
+      update(indiceEditando, { ...bloqueActual, ...valores })
+    }
+  }
+
+  const valoresIniciales =
+    indiceEditando !== null ? form.getValues(`bloquesTaller.${indiceEditando}`) : null
 
   return (
     <Card className={cn(!tieneTalleres && 'opacity-60')}>
@@ -58,7 +94,7 @@ export function SeccionTalleres() {
                 {!tieneTalleres && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
               </div>
               <p className="text-sm text-muted-foreground">
-                Actividades dentro del evento con horario propio.
+                Actividades dentro del evento con horario propio. Organizá los talleres en bloques con su propia regla de selección.
               </p>
               {
                 !tieneTalleres ?
@@ -78,57 +114,62 @@ export function SeccionTalleres() {
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <CardContent className="space-y-4 pt-0">
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                Modo de talleres
-              </label>
-              <Controller
-                control={form.control}
-                name="modoTaller"
-                render={({ field }) => (
-                  <Select
-                    value={field.value === 'ninguno' ? 'paralelos' : field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger className="w-full sm:w-56">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {OPCIONES_MODO_TALLER.map((opcion) => (
-                        <SelectItem key={opcion.value} value={opcion.value}>
-                          {opcion.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-
-            <div className="space-y-3">
-              {fields.map((field, index) => (
-                <TallerItem key={field.id} index={index} onEliminar={() => remove(index)} />
-              ))}
-            </div>
-
+          <CardContent className="space-y-3 pt-0">
             {fields.length === 0 && (
-              <p className="rounded-lg border border-dashed border-border py-6 text-center text-sm text-muted-foreground">
-                Todavía no agregaste talleres.
-              </p>
+              <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border py-10 text-center">
+                <CalendarX2 className="h-7 w-7 text-muted-foreground/50" />
+                <p className="text-sm font-medium text-foreground">
+                  Todavía no agregaste talleres
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Creá un bloque para empezar a agregar talleres.
+                </p>
+              </div>
+            )}
+
+            {fields.length > 0 && (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={fields.map((f) => f.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-2">
+                    {fields.map((field, index) => (
+                      <BloqueTallerCard
+                        key={field.id}
+                        id={field.id}
+                        index={index}
+                        onEliminar={() => remove(index)}
+                        onEditar={() => abrirDialogoEditar(index)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             )}
 
             <button
               type="button"
-              onClick={agregarTaller}
+              onClick={abrirDialogoCrear}
               className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border py-2.5 text-sm text-muted-foreground hover:bg-accent/50"
             >
               <Plus className="h-4 w-4" />
-              Agregar taller
+              Agregar bloque
             </button>
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
+
+      <BloqueTallerFormDialog
+        open={dialogoAbierto}
+        onOpenChange={setDialogoAbierto}
+        valoresIniciales={valoresIniciales}
+        onConfirmar={handleConfirmarDialogo}
+      />
     </Card>
   )
 }

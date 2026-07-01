@@ -28,11 +28,10 @@ export function EventoPreviewPanel({ imagenPreview }) {
   const fechaInicio = form.watch('fechaInicio')
   const tieneTalleres = form.watch('tieneTalleres')
   const camposForm = form.watch('camposForm') ?? []
-  const talleres = form.watch('talleres') ?? []
+  const bloquesTaller = form.watch('bloquesTaller') ?? []
   const costo = form.watch('costo')
   const cbuCvu = form.watch('cbuCvu')
   const aliasCobro = form.watch('aliasCobro')
-  const modoTaller = form.watch('modoTaller')
 
   return (
     <Card className="gap-0 overflow-hidden p-0">
@@ -90,48 +89,81 @@ export function EventoPreviewPanel({ imagenPreview }) {
           ))}
         </div>
 
-        {tieneTalleres && talleres.length > 0 && (
+        {tieneTalleres && bloquesTaller.length > 0 && (
           <>
             <Separator />
-            <div className="space-y-3">
+            <div className="space-y-4">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Talleres disponibles{' '}
-                <span className="font-normal">
-                  ({modoTaller === 'paralelos' ? 'elegí uno' : 'elegí los que quieras'})
-                </span>
+                Talleres disponibles
               </p>
 
-              {modoTaller === 'paralelos' ? (
-                <RadioGroup disabled className="space-y-3">
-                  {talleres.map((taller, index) => (
-                    <Label
-                      key={index}
-                      htmlFor={`preview-taller-${index}`}
-                      className="flex cursor-not-allowed items-start gap-3 rounded-md border border-border p-3 text-sm font-normal"
-                    >
-                      <RadioGroupItem
-                        value={String(index)}
-                        id={`preview-taller-${index}`}
-                        className="mt-0.5"
-                      />
-                      <TallerPreviewDetalle taller={taller} index={index} />
-                    </Label>
-                  ))}
-                </RadioGroup>
-              ) : (
-                <div className="space-y-3">
-                  {talleres.map((taller, index) => (
-                    <Label
-                      key={index}
-                      htmlFor={`preview-taller-${index}`}
-                      className="flex cursor-not-allowed items-start gap-3 rounded-md border border-border p-3 text-sm font-normal"
-                    >
-                      <Checkbox disabled id={`preview-taller-${index}`} className="mt-0.5" />
-                      <TallerPreviewDetalle taller={taller} index={index} />
-                    </Label>
-                  ))}
-                </div>
-              )}
+              {bloquesTaller.map((bloque, bloqueIndex) => {
+                const esInformativo = bloque.talleres.length <= 1
+                const usaRadio = !esInformativo && bloque.cantidadElegible === 1
+
+                return (
+                  <div key={bloqueIndex} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-foreground">
+                        {bloque.nombre || `Bloque ${bloqueIndex + 1}`}
+                      </p>
+                      {esInformativo ? (
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                          Informativo
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">
+                          {bloque.esObligatorio
+                            ? `Elegí exactamente ${bloque.cantidadElegible}`
+                            : `Elegí hasta ${bloque.cantidadElegible}`}
+                        </span>
+                      )}
+                    </div>
+
+                    {esInformativo ? (
+                      bloque.talleres.map((taller, i) => (
+                        <div key={i} className="rounded-md border border-border p-3 text-sm">
+                          <TallerPreviewDetalle taller={taller} index={i} />
+                        </div>
+                      ))
+                    ) : usaRadio ? (
+                      <RadioGroup disabled className="space-y-2">
+                        {bloque.talleres.map((taller, i) => (
+                          <Label
+                            key={i}
+                            htmlFor={`preview-bloque-${bloqueIndex}-taller-${i}`}
+                            className="flex cursor-not-allowed items-start gap-3 rounded-md border border-border p-3 text-sm font-normal"
+                          >
+                            <RadioGroupItem
+                              value={String(i)}
+                              id={`preview-bloque-${bloqueIndex}-taller-${i}`}
+                              className="mt-0.5"
+                            />
+                            <TallerPreviewDetalle taller={taller} index={i} />
+                          </Label>
+                        ))}
+                      </RadioGroup>
+                    ) : (
+                      <div className="space-y-2">
+                        {bloque.talleres.map((taller, i) => (
+                          <Label
+                            key={i}
+                            htmlFor={`preview-bloque-${bloqueIndex}-taller-${i}`}
+                            className="flex cursor-not-allowed items-start gap-3 rounded-md border border-border p-3 text-sm font-normal"
+                          >
+                            <Checkbox
+                              disabled
+                              id={`preview-bloque-${bloqueIndex}-taller-${i}`}
+                              className="mt-0.5"
+                            />
+                            <TallerPreviewDetalle taller={taller} index={i} />
+                          </Label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </>
         )}

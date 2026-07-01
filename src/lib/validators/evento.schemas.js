@@ -35,17 +35,17 @@ export const tallerSchema = z
     path: ['fin'],
   })
 
-export const bloqueTallerSchema = z
-  .object({
-    nombre: z.string().min(1, 'El nombre del bloque es obligatorio.').max(100),
-    cantidadElegible: z
-      .number({ invalid_type_error: 'Ingresá un número.' })
-      .int()
-      .positive('Debe ser al menos 1.')
-      .default(1),
-    esObligatorio: z.boolean().default(true),
-    talleres: z.array(tallerSchema).default([]),
-  })
+export const bloqueTallerSchema = z.object({
+  nombre: z.string().min(1, 'El nombre del bloque es obligatorio.').max(100),
+  cantidadElegible: z
+    .number({ invalid_type_error: 'Ingresá un número.' })
+    .int()
+    .positive('Debe ser al menos 1.')
+    .default(1),
+  esObligatorio: z.boolean().default(true),
+  orden: z.number().default(0),
+  talleres: z.array(tallerSchema).min(1, 'Agregá al menos un taller a este bloque.'),
+})
 
 export const eventoSchema = z
   .object({
