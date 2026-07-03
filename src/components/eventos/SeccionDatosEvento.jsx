@@ -23,6 +23,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { DateTimePicker } from '@/components/DateTimePicker'
+import { CodigoInput } from '@/components/eventos/CodigoInput'
 
 const OPCIONES_POLITICA_MENOR = [
   { value: 'no_aplica', label: 'No aplica' },
@@ -96,19 +97,7 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="codigo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Código</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ej. RETIRO2026" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <CodigoInput />
             </div>
 
             <FormField

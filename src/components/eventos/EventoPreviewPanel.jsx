@@ -216,7 +216,7 @@ function TallerPreviewDetalle({ taller, index }) {
             }).format(new Date(taller.inicio))}
           </span>
         )}
-        {taller.capacidad && (
+        {taller.capacidad > 0 && (
           <span className="flex items-center gap-1">
             <Users className="h-3 w-3" />
             {taller.capacidad} cupos

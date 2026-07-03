@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
 import { Trash2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -9,6 +10,20 @@ export function TallerEnBloqueItem({ bloqueIndex, tallerIndex, onEliminar }) {
   const base = `bloquesTaller.${bloqueIndex}.talleres.${tallerIndex}`
 
   const errores = form.formState.errors.bloquesTaller?.[bloqueIndex]?.talleres?.[tallerIndex]
+
+  // Valores necesarios para la validación cruzada con las fechas del evento
+  const inicioTaller = form.watch(`${base}.inicio`)
+  const finTaller = form.watch(`${base}.fin`)
+  const fechaInicioEvento = form.watch('fechaInicio')
+  const fechaFinEvento = form.watch('fechaFin')
+
+  // El superRefine del eventoSchema no propaga automáticamente a arrays anidados
+  // antes del primer submit. Forzamos el trigger explícitamente.
+  useEffect(() => {
+    if (inicioTaller) form.trigger(`${base}.inicio`)
+    if (finTaller) form.trigger(`${base}.fin`)
+  }, [inicioTaller, finTaller, fechaInicioEvento, fechaFinEvento])
+
 
   return (
     <div className="space-y-3 rounded-md border border-border bg-background p-3">
@@ -90,12 +105,20 @@ export function TallerEnBloqueItem({ bloqueIndex, tallerIndex, onEliminar }) {
       </div>
 
       {errores && (
-        <p className="text-xs text-destructive">
-          {errores.inicio?.message ||
-            errores.fin?.message ||
-            errores.nombre?.message ||
-            errores.capacidad?.message}
-        </p>
+        <div className="space-y-0.5">
+          {errores.nombre?.message && (
+            <p className="text-xs text-destructive">{errores.nombre.message}</p>
+          )}
+          {errores.inicio?.message && (
+            <p className="text-xs text-destructive">{errores.inicio.message}</p>
+          )}
+          {errores.fin?.message && (
+            <p className="text-xs text-destructive">{errores.fin.message}</p>
+          )}
+          {errores.capacidad?.message && (
+            <p className="text-xs text-destructive">{errores.capacidad.message}</p>
+          )}
+        </div>
       )}
     </div>
   )

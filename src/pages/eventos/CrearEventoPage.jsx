@@ -34,6 +34,7 @@ export default function CrearEventoPage() {
   const form = useForm({
     resolver: zodResolver(eventoSchema),
     defaultValues: VALORES_INICIALES,
+    mode: 'onChange',
   })
 
   const [imagenArchivo, setImagenArchivo] = useState(null)

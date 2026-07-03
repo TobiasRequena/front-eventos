@@ -27,3 +27,12 @@ export async function crearEvento(payload) {
   const { data } = await httpClient.post('/eventos', payload)
   return data
 }
+
+/**
+ * @param {string} codigo
+ * @returns {Promise<boolean>}
+ */
+export async function getCodigoDisponible(codigo) {
+  const { data } = await httpClient.get(`/eventos/codigo/${codigo}/disponible`)
+  return data.disponible
+}

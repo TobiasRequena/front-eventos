@@ -24,11 +24,10 @@ export const tallerSchema = z
     descripcion: z.string().max(500).optional().or(z.literal('')),
     inicio: z.string().min(1, 'Definí el horario de inicio.'),
     fin: z.string().min(1, 'Definí el horario de fin.'),
-    capacidad: z
-      .number({ invalid_type_error: 'Ingresá un número.' })
-      .int()
-      .positive('La capacidad debe ser mayor a 0.')
-      .optional(),
+    capacidad: z.preprocess(
+      (val) => (typeof val === 'number' && isNaN(val) ? undefined : val),
+      z.number().int().positive('La capacidad debe ser mayor a 0.').optional()
+    ),
   })
   .refine((taller) => new Date(taller.fin) > new Date(taller.inicio), {
     message: 'El fin debe ser posterior al inicio.',
