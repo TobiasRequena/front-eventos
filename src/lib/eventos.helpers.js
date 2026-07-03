@@ -51,7 +51,18 @@ export const FILTROS_EVENTO = {
 }
 
 /**
- * Filtra una lista de eventos según el filtro de estado pedido.
+ * Ordena eventos de más próximo a más lejano (fecha_inicio ascendente).
+ * @param {Array<object>} eventos
+ */
+function ordenarPorFechaInicio(eventos) {
+  return [...eventos].sort(
+    (a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio),
+  )
+}
+
+/**
+ * Filtra una lista de eventos según el filtro de estado pedido y los
+ * devuelve ordenados de más próximo a más lejano (fecha_inicio ascendente).
  * 'borradores' siempre devuelve vacío por ahora: el back todavía no
  * modela ese concepto (ver getEstadoEvento más arriba).
  * @param {Array<object>} eventos
@@ -60,13 +71,13 @@ export const FILTROS_EVENTO = {
 export function filtrarEventosPorEstado(eventos, filtro) {
   switch (filtro) {
     case 'activos':
-      return eventos.filter(esEventoActivo)
+      return ordenarPorFechaInicio(eventos.filter(esEventoActivo))
     case 'finalizados':
-      return eventos.filter(esEventoFinalizado)
+      return ordenarPorFechaInicio(eventos.filter(esEventoFinalizado))
     case 'borradores':
       return []
     case 'todos':
     default:
-      return eventos
+      return ordenarPorFechaInicio(eventos)
   }
 }

@@ -62,7 +62,10 @@ export const eventoSchema = z
     tieneTalleres: z.boolean().default(false),
     cbuCvu: z.string().max(50).optional().or(z.literal('')),
     aliasCobro: z.string().max(50).optional().or(z.literal('')),
-    costo: z.number({ invalid_type_error: 'Ingresá un número.' }).min(0).default(0),
+    costo: z.preprocess(
+      (val) => (val === '' || val === null || val === undefined ? 0 : Number(val)),
+      z.number({ invalid_type_error: 'Ingresá un número válido.' }).min(0, 'El costo no puede ser negativo.')
+    ),
     camposForm: z.array(campoFormSchema).default([]),
     bloquesTaller: z.array(bloqueTallerSchema).default([]),
   })
