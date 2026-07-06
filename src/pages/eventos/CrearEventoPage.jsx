@@ -126,7 +126,7 @@ export default function CrearEventoPage() {
         toast.success('Evento creado correctamente.')
       }
 
-      navigate(`/eventos/${eventoId}`)
+      navigate(`/eventos/${eventoId}/detalle`)
     } catch (error) {
       const status = error?.response?.status
 

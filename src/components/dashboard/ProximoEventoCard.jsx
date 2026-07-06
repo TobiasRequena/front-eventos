@@ -58,7 +58,7 @@ export function ProximoEventoCard({ evento, className }) {
 
         <CardFooter>
           <Button asChild className="w-fit">
-            <Link to={`/eventos/${evento.id}`}>
+            <Link to={`/eventos/${evento.id}/detalle`}>
               Ver detalle
               <ArrowRight className="h-4 w-4" />
             </Link>

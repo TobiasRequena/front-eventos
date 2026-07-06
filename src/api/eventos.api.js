@@ -36,3 +36,23 @@ export async function getCodigoDisponible(codigo) {
   const { data } = await httpClient.get(`/eventos/codigo/${codigo}/disponible`)
   return data.disponible
 }
+
+// ⚠️ MOCK TEMPORAL — reemplazar por:
+// const { data } = await httpClient.get(`/eventos/${id}/stats`)
+// return data
+import { generarStatsMock } from '@/lib/mocks/eventoStats.mock'
+
+export async function getEventoStats(id, evento) {
+  await new Promise((resolve) => setTimeout(resolve, 300))
+  return generarStatsMock(evento)
+}
+
+import { generarParticipantesMock } from '@/lib/mocks/participantes.mock'
+
+// ⚠️ MOCK TEMPORAL — reemplazar por:
+// const { data } = await httpClient.get(`/eventos/${id}/participantes`)
+// return data.participantes
+export async function getParticipantes(id, evento) {
+  await new Promise((resolve) => setTimeout(resolve, 400))
+  return generarParticipantesMock(evento)
+}

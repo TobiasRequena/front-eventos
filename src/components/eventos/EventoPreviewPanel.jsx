@@ -20,18 +20,62 @@ function formatearFechaHora(fechaIso) {
   }).format(new Date(fechaIso))
 }
 
-export function EventoPreviewPanel({ imagenPreview }) {
-  const form = useFormContext()
+// Adapta los datos del evento real (snake_case del back)
+// al formato que espera el panel (camelCase del form)
+function adaptarEventoAForm(evento) {
+  return {
+    nombre: evento.nombre,
+    descripcion: evento.descripcion,
+    fechaInicio: evento.fecha_inicio,
+    tieneTalleres: evento.tiene_talleres,
+    camposForm: evento.camposForm ?? [],
+    bloquesTaller: evento.bloquesTaller ?? [],
+    costo: parseFloat(evento.costo ?? 0),
+    cbuCvu: evento.cbu_cvu,
+    aliasCobro: evento.alias_cobro,
+    imagenUrl: evento.imagenUrl,
+  }
+}
 
-  const nombre = form.watch('nombre')
-  const descripcion = form.watch('descripcion')
-  const fechaInicio = form.watch('fechaInicio')
-  const tieneTalleres = form.watch('tieneTalleres')
-  const camposForm = form.watch('camposForm') ?? []
-  const bloquesTaller = form.watch('bloquesTaller') ?? []
-  const costo = form.watch('costo')
-  const cbuCvu = form.watch('cbuCvu')
-  const aliasCobro = form.watch('aliasCobro')
+function useDatos(eventoExterno, imagenPreviewExterna) {
+  // modo readOnly: datos vienen del evento real
+  if (eventoExterno) {
+    const datos = adaptarEventoAForm(eventoExterno)
+    return { ...datos, imagenPreview: datos.imagenUrl }
+  }
+
+  // modo form: datos vienen de react-hook-form
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const form = useFormContext()
+  return {
+    nombre: form.watch('nombre'),
+    descripcion: form.watch('descripcion'),
+    fechaInicio: form.watch('fechaInicio'),
+    tieneTalleres: form.watch('tieneTalleres'),
+    camposForm: form.watch('camposForm') ?? [],
+    bloquesTaller: form.watch('bloquesTaller') ?? [],
+    costo: form.watch('costo'),
+    cbuCvu: form.watch('cbuCvu'),
+    aliasCobro: form.watch('aliasCobro'),
+    imagenPreview: imagenPreviewExterna,
+  }
+}
+
+export function EventoPreviewPanel({ evento, imagenPreview: imagenPreviewExterna, readOnly = false }) {
+  const datos = useDatos(readOnly ? evento : null, imagenPreviewExterna)
+
+  const {
+    nombre,
+    descripcion,
+    fechaInicio,
+    tieneTalleres,
+    camposForm,
+    bloquesTaller,
+    costo,
+    cbuCvu,
+    aliasCobro,
+    imagenPreview,
+  } = datos
 
   return (
     <Card className="gap-0 overflow-hidden p-0">
@@ -85,7 +129,7 @@ export function EventoPreviewPanel({ imagenPreview }) {
           ))}
 
           {camposForm.map((campo, index) => (
-            <CampoFormInput key={index} campo={campo} preview />
+            <CampoFormInput key={campo.id ?? index} campo={campo} preview />
           ))}
         </div>
 
@@ -99,10 +143,12 @@ export function EventoPreviewPanel({ imagenPreview }) {
 
               {bloquesTaller.map((bloque, bloqueIndex) => {
                 const esInformativo = bloque.talleres.length <= 1
-                const usaRadio = !esInformativo && bloque.cantidadElegible === 1
+                const cantidadElegible = bloque.cantidad_elegible ?? bloque.cantidadElegible ?? 1
+                const esObligatorio = bloque.es_obligatorio ?? bloque.esObligatorio ?? true
+                const usaRadio = !esInformativo && cantidadElegible === 1
 
                 return (
-                  <div key={bloqueIndex} className="space-y-2">
+                  <div key={bloque.id ?? bloqueIndex} className="space-y-2">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium text-foreground">
                         {bloque.nombre || `Bloque ${bloqueIndex + 1}`}
@@ -113,24 +159,24 @@ export function EventoPreviewPanel({ imagenPreview }) {
                         </span>
                       ) : (
                         <span className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">
-                          {bloque.esObligatorio
-                            ? `Elegí exactamente ${bloque.cantidadElegible}`
-                            : `Elegí hasta ${bloque.cantidadElegible}`}
+                          {esObligatorio
+                            ? `Elegí exactamente ${cantidadElegible}`
+                            : `Elegí hasta ${cantidadElegible}`}
                         </span>
                       )}
                     </div>
 
                     {esInformativo ? (
                       bloque.talleres.map((taller, i) => (
-                        <div key={i} className="rounded-md border border-border p-3 text-sm">
-                          <TallerPreviewDetalle taller={taller} index={i} />
+                        <div key={taller.id ?? i} className="rounded-md border border-border p-3 text-sm">
+                          <TallerDetalle taller={taller} />
                         </div>
                       ))
                     ) : usaRadio ? (
                       <RadioGroup disabled className="space-y-2">
                         {bloque.talleres.map((taller, i) => (
                           <Label
-                            key={i}
+                            key={taller.id ?? i}
                             htmlFor={`preview-bloque-${bloqueIndex}-taller-${i}`}
                             className="flex cursor-not-allowed items-start gap-3 rounded-md border border-border p-3 text-sm font-normal"
                           >
@@ -139,7 +185,7 @@ export function EventoPreviewPanel({ imagenPreview }) {
                               id={`preview-bloque-${bloqueIndex}-taller-${i}`}
                               className="mt-0.5"
                             />
-                            <TallerPreviewDetalle taller={taller} index={i} />
+                            <TallerDetalle taller={taller} />
                           </Label>
                         ))}
                       </RadioGroup>
@@ -147,7 +193,7 @@ export function EventoPreviewPanel({ imagenPreview }) {
                       <div className="space-y-2">
                         {bloque.talleres.map((taller, i) => (
                           <Label
-                            key={i}
+                            key={taller.id ?? i}
                             htmlFor={`preview-bloque-${bloqueIndex}-taller-${i}`}
                             className="flex cursor-not-allowed items-start gap-3 rounded-md border border-border p-3 text-sm font-normal"
                           >
@@ -156,7 +202,7 @@ export function EventoPreviewPanel({ imagenPreview }) {
                               id={`preview-bloque-${bloqueIndex}-taller-${i}`}
                               className="mt-0.5"
                             />
-                            <TallerPreviewDetalle taller={taller} index={i} />
+                            <TallerDetalle taller={taller} />
                           </Label>
                         ))}
                       </div>
@@ -197,10 +243,10 @@ export function EventoPreviewPanel({ imagenPreview }) {
   )
 }
 
-function TallerPreviewDetalle({ taller, index }) {
+function TallerDetalle({ taller }) {
   return (
     <div className="flex-1">
-      <p className="font-medium text-foreground">{taller.nombre || `Taller ${index + 1}`}</p>
+      <p className="font-medium text-foreground">{taller.nombre}</p>
       {taller.descripcion && (
         <p className="mt-0.5 text-xs text-muted-foreground">{taller.descripcion}</p>
       )}
@@ -208,12 +254,7 @@ function TallerPreviewDetalle({ taller, index }) {
         {taller.inicio && (
           <span className="flex items-center gap-1">
             <CalendarRange className="h-3 w-3" />
-            {new Intl.DateTimeFormat('es-AR', {
-              day: 'numeric',
-              month: 'long',
-              hour: '2-digit',
-              minute: '2-digit',
-            }).format(new Date(taller.inicio))}
+            {formatearFechaHora(taller.inicio)}
           </span>
         )}
         {taller.capacidad > 0 && (
