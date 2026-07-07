@@ -28,7 +28,7 @@ export function TabResumen({ evento }) {
   useEffect(() => {
     if (!evento) return
     setIsLoading(true)
-    getEventoStats(evento.id, evento)
+    getEventoStats(evento.id)
       .then(setStats)
       .finally(() => setIsLoading(false))
   }, [evento])

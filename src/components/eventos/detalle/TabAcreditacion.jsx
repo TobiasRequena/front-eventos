@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { CalendarRange, Copy, Check } from 'lucide-react'
 import { AcreditacionDataTable } from '@/components/eventos/detalle/AcreditacionDataTable'
 import { buildAcreditacionColumns } from '@/components/eventos/detalle/acreditacion.columns'
-import { getParticipantes } from '@/api/eventos.api'
+import { useParticipantes } from '@/hooks/useParticipantes'
 
 function ProgressCard({ acreditados, total }) {
   const porcentaje = total > 0 ? Math.round((acreditados / total) * 100) : 0
@@ -201,19 +201,10 @@ function EstadoInformativo({ evento }) {
 }
 
 export function TabAcreditacion({ evento }) {
-  const [participantes, setParticipantes] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-
   const DOS_HORAS_MS = 2 * 60 * 60 * 1000
   const eventoActivo = new Date() >= new Date(new Date(evento.fecha_inicio).getTime() - DOS_HORAS_MS)
 
-  useEffect(() => {
-    if (!evento || !eventoActivo) return
-    setIsLoading(true)
-    getParticipantes(evento.id, evento)
-      .then(setParticipantes)
-      .finally(() => setIsLoading(false))
-  }, [evento, eventoActivo])
+  const { participantes, isLoading } = useParticipantes(eventoActivo ? evento.id : null)
 
   if (!eventoActivo) return <EstadoInformativo evento={evento} />
 

@@ -24,5 +24,11 @@ export function useEvento(id) {
     cargar()
   }, [cargar])
 
-  return { evento, isLoading: status === 'loading', isError: status === 'error', reintentar: cargar }
+  return {
+    evento,
+    setEvento,
+    isLoading: status === 'loading',
+    isError: status === 'error',
+    reintentar: cargar,
+  }
 }

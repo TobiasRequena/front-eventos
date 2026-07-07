@@ -1,9 +1,10 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ParticipantesDataTable } from '@/components/eventos/detalle/ParticipantesDataTable'
 import { ParticipanteDrawer } from '@/components/eventos/detalle/ParticipanteDrawer'
 import { buildColumns } from '@/components/eventos/detalle/participantes.columns'
-import { getParticipantes } from '@/api/eventos.api'
+import { useParticipantes } from '@/hooks/useParticipantes'
 
 function TablaSkeletonRows() {
   return (
@@ -17,18 +18,9 @@ function TablaSkeletonRows() {
 }
 
 export function TabParticipantes({ evento }) {
-  const [participantes, setParticipantes] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { participantes, isLoading, isError, reintentar } = useParticipantes(evento.id)
   const [participanteSeleccionado, setParticipanteSeleccionado] = useState(null)
   const [drawerAbierto, setDrawerAbierto] = useState(false)
-
-  useEffect(() => {
-    if (!evento) return
-    setIsLoading(true)
-    getParticipantes(evento.id, evento)
-      .then(setParticipantes)
-      .finally(() => setIsLoading(false))
-  }, [evento])
 
   const camposForm = evento.camposForm ?? []
 
@@ -48,6 +40,17 @@ export function TabParticipantes({ evento }) {
 
   if (isLoading) return <TablaSkeletonRows />
 
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-destructive/40 py-16 text-center">
+        <p className="text-sm font-medium text-foreground">No pudimos cargar los participantes</p>
+        <Button variant="outline" className="mt-4" onClick={reintentar}>
+          Reintentar
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <>
       <ParticipantesDataTable
@@ -56,7 +59,6 @@ export function TabParticipantes({ evento }) {
         evento={evento}
         camposForm={camposForm}
       />
-
       <ParticipanteDrawer
         participante={participanteSeleccionado}
         camposForm={camposForm}

@@ -108,3 +108,24 @@ export const eventoSchema = z
       })
     })
   })
+
+export const editarEventoSchema = z.object({
+  nombre: z.string().min(1, 'El nombre es obligatorio.').max(150),
+  codigo: z
+    .string()
+    .min(3, 'El código debe tener al menos 3 caracteres.')
+    .max(20)
+    .regex(/^[a-zA-Z0-9-]+$/, 'Solo letras, números y guiones.'),
+  descripcion: z.string().max(2000).optional().or(z.literal('')),
+  fechaInicio: z.string().min(1, 'Definí la fecha de inicio.'),
+  fechaFin: z.string().min(1, 'Definí la fecha de fin.'),
+  politicaMenor: z.enum(['obligatorio', 'opcional', 'no_aplica']).default('no_aplica'),
+  tieneGrupos: z.boolean().default(false),
+  tieneTalleres: z.boolean().default(false),
+  cbuCvu: z.string().max(50).optional().or(z.literal('')),
+  aliasCobro: z.string().max(50).optional().or(z.literal('')),
+  costo: z.number({ invalid_type_error: 'Ingresá un número.' }).min(0).default(0),
+}).refine(
+  (data) => new Date(data.fechaFin) >= new Date(data.fechaInicio),
+  { message: 'La fecha de fin debe ser igual o posterior a la de inicio.', path: ['fechaFin'] }
+)

@@ -23,10 +23,10 @@ const ESTADO_CONFIG = {
   error: { icon: XCircle, className: 'text-muted-foreground', texto: 'No se pudo verificar' },
 }
 
-export function CodigoInput() {
+export function CodigoInput({ codigoOriginal }) {
   const form = useFormContext()
   const codigo = form.watch('codigo')
-  const estadoDisponibilidad = useCodigoDisponible(codigo)
+  const estadoDisponibilidad = useCodigoDisponible(codigo, codigoOriginal)
 
   const config = ESTADO_CONFIG[estadoDisponibilidad]
 

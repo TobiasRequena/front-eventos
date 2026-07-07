@@ -31,7 +31,7 @@ const OPCIONES_POLITICA_MENOR = [
   { value: 'obligatorio', label: 'Obligatorio' },
 ]
 
-export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarImagen }) {
+export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarImagen, codigoOriginal }) {
   const form = useFormContext()
   const [abierto, setAbierto] = useState(true)
 
@@ -97,7 +97,7 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                   </FormItem>
                 )}
               />
-              <CodigoInput />
+              <CodigoInput codigoOriginal={codigoOriginal} />
             </div>
 
             <FormField

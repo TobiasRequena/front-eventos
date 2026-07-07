@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useBreadcrumb } from '@/hooks/useBreadcrumb'
 import { useEvento } from '@/hooks/useEvento'
@@ -8,6 +9,7 @@ import { getEstadoEvento } from '@/lib/eventos.helpers'
 import { TabResumen } from '@/components/eventos/detalle/TabResumen'
 import { TabParticipantes } from '@/components/eventos/detalle/TabParticipantes'
 import { TabAcreditacion } from '@/components/eventos/detalle/TabAcreditacion'
+import { EditarEventoPanel } from '@/components/eventos/detalle/EditarEventoPanel'
 
 const TABS = [
   { value: 'resumen', label: 'Resumen' },
@@ -15,7 +17,7 @@ const TABS = [
   { value: 'acreditacion', label: 'Acreditación' },
 ]
 
-function HeaderEvento({ evento }) {
+function HeaderEvento({ evento, onEditar }) {
   const imagenUrl = evento.imagen_url ?? evento.imagenUrl
 
   return (
@@ -54,7 +56,11 @@ function HeaderEvento({ evento }) {
               }).format(new Date(evento.fecha_fin))}
             </p>
           </div>
-          <Button variant="outline" className="shrink-0 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white backdrop-blur-sm">
+          <Button
+            variant="outline"
+            onClick={onEditar}
+            className="shrink-0 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white backdrop-blur-sm"
+          >
             Editar evento
           </Button>
         </div>
@@ -72,7 +78,8 @@ export default function EventoDetallePage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tabActivo = searchParams.get('tab') ?? 'resumen'
 
-  const { evento, isLoading, isError, reintentar } = useEvento(id)
+  const { evento, setEvento, isLoading, isError, reintentar } = useEvento(id)
+  const [modoEdicion, setModoEdicion] = useState(false)
 
   useBreadcrumb([
     { label: 'Eventos', to: '/eventos' },
@@ -81,6 +88,11 @@ export default function EventoDetallePage() {
 
   function handleCambiarTab(nuevoTab) {
     setSearchParams({ tab: nuevoTab })
+  }
+
+  function handleGuardado(eventoActualizado) {
+    setEvento((prev) => ({ ...prev, ...eventoActualizado }))
+    setModoEdicion(false)
   }
 
   if (isError) {
@@ -94,9 +106,19 @@ export default function EventoDetallePage() {
     )
   }
 
+  if (modoEdicion && evento) {
+    return (
+      <EditarEventoPanel
+        evento={evento}
+        onVolver={() => setModoEdicion(false)}
+        onGuardado={handleGuardado}
+      />
+    )
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      {isLoading ? <HeaderSkeleton /> : <HeaderEvento evento={evento} />}
+      {isLoading ? <HeaderSkeleton /> : <HeaderEvento evento={evento} onEditar={() => setModoEdicion(true)} />}
 
       <Tabs value={tabActivo} onValueChange={handleCambiarTab}>
         <TabsList>
