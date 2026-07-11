@@ -5,31 +5,32 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { DateTimePicker } from '@/components/DateTimePicker'
 
-export function TallerEnBloqueItem({ bloqueIndex, tallerIndex, onEliminar }) {
+export function TallerEnBloqueItem({ bloqueIndex, tallerIndex, totalTallersEnBloque, onEliminar }) {
   const form = useFormContext()
   const base = `bloquesTaller.${bloqueIndex}.talleres.${tallerIndex}`
-
   const errores = form.formState.errors.bloquesTaller?.[bloqueIndex]?.talleres?.[tallerIndex]
+  const esInformativo = totalTallersEnBloque === 1
 
-  // Valores necesarios para la validación cruzada con las fechas del evento
   const inicioTaller = form.watch(`${base}.inicio`)
   const finTaller = form.watch(`${base}.fin`)
   const fechaInicioEvento = form.watch('fechaInicio')
   const fechaFinEvento = form.watch('fechaFin')
 
-  // El superRefine del eventoSchema no propaga automáticamente a arrays anidados
-  // antes del primer submit. Forzamos el trigger explícitamente.
   useEffect(() => {
     if (inicioTaller) form.trigger(`${base}.inicio`)
     if (finTaller) form.trigger(`${base}.fin`)
   }, [inicioTaller, finTaller, fechaInicioEvento, fechaFinEvento])
-
 
   return (
     <div className="space-y-3 rounded-md border border-border bg-background p-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted-foreground">
           Taller {tallerIndex + 1}
+          {esInformativo && (
+            <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+              Informativo — todos participan
+            </span>
+          )}
         </span>
         <button
           type="button"
@@ -40,29 +41,29 @@ export function TallerEnBloqueItem({ bloqueIndex, tallerIndex, onEliminar }) {
         </button>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-[1fr_110px]">
+      <div className={esInformativo ? '' : 'grid gap-3 sm:grid-cols-[1fr_110px]'}>
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-            Nombre
-          </label>
+          <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Nombre</label>
           <Input
             {...form.register(`${base}.nombre`)}
             placeholder="Ej. Oratoria"
             className="h-9 text-sm"
           />
         </div>
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-            Capacidad
-          </label>
-          <Input
-            type="number"
-            min="1"
-            {...form.register(`${base}.capacidad`, { valueAsNumber: true })}
-            placeholder="Opcional"
-            className="h-9 text-sm"
-          />
-        </div>
+        {!esInformativo && (
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              Capacidad
+            </label>
+            <Input
+              type="number"
+              min="1"
+              {...form.register(`${base}.capacidad`, { valueAsNumber: true })}
+              placeholder="Opcional"
+              className="h-9 text-sm"
+            />
+          </div>
+        )}
       </div>
 
       <div>

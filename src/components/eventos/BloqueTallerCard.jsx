@@ -126,6 +126,7 @@ export function BloqueTallerCard({ id, index, onEliminar, onEditar }) {
               key={field.id}
               bloqueIndex={index}
               tallerIndex={tallerIndex}
+              totalTallersEnBloque={fields.length}
               onEliminar={() => remove(tallerIndex)}
             />
           ))}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
 import { ChevronDown, ImagePlus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -34,6 +34,15 @@ const OPCIONES_POLITICA_MENOR = [
 export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarImagen, codigoOriginal }) {
   const form = useFormContext()
   const [abierto, setAbierto] = useState(true)
+  const politicaMenor = form.watch('politicaMenor')
+
+  useEffect(() => {
+    if (politicaMenor !== 'no_aplica') {
+      form.setValue('tieneGrupos', true)
+    } else if (politicaMenor === 'no_aplica') {
+      form.setValue('tieneGrupos', false)
+    }
+  }, [politicaMenor])
 
   return (
     <Card>
@@ -182,11 +191,17 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                     <div>
                       <FormLabel>Inscripción por grupos</FormLabel>
                       <p className="text-xs text-muted-foreground">
-                        Permite cargar inscriptos agrupados.
+                        {politicaMenor !== 'no_aplica'
+                          ? 'Requerido por la política de menores.'
+                          : 'Permite cargar inscriptos agrupados.'}
                       </p>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={politicaMenor !== 'no_aplica'}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
