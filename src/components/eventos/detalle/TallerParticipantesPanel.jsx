@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   useReactTable,
   getCoreRowModel,
@@ -25,7 +25,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { generarParticipantesTallerMock } from '@/lib/mocks/participantes.mock'
+import { Skeleton } from '@/components/ui/skeleton'
+import { getInscriptosTaller } from '@/api/participantes.api'
 
 const COLUMNAS = [
   {
@@ -72,10 +73,23 @@ export function TallerParticipantesPanel({ bloque, taller, onVolver }) {
     acreditado: false,
   })
 
-  const participantes = useMemo(
-    () => generarParticipantesTallerMock(taller),
-    [taller]
-  )
+  const [participantes, setParticipantes] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    if (!taller?.id) return
+    setIsLoading(true)
+    getInscriptosTaller(taller.id)
+      .then((data) => {
+        setParticipantes(data.map((p) => ({
+          ...p,
+          fecha_nacimiento: p.nacimiento ?? p.fecha_nacimiento,
+          acreditado: p.acreditado ?? false,
+        })))
+      })
+      .catch(() => setParticipantes([]))
+      .finally(() => setIsLoading(false))
+  }, [taller?.id])
 
   const datosFiltrados = useMemo(() => {
     if (!busqueda) return participantes
@@ -98,6 +112,27 @@ export function TallerParticipantesPanel({ bloque, taller, onVolver }) {
   })
 
   const columnasOcultables = table.getAllColumns().filter((col) => col.getCanHide())
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={onVolver} className="gap-1.5">
+            <ArrowLeft className="h-4 w-4" />
+            Volver
+          </Button>
+          <div>
+            <p className="text-xs text-muted-foreground">{bloque.nombre}</p>
+            <h3 className="text-base font-semibold text-foreground">{taller.nombre}</h3>
+          </div>
+        </div>
+        <Skeleton className="h-10 w-full" />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">

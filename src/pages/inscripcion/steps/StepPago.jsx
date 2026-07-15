@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
 
 export default function StepPago({ evento, wizard }) {
   const { datosWizard, avanzar, retroceder } = wizard
@@ -45,8 +46,8 @@ export default function StepPago({ evento, wizard }) {
   const costo = parseFloat(evento.costo ?? 0)
 
   return (
-    <Card>
-      <CardContent className="space-y-5 pt-6">
+    <InscripcionStepLayout evento={evento} titulo="Pago de inscripción">
+      <div className="space-y-5">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Costo de inscripción
@@ -161,7 +162,7 @@ export default function StepPago({ evento, wizard }) {
             Continuar
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </InscripcionStepLayout>
   )
 }

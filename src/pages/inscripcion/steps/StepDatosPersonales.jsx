@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { differenceInYears } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
+import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
 import {
   Form,
   FormControl,
@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/form'
 import { datosPersonalesSchema } from '@/lib/validators/inscripcion.schemas'
 
-export default function StepDatosPersonales({ wizard }) {
+export default function StepDatosPersonales({ evento, wizard }) {
   const { datosWizard, avanzar } = wizard
 
   const form = useForm({
@@ -34,91 +34,86 @@ export default function StepDatosPersonales({ wizard }) {
   }
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <p className="mb-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Tus datos personales
-        </p>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="nombre"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Juan" autoComplete="given-name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="apellido"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Apellido</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Pérez" autoComplete="family-name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
+    <InscripcionStepLayout evento={evento} titulo="Tus datos personales">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
             <FormField
               control={form.control}
-              name="email"
+              name="nombre"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Nombre</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="tu@email.com" autoComplete="email" {...field} />
+                    <Input placeholder="Juan" autoComplete="given-name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="apellido"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Apellido</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Pérez" autoComplete="family-name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="dni"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>DNI</FormLabel>
-                    <FormControl>
-                      <Input placeholder="12345678" inputMode="numeric" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="nacimiento"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fecha de nacimiento</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="tu@email.com" autoComplete="email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <Button type="submit" className="w-full">
-              Continuar
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="dni"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>DNI</FormLabel>
+                  <FormControl>
+                    <Input placeholder="12345678" inputMode="numeric" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="nacimiento"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fecha de nacimiento</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <Button type="submit" className="w-full">
+            Continuar
+          </Button>
+        </form>
+      </Form>
+    </InscripcionStepLayout>
   )
 }

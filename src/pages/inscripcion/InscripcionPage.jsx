@@ -88,7 +88,7 @@ export default function InscripcionPage() {
   const StepComponent = STEP_COMPONENTS[wizard.pasoActual]
 
   return (
-    <InscripcionLayout evento={evento}>
+    <InscripcionLayout>
       {wizard.pasoActual !== 'confirmacion' && (
         <WizardProgress
           pasos={wizard.pasos}

@@ -42,16 +42,6 @@ export async function getEventoStats(id) {
   return data
 }
 
-import { generarParticipantesMock } from '@/lib/mocks/participantes.mock'
-
-// ⚠️ MOCK TEMPORAL — reemplazar por:
-// const { data } = await httpClient.get(`/eventos/${id}/participantes`)
-// return data.participantes
-export async function getParticipantes(id, evento) {
-  await new Promise((resolve) => setTimeout(resolve, 400))
-  return generarParticipantesMock(evento)
-}
-
 /**
  * @param {string} id
  * @param {object} payload
@@ -60,4 +50,22 @@ export async function getParticipantes(id, evento) {
 export async function patchEvento(id, payload) {
   const { data } = await httpClient.patch(`/eventos/${id}`, payload)
   return data.evento
+}
+
+export async function eliminarEvento(id) {
+  await httpClient.delete(`/eventos/${id}`)
+}
+
+export async function descargarInscriptosExcel(eventoId, nombreEvento) {
+  const response = await httpClient.get(`/eventos/${eventoId}/inscriptos/excel`, {
+    responseType: 'blob',
+  })
+  const url = window.URL.createObjectURL(new Blob([response.data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', `inscriptos-${nombreEvento ?? eventoId}.xlsx`)
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
 }

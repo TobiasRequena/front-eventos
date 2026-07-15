@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Search, Users, UserPlus, User, CheckCircle2 } from 'lucide-react'
@@ -17,6 +17,7 @@ import {
 import { cn } from '@/lib/utils'
 import { grupoNuevoSchema } from '@/lib/validators/inscripcion.schemas'
 import { getGrupoPorCodigoInvitacion } from '@/api/inscripcion.api'
+import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
 
 const OPCIONES_ROL = [
   {
@@ -191,7 +192,7 @@ function FormCrearGrupo({ onDatosChange }) {
             name="parroquia"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Parroquia / institución</FormLabel>
+                <FormLabel>Parroquia / Institución</FormLabel>
                 <FormControl>
                   <Input placeholder="Opcional" {...field} />
                 </FormControl>
@@ -294,12 +295,8 @@ export default function StepGrupo({ evento, wizard, codigoGrupoInicial }) {
   }
 
   return (
-    <Card>
-      <CardContent className="space-y-4 pt-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          ¿Cómo vas a participar?
-        </p>
-
+    <InscripcionStepLayout evento={evento} titulo="¿Cómo vas a participar?">
+      <div className="space-y-4">
         {soloDebeUnirse && (
           <p className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
             Como sos menor de edad, necesitás unirte al grupo de un adulto responsable.
@@ -351,7 +348,7 @@ export default function StepGrupo({ evento, wizard, codigoGrupoInicial }) {
             Continuar
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </InscripcionStepLayout>
   )
 }

@@ -18,3 +18,13 @@ export async function getParticipantePorId(id) {
   const { data } = await httpClient.get(`/participantes/${id}`)
   return data.participante
 }
+
+export async function getComprobante(participanteId) {
+  const { data } = await httpClient.get(`/participantes/${participanteId}/comprobante`)
+  return data.comprobante
+}
+
+export async function getInscriptosTaller(tallerId) {
+  const { data } = await httpClient.get(`/talleres/${tallerId}/inscriptos`)
+  return data.inscriptos ?? data.participantes
+}

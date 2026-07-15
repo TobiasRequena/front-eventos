@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { CalendarRange, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
 
 function formatearFechaHora(fechaIso) {
   if (!fechaIso) return null
@@ -166,11 +167,8 @@ export default function StepTalleres({ evento, wizard }) {
   const puedeAvanzar = validarSeleccion(bloquesTaller, seleccionados)
 
   return (
-    <Card>
-      <CardContent className="space-y-6 pt-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Talleres disponibles
-        </p>
+    <InscripcionStepLayout evento={evento} titulo="Talleres disponibles">
+      <div className="space-y-6">
 
         {bloquesTaller.map((bloque) => {
           const esInformativo = bloque.talleres.length <= 1
@@ -225,7 +223,7 @@ export default function StepTalleres({ evento, wizard }) {
             Continuar
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </InscripcionStepLayout>
   )
 }

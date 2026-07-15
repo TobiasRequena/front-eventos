@@ -5,6 +5,7 @@ import { AspectRatio } from '@/components/ui/aspect-ratio'
 import { Separator } from '@/components/ui/separator'
 import { CAMPOS_BASE_INSCRIPCION } from '@/lib/constants/camposBase'
 import { CampoFormInput } from '@/components/eventos/CampoFormInput'
+import { InscripcionSeccionGrupos } from '@/components/inscripcion/InscripcionSeccionGrupos'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -20,14 +21,14 @@ function formatearFechaHora(fechaIso) {
   }).format(new Date(fechaIso))
 }
 
-// Adapta los datos del evento real (snake_case del back)
-// al formato que espera el panel (camelCase del form)
 function adaptarEventoAForm(evento) {
   return {
     nombre: evento.nombre,
     descripcion: evento.descripcion,
     fechaInicio: evento.fecha_inicio,
     tieneTalleres: evento.tiene_talleres,
+    tieneGrupos: evento.tiene_grupos,
+    politicaMenor: evento.politica_menor,
     camposForm: evento.camposForm ?? [],
     bloquesTaller: evento.bloquesTaller ?? [],
     costo: parseFloat(evento.costo ?? 0),
@@ -38,13 +39,10 @@ function adaptarEventoAForm(evento) {
 }
 
 function useDatos(eventoExterno, imagenPreviewExterna) {
-  // modo readOnly: datos vienen del evento real
   if (eventoExterno) {
     const datos = adaptarEventoAForm(eventoExterno)
     return { ...datos, imagenPreview: datos.imagenUrl }
   }
-
-  // modo form: datos vienen de react-hook-form
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const form = useFormContext()
   return {
@@ -52,6 +50,8 @@ function useDatos(eventoExterno, imagenPreviewExterna) {
     descripcion: form.watch('descripcion'),
     fechaInicio: form.watch('fechaInicio'),
     tieneTalleres: form.watch('tieneTalleres'),
+    tieneGrupos: form.watch('tieneGrupos'),
+    politicaMenor: form.watch('politicaMenor'),
     camposForm: form.watch('camposForm') ?? [],
     bloquesTaller: form.watch('bloquesTaller') ?? [],
     costo: form.watch('costo'),
@@ -65,17 +65,18 @@ export function EventoPreviewPanel({ evento, imagenPreview: imagenPreviewExterna
   const datos = useDatos(readOnly ? evento : null, imagenPreviewExterna)
 
   const {
-    nombre,
-    descripcion,
-    fechaInicio,
-    tieneTalleres,
-    camposForm,
-    bloquesTaller,
-    costo,
-    cbuCvu,
-    aliasCobro,
-    imagenPreview,
+    nombre, descripcion, fechaInicio,
+    tieneTalleres, tieneGrupos, politicaMenor,
+    camposForm, bloquesTaller,
+    costo, cbuCvu, aliasCobro, imagenPreview,
   } = datos
+
+  const tieneSeccionGrupos = tieneGrupos || politicaMenor !== 'no_aplica'
+
+  // Para el preview necesitamos un objeto evento con la forma correcta
+  const eventoParaGrupos = readOnly
+    ? evento
+    : { tiene_grupos: tieneGrupos, politica_menor: politicaMenor }
 
   return (
     <Card className="gap-0 overflow-hidden p-0">
@@ -90,6 +91,7 @@ export function EventoPreviewPanel({ evento, imagenPreview: imagenPreviewExterna
       </AspectRatio>
 
       <CardContent className="space-y-5 p-5">
+        {/* 1. Nombre + fecha + descripción */}
         <div>
           <h3 className="text-lg font-semibold leading-snug text-foreground">
             {nombre || 'Nombre del evento'}
@@ -100,39 +102,70 @@ export function EventoPreviewPanel({ evento, imagenPreview: imagenPreviewExterna
               {formatearFechaHora(fechaInicio)}
             </div>
           )}
-          {descripcion && <p className="mt-2 text-sm text-muted-foreground">{descripcion}</p>}
+          {descripcion && (
+            <p className="mt-2 text-sm text-muted-foreground">{descripcion}</p>
+          )}
         </div>
 
-        {costo > 0 && (
-          <div className="space-y-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Costo de inscripción
-            </p>
-            <p className="text-2xl font-semibold text-foreground">
-              ${costo.toLocaleString('es-AR')}
-            </p>
-          </div>
+        {/* 2. Costo */}
+        {Number(costo) > 0 && (
+          <>
+            <Separator />
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Costo de inscripción
+              </p>
+              <p className="text-2xl font-semibold text-foreground">
+                ${Number(costo).toLocaleString('es-AR')}
+              </p>
+            </div>
+          </>
         )}
 
+        {/* 3. Tus datos (campos base) */}
         <Separator />
-
         <div className="space-y-4">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Formulario de inscripción
+            Tus datos
           </p>
-
           {CAMPOS_BASE_INSCRIPCION.map((campo) => (
             <div key={campo.id} className="space-y-1.5">
               <Label className="text-sm">{campo.label}</Label>
               <Input disabled placeholder={campo.label} />
             </div>
           ))}
-
-          {camposForm.map((campo, index) => (
-            <CampoFormInput key={campo.id ?? index} campo={campo} preview />
-          ))}
         </div>
 
+        {/* 4. Grupos */}
+        {tieneSeccionGrupos && (
+          <>
+            <Separator />
+            <div className="space-y-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Participación
+              </p>
+              <InscripcionSeccionGrupos evento={eventoParaGrupos} preview />
+            </div>
+          </>
+        )}
+
+
+        {/* 5. Formulario adicional */}
+        {camposForm.length > 0 && (
+          <>
+            <Separator />
+            <div className="space-y-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Información adicional
+              </p>
+              {camposForm.map((campo, index) => (
+                <CampoFormInput key={campo.id ?? index} campo={campo} preview />
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* 6. Talleres */}
         {tieneTalleres && bloquesTaller.length > 0 && (
           <>
             <Separator />
@@ -140,7 +173,6 @@ export function EventoPreviewPanel({ evento, imagenPreview: imagenPreviewExterna
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Talleres disponibles
               </p>
-
               {bloquesTaller.map((bloque, bloqueIndex) => {
                 const esInformativo = bloque.talleres.length <= 1
                 const cantidadElegible = bloque.cantidad_elegible ?? bloque.cantidadElegible ?? 1
@@ -214,7 +246,8 @@ export function EventoPreviewPanel({ evento, imagenPreview: imagenPreviewExterna
           </>
         )}
 
-        {costo > 0 && (cbuCvu || aliasCobro) && (
+        {/* 7. Datos de pago */}
+        {Number(costo) > 0 && (cbuCvu || aliasCobro) && (
           <>
             <Separator />
             <div className="space-y-2">
@@ -254,10 +287,15 @@ function TallerDetalle({ taller }) {
         {taller.inicio && (
           <span className="flex items-center gap-1">
             <CalendarRange className="h-3 w-3" />
-            {formatearFechaHora(taller.inicio)}
+            {new Intl.DateTimeFormat('es-AR', {
+              day: 'numeric',
+              month: 'long',
+              hour: '2-digit',
+              minute: '2-digit',
+            }).format(new Date(taller.inicio))}
           </span>
         )}
-        {taller.capacidad > 0 && (
+        {taller.capacidad && (
           <span className="flex items-center gap-1">
             <Users className="h-3 w-3" />
             {taller.capacidad} cupos

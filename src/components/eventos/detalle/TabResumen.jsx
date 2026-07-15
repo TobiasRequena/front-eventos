@@ -26,12 +26,12 @@ export function TabResumen({ evento }) {
   const [bloqueSeleccionado, setBloqueSeleccionado] = useState(null)
 
   useEffect(() => {
-    if (!evento) return
+    if (!evento?.id) return
     setIsLoading(true)
     getEventoStats(evento.id)
       .then(setStats)
       .finally(() => setIsLoading(false))
-  }, [evento])
+  }, [evento.id])
 
   if (isLoading || !stats) return <ResumenSkeleton />
 

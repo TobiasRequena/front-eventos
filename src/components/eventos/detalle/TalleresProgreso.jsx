@@ -18,17 +18,16 @@ function TallerProgressCard({ taller, onClick }) {
     >
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-medium text-foreground truncate">{taller.nombre}</p>
-        {porcentaje !== null && (
-          <span className="shrink-0 text-xs text-muted-foreground">
-            {taller.inscriptos} / {taller.capacidad}
-          </span>
-        )}
+        <span className="shrink-0 text-xs text-muted-foreground">
+          {porcentaje !== null
+            ? `${taller.inscriptos} / ${taller.capacidad}`
+            : `${taller.inscriptos ?? 0} inscriptos`
+          }
+        </span>
       </div>
       {porcentaje !== null ? (
         <Progress value={porcentaje} className="h-1.5" />
-      ) : (
-        <p className="text-xs text-muted-foreground">Sin límite de capacidad</p>
-      )}
+      ) : null}
     </button>
   )
 }

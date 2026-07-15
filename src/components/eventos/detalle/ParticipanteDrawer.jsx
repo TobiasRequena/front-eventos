@@ -8,6 +8,7 @@ import {
   DrawerContent,
   DrawerClose,
 } from '@/components/ui/drawer'
+import { ComprobanteButton } from '@/components/ComprobanteButton'
 
 const ESTADO_PAGO_CONFIG = {
   no_aplica: { label: 'Sin costo', variant: 'secondary' },
@@ -93,14 +94,17 @@ export function ParticipanteDrawer({ participante, camposForm, evento, open, onC
             </p>
 
             {tieneCosto && (
-              <div className="flex items-center gap-3">
-                <Hash className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Estado de pago</p>
-                  <Badge variant={estadoPago.variant} className="mt-0.5">
-                    {estadoPago.label}
-                  </Badge>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <Hash className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Estado de pago</p>
+                    <Badge variant={estadoPago.variant} className="mt-0.5">
+                      {estadoPago.label}
+                    </Badge>
+                  </div>
                 </div>
+                <ComprobanteButton participanteId={participante.id} />
               </div>
             )}
 

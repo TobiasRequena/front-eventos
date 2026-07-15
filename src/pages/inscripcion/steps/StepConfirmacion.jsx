@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CheckCircle2, QrCode, Users, Calendar, Copy, Check } from 'lucide-react'
+import { CheckCircle2, QrCode, Users, Calendar, Copy, Check, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { inscribirParticipante, crearGrupo } from '@/api/inscripcion.api'
 import { subirComprobantePago } from '@/api/archivos.api'
+import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
 
 function armarRespuestasForm(talleresSeleccionados) {
   const talleres = []
@@ -141,105 +142,128 @@ function ResumenInscripcion({ datosWizard, evento, grupoCreado }) {
 
 export default function StepConfirmacion({ evento, wizard }) {
   const { datosWizard, actualizarDatos } = wizard
-  const [status, setStatus] = useState('loading')
+  const [status, setStatus] = useState('idle')
+  const [errorMensaje, setErrorMensaje] = useState(null)
   const [participante, setParticipante] = useState(datosWizard.participanteCreado ?? null)
   const [grupoCreado, setGrupoCreado] = useState(datosWizard.grupoCreado ?? null)
   const yaEjecutado = useRef(false)
+
+  async function procesar() {
+    if (yaEjecutado.current) return
+    yaEjecutado.current = true
+    setStatus('loading')
+    setErrorMensaje(null)
+
+    try {
+      const payload = armarPayload(evento, datosWizard)
+      const participanteCreado = await inscribirParticipante(payload)
+      setParticipante(participanteCreado)
+
+      let grupoCreadoLocal = null
+      if (datosWizard.rolGrupo === 'responsable' && datosWizard.datosGrupoNuevo) {
+        grupoCreadoLocal = await crearGrupo({
+          ...datosWizard.datosGrupoNuevo,
+          eventoId: evento.id,
+          responsableId: participanteCreado.id,
+        })
+        setGrupoCreado(grupoCreadoLocal)
+      }
+
+      if (datosWizard.comprobantePago && !datosWizard.pagoPostergado) {
+        try {
+          await subirComprobantePago(
+            datosWizard.comprobantePago,
+            participanteCreado.id,
+            evento.org_id
+          )
+        } catch {
+          toast.warning('Tu inscripción se completó, pero no pudimos subir el comprobante.')
+        }
+      }
+
+      actualizarDatos({ participanteCreado, grupoCreado: grupoCreadoLocal })
+      setStatus('success')
+    } catch (error) {
+      yaEjecutado.current = false
+      const mensaje =
+        error?.response?.data?.error?.message ??
+        error?.response?.data?.error ??
+        'No pudimos completar tu inscripción. Revisá tu conexión e intentá de nuevo.'
+      setErrorMensaje(mensaje)
+      toast.error('Algo salió mal con tu inscripción.')
+      setStatus('error')
+    }
+  }
 
   useEffect(() => {
     if (datosWizard.participanteCreado) {
       setStatus('success')
       return
     }
-
-    if (yaEjecutado.current) return
-    yaEjecutado.current = true
-
-    async function procesar() {
-      try {
-        const payload = armarPayload(evento, datosWizard)
-        const participanteCreado = await inscribirParticipante(payload)
-        setParticipante(participanteCreado)
-
-        let grupoCreadoLocal = null
-        if (datosWizard.rolGrupo === 'responsable' && datosWizard.datosGrupoNuevo) {
-          grupoCreadoLocal = await crearGrupo({
-            ...datosWizard.datosGrupoNuevo,
-            eventoId: evento.id,
-            responsableId: participanteCreado.id,
-          })
-          setGrupoCreado(grupoCreadoLocal)
-        }
-
-        if (datosWizard.comprobantePago && !datosWizard.pagoPostergado) {
-          try {
-            await subirComprobantePago(
-              datosWizard.comprobantePago,
-              participanteCreado.id,
-              evento.org_id
-            )
-          } catch {
-            toast.warning('Tu inscripción se completó, pero no pudimos subir el comprobante.')
-          }
-        }
-
-        actualizarDatos({ participanteCreado, grupoCreado: grupoCreadoLocal })
-        setStatus('success')
-      } catch (error) {
-        yaEjecutado.current = false // permitir reintentar
-        const mensaje = error?.response?.data?.error?.message
-          ?? error?.response?.data?.error
-          ?? 'No pudimos completar tu inscripción.'
-        toast.error(mensaje)
-        setStatus('error')
-      }
-    }
-
     procesar()
   }, [])
 
   if (status === 'loading') {
     return (
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <div className="flex flex-col items-center gap-3 py-6 text-center">
-            <Skeleton className="h-32 w-32 rounded-xl" />
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-4 w-36" />
+      <InscripcionStepLayout evento={evento} titulo="Procesando tu inscripción...">
+        <div className="flex flex-col items-center gap-4 py-6 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
-        </CardContent>
-      </Card>
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              Estamos registrando tu inscripción
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Por favor no cerrés esta ventana...
+            </p>
+          </div>
+        </div>
+      </InscripcionStepLayout>
     )
   }
 
   if (status === 'error') {
     return (
-      <Card>
-        <CardContent className="py-10 text-center space-y-3">
-          <p className="text-sm font-medium text-foreground">
-            Algo salió mal con tu inscripción
+      <InscripcionStepLayout evento={evento} titulo="Algo salió mal">
+        <div className="space-y-4">
+          <div className="rounded-md border border-destructive/40 bg-destructive/5 p-4">
+            <p className="text-sm font-medium text-destructive">
+              No pudimos completar tu inscripción
+            </p>
+            {errorMensaje && (
+              <p className="mt-1 text-sm text-muted-foreground">{errorMensaje}</p>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Si el problema persiste, contactá al organizador del evento.
           </p>
-          <p className="text-sm text-muted-foreground">
-            Revisá tu conexión e intentá de nuevo. Si el problema persiste, contactá al organizador.
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setStatus('loading')
-              actualizarDatos({ participanteCreado: null, grupoCreado: null })
-            }}
-          >
-            Reintentar
-          </Button>
-        </CardContent>
-      </Card>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              // variant="outline"
+              className="flex-1"
+              onClick={procesar}
+            >
+              Reenviar
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              onClick={() => window.location.reload()}
+            >
+              Reiniciar
+            </Button>
+          </div>
+        </div>
+      </InscripcionStepLayout>
     )
   }
 
   return (
-    <Card>
-      <CardContent className="space-y-5 pt-6">
+    <InscripcionStepLayout evento={evento} titulo="¡Inscripción completada!">
+      <div className="space-y-5 pt-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/15">
             <CheckCircle2 className="h-6 w-6 text-success" />
@@ -266,7 +290,16 @@ export default function StepConfirmacion({ evento, wizard }) {
             grupoCreado={grupoCreado}
           />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      <Separator />
+      <button
+        type="button"
+        onClick={() => window.location.reload()}
+        className="w-full text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
+      >
+        Realizar otra inscripción
+      </button>
+    </InscripcionStepLayout>
   )
 }

@@ -22,6 +22,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { HelpCircle } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import { CodigoInput } from '@/components/eventos/CodigoInput'
 
@@ -162,7 +169,20 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
               name="politicaMenor"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Política de menores</FormLabel>
+                  <div className="flex items-center gap-1.5">
+                    <FormLabel>Política de menores</FormLabel>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-3.5 w-3.5 cursor-help text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-56 text-center">
+                          Define si los participantes menores de 18 años necesitan estar
+                          vinculados a un adulto responsable para inscribirse.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger className="w-full sm:w-64">
@@ -177,6 +197,21 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                       ))}
                     </SelectContent>
                   </Select>
+                  {field.value === 'no_aplica' && (
+                    <p className="text-xs text-muted-foreground">
+                      Este evento no distingue entre mayores y menores. Cualquier persona puede inscribirse libremente.
+                    </p>
+                  )}
+                  {field.value === 'opcional' && (
+                    <p className="text-xs text-muted-foreground">
+                      Los menores pueden inscribirse solos o vincularse al grupo de un adulto responsable. La vinculación es voluntaria.
+                    </p>
+                  )}
+                  {field.value === 'obligatorio' && (
+                    <p className="text-xs text-muted-foreground">
+                      Los menores deben pertenecer al grupo de un adulto responsable para poder inscribirse. En caso de emergencia, se puede ubicar al referente de un menor escaneando su QR.
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -188,12 +223,28 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                 name="tieneGrupos"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between rounded-lg border border-border p-3">
-                    <div>
-                      <FormLabel>Inscripción por grupos</FormLabel>
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <FormLabel>Inscripción por grupos</FormLabel>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-3.5 w-3.5 cursor-help text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-64 text-center">
+                              Permite que los participantes se organicen en grupos con un adulto
+                              responsable. El responsable crea el grupo, comparte el código de
+                              invitación, y el día del evento representa al grupo en la acreditación.
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         {politicaMenor !== 'no_aplica'
                           ? 'Requerido por la política de menores.'
-                          : 'Permite cargar inscriptos agrupados.'}
+                          : field.value
+                            ? 'Cada grupo tiene un responsable adulto que gestiona sus integrantes. El día del evento, escaneando el QR del responsable se acredita a todo el grupo de una sola vez.'
+                            : 'Permite cargar inscriptos agrupados.'}
                       </p>
                     </div>
                     <FormControl>

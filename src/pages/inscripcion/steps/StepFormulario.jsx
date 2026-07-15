@@ -1,7 +1,7 @@
 import { useForm, Controller } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { CampoFormInput } from '@/components/eventos/CampoFormInput'
+import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
 
 export default function StepFormulario({ evento, wizard }) {
   const { datosWizard, avanzar, retroceder } = wizard
@@ -9,7 +9,11 @@ export default function StepFormulario({ evento, wizard }) {
 
   const defaultValues = {}
   camposForm.forEach((campo) => {
-    defaultValues[campo.id] = datosWizard.respuestasForm?.[campo.id] ?? ''
+    if (campo.tipo === 'booleano') {
+      defaultValues[campo.id] = datosWizard.respuestasForm?.[campo.id] ?? false
+    } else {
+      defaultValues[campo.id] = datosWizard.respuestasForm?.[campo.id] ?? ''
+    }
   })
 
   const { control, handleSubmit } = useForm({ defaultValues })
@@ -19,11 +23,8 @@ export default function StepFormulario({ evento, wizard }) {
   }
 
   return (
-    <Card>
-      <CardContent className="space-y-4 pt-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Información adicional
-        </p>
+    <InscripcionStepLayout evento={evento} titulo="Información adicional">
+      <div className="space-y-4">
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {camposForm.map((campo) => (
@@ -44,7 +45,7 @@ export default function StepFormulario({ evento, wizard }) {
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </InscripcionStepLayout>
   )
 }

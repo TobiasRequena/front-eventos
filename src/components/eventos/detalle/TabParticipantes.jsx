@@ -5,6 +5,9 @@ import { ParticipantesDataTable } from '@/components/eventos/detalle/Participant
 import { ParticipanteDrawer } from '@/components/eventos/detalle/ParticipanteDrawer'
 import { buildColumns } from '@/components/eventos/detalle/participantes.columns'
 import { useParticipantes } from '@/hooks/useParticipantes'
+import { descargarInscriptosExcel } from '@/api/eventos.api'
+import { getApiErrorMessage } from '@/api/httpClient'
+import { toast } from 'sonner'
 
 function TablaSkeletonRows() {
   return (
@@ -21,6 +24,7 @@ export function TabParticipantes({ evento }) {
   const { participantes, isLoading, isError, reintentar } = useParticipantes(evento.id)
   const [participanteSeleccionado, setParticipanteSeleccionado] = useState(null)
   const [drawerAbierto, setDrawerAbierto] = useState(false)
+  const [descargando, setDescargando] = useState(false)
 
   const camposForm = evento.camposForm ?? []
 
@@ -51,6 +55,17 @@ export function TabParticipantes({ evento }) {
     )
   }
 
+  async function handleDescargar() {
+    setDescargando(true)
+    try {
+      await descargarInscriptosExcel(evento.id, evento.nombre)
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'No pudimos generar el Excel.'))
+    } finally {
+      setDescargando(false)
+    }
+  }
+
   return (
     <>
       <ParticipantesDataTable
@@ -58,7 +73,12 @@ export function TabParticipantes({ evento }) {
         data={participantes}
         evento={evento}
         camposForm={camposForm}
+        onDescargar={handleDescargar}
+        descargando={descargando}
+        onRefresh={reintentar}
+        refreshing={isLoading}
       />
+
       <ParticipanteDrawer
         participante={participanteSeleccionado}
         camposForm={camposForm}

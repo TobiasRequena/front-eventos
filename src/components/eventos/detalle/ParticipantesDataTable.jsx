@@ -6,7 +6,8 @@ import {
   getPaginationRowModel,
   flexRender,
 } from '@tanstack/react-table'
-import { Search, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight, Settings2, Download, Loader2, RefreshCw } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -33,6 +34,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 const OPCIONES_ESTADO_PAGO = [
   { value: 'todos', label: 'Todos' },
@@ -50,7 +57,7 @@ const OPCIONES_EDAD = [
 
 const PAGE_SIZE = 10
 
-export function ParticipantesDataTable({ columns, data, evento, camposForm = [] }) {
+export function ParticipantesDataTable({ columns, data, evento, camposForm = [], onDescargar, descargando = false, onRefresh, refreshing = false }) {
   const tieneCosto = parseFloat(evento?.costo ?? 0) > 0
   const tieneGrupos = evento?.tiene_grupos ?? false
 
@@ -197,6 +204,42 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [] 
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onRefresh}
+                disabled={refreshing}
+              >
+                <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Refrescar</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onDescargar}
+                disabled={descargando}
+                className="border-primary/30 text-primary hover:bg-primary/5 hover:text-primary"
+              >
+                {descargando
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <Download className="h-4 w-4" />
+                }
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Descargar Excel</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       <div className="rounded-md border border-border overflow-x-auto">
