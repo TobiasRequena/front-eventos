@@ -43,18 +43,22 @@ function armarPayload(evento, datosWizard) {
     }
   })
 
+  const tieneCosto = parseFloat(evento.costo ?? 0) > 0
+  const subiendoComprobante = tieneCosto && datosWizard.comprobantePago && !datosWizard.pagoPostergado
+
   return {
-    nombre,
-    apellido,
-    email,
-    dni,
-    nacimiento,
+    nombre: datosWizard.nombre,
+    apellido: datosWizard.apellido,
+    email: datosWizard.email,
+    dni: datosWizard.dni,
+    nacimiento: datosWizard.nacimiento,
     eventoId: evento.id,
-    rolGrupo,
-    grupoId: grupoId ?? null,
+    rolGrupo: datosWizard.rolGrupo,
+    grupoId: datosWizard.grupoId ?? null,
     responsableId: null,
-    respuestasForm: respuestasForm ?? {},
+    respuestasForm: datosWizard.respuestasForm ?? {},
     ...(tallerIds.length > 0 ? { tallerIds } : {}),
+    ...(tieneCosto ? { estadoPago: subiendoComprobante ? 'aprobado' : 'pendiente' } : {}),
   }
 }
 

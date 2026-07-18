@@ -23,6 +23,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Link2, Check } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 const TABS = [
   { value: 'resumen', label: 'Resumen' },
@@ -31,16 +38,20 @@ const TABS = [
 ]
 
 function HeaderEvento({ evento, onEditar, onEliminar }) {
+  const [linkCopiado, setLinkCopiado] = useState(false)
   const imagenUrl = evento.imagen_url ?? evento.imagenUrl
+
+  function copiarLink() {
+    const url = `${import.meta.env.VITE_APP_URL ?? 'http://localhost:5173'}/inscribirse/${evento.codigo}`
+    navigator.clipboard.writeText(url)
+    setLinkCopiado(true)
+    setTimeout(() => setLinkCopiado(false), 2000)
+  }
 
   return (
     <div className="relative h-52 w-full overflow-hidden rounded-xl bg-muted">
       {imagenUrl && (
-        <img
-          src={imagenUrl}
-          alt={evento.nombre}
-          className="h-full w-full object-cover"
-        />
+        <img src={imagenUrl} alt={evento.nombre} className="h-full w-full object-cover" />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-5">
@@ -70,12 +81,33 @@ function HeaderEvento({ evento, onEditar, onEliminar }) {
             </p>
           </div>
           <div className="flex gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={copiarLink}
+                    className="shrink-0 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white backdrop-blur-sm"
+                  >
+                    {linkCopiado
+                      ? <Check className="h-4 w-4" />
+                      : <Link2 className="h-4 w-4" />
+                    }
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {linkCopiado ? '¡Copiado!' : 'Copiar link de inscripción'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             <Button
               variant="outline"
               onClick={onEditar}
               className="shrink-0 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white backdrop-blur-sm"
             >
-              Editar evento
+              Editar
             </Button>
             <Button
               variant="outline"

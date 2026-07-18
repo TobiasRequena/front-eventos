@@ -69,3 +69,10 @@ export async function descargarInscriptosExcel(eventoId, nombreEvento) {
   link.remove()
   window.URL.revokeObjectURL(url)
 }
+
+export async function getEstadisticasInscripciones(rango = '7d') {
+  const { data } = await httpClient.get('/eventos/stats/inscripciones', {
+    params: { rango },
+  })
+  return data
+}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -13,7 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { generarTendenciaMock } from '@/lib/mocks/tendenciaInscripciones.mock'
+import { getEstadisticasInscripciones } from '@/api/eventos.api'
+import { Loader2 } from 'lucide-react'
 
 const RANGOS = {
   '7d': { dias: 7, label: 'Últimos 7 días' },
@@ -36,8 +37,16 @@ function formatearFechaCorta(fechaIso) {
 
 export function TendenciaInscripcionesChart({ className }) {
   const [rango, setRango] = useState('7d')
+  const [datos, setDatos] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const datos = useMemo(() => generarTendenciaMock(RANGOS[rango].dias), [rango])
+  useEffect(() => {
+    setIsLoading(true)
+    getEstadisticasInscripciones(rango)
+      .then((data) => setDatos(data.datos))
+      .catch(() => setDatos([]))
+      .finally(() => setIsLoading(false))
+  }, [rango])
 
   return (
     <Card className={className}>
@@ -57,22 +66,28 @@ export function TendenciaInscripcionesChart({ className }) {
         </Select>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-64 w-full">
-          <BarChart data={datos}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="fecha"
-              tickFormatter={formatearFechaCorta}
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-            />
-            <ChartTooltip
-              content={<ChartTooltipContent labelFormatter={formatearFechaCorta} />}
-            />
-            <Bar dataKey="inscripciones" fill="var(--color-inscripciones)" radius={4} />
-          </BarChart>
-        </ChartContainer>
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <ChartContainer config={chartConfig} className="h-64 w-full">
+            <BarChart data={datos}>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="fecha"
+                tickFormatter={formatearFechaCorta}
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+              />
+              <ChartTooltip
+                content={<ChartTooltipContent labelFormatter={formatearFechaCorta} />}
+              />
+              <Bar dataKey="inscripciones" fill="var(--color-inscripciones)" radius={4} />
+            </BarChart>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   )
