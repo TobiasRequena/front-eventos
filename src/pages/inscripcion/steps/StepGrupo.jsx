@@ -224,8 +224,15 @@ function FormCrearGrupo({ onDatosChange }) {
                 <Input
                   type="number"
                   min="1"
-                  {...field}
-                  onChange={(e) => field.onChange(e.target.valueAsNumber || 10)}
+                  placeholder="10"
+                  defaultValue={10}
+                  {...form.register('maxIntegrantes', {
+                    valueAsNumber: true,
+                    setValueAs: (v) => {
+                      const num = parseInt(v, 10)
+                      return isNaN(num) || num < 1 ? 10 : num
+                    },
+                  })}
                 />
               </FormControl>
               <FormMessage />

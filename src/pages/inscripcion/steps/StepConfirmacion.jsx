@@ -136,7 +136,7 @@ function ResumenInscripcion({ datosWizard, evento, grupoCreado }) {
       {datosWizard.pagoPostergado && (
         <div className="rounded-md bg-muted/50 p-3">
           <p className="text-xs text-muted-foreground">
-            Tu pago quedó pendiente. Recordá abonar antes del evento.
+            Tu pago quedó pendiente. Recordá abonar antes del evento, o al llegar al mismo.
           </p>
         </div>
       )}
@@ -160,6 +160,7 @@ export default function StepConfirmacion({ evento, wizard }) {
 
     try {
       const payload = armarPayload(evento, datosWizard)
+
       const participanteCreado = await inscribirParticipante(payload)
       setParticipante(participanteCreado)
 

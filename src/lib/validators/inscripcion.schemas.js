@@ -9,7 +9,14 @@ export const datosPersonalesSchema = z.object({
     .min(7, 'DNI inválido.')
     .max(8, 'DNI inválido.')
     .regex(/^\d+$/, 'Solo números.'),
-  nacimiento: z.string().min(1, 'Ingresá tu fecha de nacimiento.'),
+  nacimiento: z
+    .string()
+    .min(1, 'Ingresá tu fecha de nacimiento.')
+    .refine((val) => {
+      const fecha = new Date(val)
+      const año = fecha.getFullYear()
+      return !isNaN(fecha.getTime()) && año >= 1900 && año <= new Date().getFullYear()
+    }, 'Fecha de nacimiento inválida.'),
 })
 
 export const grupoNuevoSchema = z.object({
