@@ -11,12 +11,14 @@ import CrearEventoPage from '@/pages/eventos/CrearEventoPage'
 import EventoDetallePage from '@/pages/eventos/EventoDetallePage'
 import InscripcionPage from '@/pages/inscripcion/InscripcionPage'
 import PanelGrupoPage from '@/pages/panel-grupo/PanelGrupoPage'
+import AcreditacionPage from '@/pages/acreditacion/AcreditacionPage'
 
 export function AppRouter() {
   return (
     <Routes>
       <Route path="/inscribirse/:codigoEvento" element={<InscripcionPage />} />
       <Route path="/panel-grupo/:codigoGrupo" element={<PanelGrupoPage />} />
+      <Route path="/acreditar/:codigoEvento" element={<AcreditacionPage />} />
 
       <Route
         path="*"

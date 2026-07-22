@@ -226,39 +226,44 @@ export function PanelGrupoPanel({ sesion, onLogout }) {
       .finally(() => setLoadingSolicitudes(false))
   }, [grupo.id, token])
 
+  function onTokenExpirado() {
+    toast.error('Tu sesión expiró. Ingresá de nuevo.')
+    onLogout()
+  }
+
   async function cargarDatos() {
     setLoadingIntegrantes(true)
     setLoadingSolicitudes(true)
     try {
       const [ints, sols] = await Promise.all([
-        getIntegrantes(grupo.id, token),
-        getSolicitudes(grupo.id, token),
+        getIntegrantes(grupo.id, token, onTokenExpirado),
+        getSolicitudes(grupo.id, token, onTokenExpirado),
       ])
       setIntegrantes(ints.filter((p) => p.estado_vinculo !== 'pendiente'))
       setSolicitudes(sols)
     } catch {
-      toast.error('No pudimos cargar los datos del grupo.')
+      // si fue 401, onTokenExpirado ya manejó el logout
     } finally {
       setLoadingIntegrantes(false)
       setLoadingSolicitudes(false)
     }
   }
 
-  useEffect(() => {
-    cargarDatos()
-  }, [grupo.id, token])
-
   async function handleResponder(participanteId, estado) {
     setProcesando((prev) => ({ ...prev, [participanteId]: true }))
     try {
-      await responderSolicitud(participanteId, estado, token)
+      await responderSolicitud(participanteId, estado, token, onTokenExpirado)
       toast.success(estado === 'aceptado' ? 'Solicitud aceptada.' : 'Solicitud rechazada.')
-      await cargarDatos() // recargar todo en vez de mutar estado local
+      await cargarDatos()
     } catch {
-      toast.error('No pudimos procesar la solicitud.')
+      // si fue 401, onTokenExpirado ya manejó el logout
       setProcesando((prev) => ({ ...prev, [participanteId]: false }))
     }
   }
+
+  useEffect(() => {
+    cargarDatos()
+  }, [grupo.id, token])
 
   return (
     <div className="min-h-svh bg-muted/40">
