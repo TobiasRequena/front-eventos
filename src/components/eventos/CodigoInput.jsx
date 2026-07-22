@@ -76,7 +76,7 @@ export function CodigoInput({ codigoOriginal }) {
               {estadoDisponibilidad === 'disponible' && codigo?.length >= 3 && (
                 <p className="text-xs text-muted-foreground">
                   <span className="font-medium break-all">
-                    {import.meta.env.VITE_API_URL_FRONT}/inscripcion/{codigo}
+                    {import.meta.env.VITE_API_URL_FRONT}/inscribirse/{codigo}
                   </span>
                 </p>
               )}

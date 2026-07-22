@@ -1,10 +1,13 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
+import { io } from 'socket.io-client'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CalendarRange, Copy, Check } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { CalendarRange, Copy, Check, ExternalLink } from 'lucide-react'
 import { AcreditacionDataTable } from '@/components/eventos/detalle/AcreditacionDataTable'
+import { ParticipanteDrawer } from '@/components/eventos/detalle/ParticipanteDrawer'
 import { buildAcreditacionColumns } from '@/components/eventos/detalle/acreditacion.columns'
 import { useParticipantes } from '@/hooks/useParticipantes'
 
@@ -177,6 +180,14 @@ function EstadoInformativo({ evento }) {
       </div>
 
       <UrlAcreditacion evento={evento} />
+      <Button
+        variant="outline"
+        className="w-full gap-2"
+        onClick={() => window.open(`/acreditar/${evento.codigo}`, '_blank')}
+      >
+        <ExternalLink className="h-4 w-4" />
+        Abrir interfaz de acreditación
+      </Button>
 
       <div className="space-y-3">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -203,8 +214,46 @@ function EstadoInformativo({ evento }) {
 export function TabAcreditacion({ evento }) {
   const DOS_HORAS_MS = 2 * 60 * 60 * 1000
   const eventoActivo = new Date() >= new Date(new Date(evento.fecha_inicio).getTime() - DOS_HORAS_MS)
+  const [participanteSeleccionado, setParticipanteSeleccionado] = useState(null)
+  const [drawerAbierto, setDrawerAbierto] = useState(false)
 
-  const { participantes, isLoading } = useParticipantes(eventoActivo ? evento.id : null)
+  const { participantes, setParticipantes, isLoading } = useParticipantes(eventoActivo ? evento.id : null)
+
+  const socketRef = useRef(null)
+
+  useEffect(() => {
+    if (!eventoActivo || !evento?.id) return
+
+    const socket = io('http://localhost:3001', { transports: ['websocket'] })
+    socketRef.current = socket
+
+    socket.emit('unirse_evento', evento.id)
+
+    socket.on('checkin:nuevo', (data) => {
+      if (data.tipo === 'individual') {
+        setParticipantes((prev) =>
+          prev.map((p) =>
+            p.id === data.participanteId
+              ? { ...p, acreditado: true }
+              : p
+          )
+        )
+      } else if (data.tipo === 'grupal') {
+        const idsAcreditados = new Set(data.acreditados.map((a) => a.participanteId))
+        setParticipantes((prev) =>
+          prev.map((p) =>
+            idsAcreditados.has(p.id)
+              ? { ...p, acreditado: true }
+              : p
+          )
+        )
+      }
+    })
+
+    return () => {
+      socket.disconnect()
+    }
+  }, [eventoActivo, evento?.id])
 
   if (!eventoActivo) return <EstadoInformativo evento={evento} />
 
@@ -224,11 +273,17 @@ export function TabAcreditacion({ evento }) {
   const acreditados = participantes.filter((p) => p.acreditado)
   const sinAcreditar = participantes.filter((p) => !p.acreditado)
 
+  const handleVerDetalle = (participante) => {
+    setParticipanteSeleccionado(participante)
+    setDrawerAbierto(true)
+  }
+
   const columnasAcreditados = buildAcreditacionColumns({
     camposForm,
     tieneCosto,
     tieneGrupos,
     mostrarAcreditado: false,
+    onVerDetalle: handleVerDetalle,
   })
 
   const columnasSinAcreditar = buildAcreditacionColumns({
@@ -236,6 +291,7 @@ export function TabAcreditacion({ evento }) {
     tieneCosto,
     tieneGrupos,
     mostrarAcreditado: false,
+    onVerDetalle: handleVerDetalle,
   })
 
   const columnasTodos = buildAcreditacionColumns({
@@ -244,56 +300,88 @@ export function TabAcreditacion({ evento }) {
     tieneGrupos,
     mostrarAcreditado: true,
     acreditadoOculto: true,
+    onVerDetalle: handleVerDetalle,
   })
 
   return (
-    <div className="space-y-4">
-      <ProgressCard acreditados={acreditados.length} total={participantes.length} />
+  <div className="space-y-4">
+    <ProgressCard acreditados={acreditados.length} total={participantes.length} />
+    <Button
+      variant="outline"
+      className="w-full gap-2"
+      onClick={() => window.open(`/acreditar/${evento.codigo}`, '_blank')}
+    >
+      <ExternalLink className="h-4 w-4" />
+      Abrir interfaz de acreditación
+    </Button>
 
-      <Tabs defaultValue="acreditados">
-        <TabsList>
-          <TabsTrigger value="acreditados">
-            Acreditados ({acreditados.length})
-          </TabsTrigger>
-          <TabsTrigger value="sin_acreditar">
-            Sin acreditar ({sinAcreditar.length})
-          </TabsTrigger>
-          <TabsTrigger value="todos">
-            Todos ({participantes.length})
-          </TabsTrigger>
-        </TabsList>
+    <Tabs defaultValue="acreditados">
+      <TabsList>
+        <TabsTrigger value="acreditados">
+          Acreditados ({acreditados.length})
+        </TabsTrigger>
+        <TabsTrigger value="sin_acreditar">
+          Sin acreditar ({sinAcreditar.length})
+        </TabsTrigger>
+        <TabsTrigger value="todos">
+          Todos ({participantes.length})
+        </TabsTrigger>
+      </TabsList>
 
-        <TabsContent value="acreditados" className="mt-4">
-          <AcreditacionDataTable
-            columns={columnasAcreditados}
-            data={acreditados}
-            evento={evento}
-            camposForm={camposForm}
-            mostrarFiltrosCompletos
-          />
-        </TabsContent>
+      <TabsContent value="acreditados" className="mt-4">
+        <AcreditacionDataTable
+          columns={columnasAcreditados}
+          data={acreditados}
+          evento={evento}
+          camposForm={camposForm}
+          mostrarFiltrosCompletos
+          onVerDetalle={(participante) => {
+            setParticipanteSeleccionado(participante)
+            setDrawerAbierto(true)
+          }}
+        />
+      </TabsContent>
 
-        <TabsContent value="sin_acreditar" className="mt-4">
-          <AcreditacionDataTable
-            columns={columnasSinAcreditar}
-            data={sinAcreditar}
-            evento={evento}
-            camposForm={camposForm}
-            mostrarFiltrosCompletos={false}
-          />
-        </TabsContent>
+      <TabsContent value="sin_acreditar" className="mt-4">
+        <AcreditacionDataTable
+          columns={columnasSinAcreditar}
+          data={sinAcreditar}
+          evento={evento}
+          camposForm={camposForm}
+          mostrarFiltrosCompletos={false}
+          onVerDetalle={(participante) => {
+            setParticipanteSeleccionado(participante)
+            setDrawerAbierto(true)
+          }}
+        />
+      </TabsContent>
 
-        <TabsContent value="todos" className="mt-4">
-          <AcreditacionDataTable
-            columns={columnasTodos}
-            data={participantes}
-            evento={evento}
-            camposForm={camposForm}
-            mostrarFiltrosCompletos={false}
-            initialColumnVisibility={{ acreditado: false }}
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
-  )
+      <TabsContent value="todos" className="mt-4">
+        <AcreditacionDataTable
+          columns={columnasTodos}
+          data={participantes}
+          evento={evento}
+          camposForm={camposForm}
+          mostrarFiltrosCompletos={false}
+          initialColumnVisibility={{ acreditado: false }}
+          onVerDetalle={(participante) => {
+            setParticipanteSeleccionado(participante)
+            setDrawerAbierto(true)
+          }}
+        />
+      </TabsContent>
+    </Tabs>
+
+    <ParticipanteDrawer
+      participante={participanteSeleccionado}
+      camposForm={evento.camposForm ?? []}
+      evento={evento}
+      open={drawerAbierto}
+      onClose={() => {
+        setDrawerAbierto(false)
+        setParticipanteSeleccionado(null)
+      }}
+    />
+  </div>
+)
 }

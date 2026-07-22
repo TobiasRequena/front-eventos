@@ -56,6 +56,7 @@ export function AcreditacionDataTable({
   camposForm = [],
   mostrarFiltrosCompletos = false,
   initialColumnVisibility = {},
+  onVerDetalle,
 }) {
   const tieneCosto = parseFloat(evento?.costo ?? 0) > 0
   const tieneGrupos = evento?.tiene_grupos ?? false

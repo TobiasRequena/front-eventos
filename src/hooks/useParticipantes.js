@@ -33,6 +33,7 @@ export function useParticipantes(eventoId) {
 
   return {
     participantes,
+    setParticipantes,
     isLoading: status === 'loading',
     isError: status === 'error',
     error,

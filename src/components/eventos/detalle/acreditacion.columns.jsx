@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle2, XCircle } from 'lucide-react'
+import { CheckCircle2, XCircle, Eye } from 'lucide-react'
 
 const ESTADO_PAGO_CONFIG = {
   no_aplica: { label: 'Sin costo', variant: 'secondary' },
@@ -17,7 +17,7 @@ function formatearFecha(fechaIso) {
   }).format(new Date(fechaIso))
 }
 
-export function buildAcreditacionColumns({ camposForm, tieneCosto, tieneGrupos, mostrarAcreditado, acreditadoOculto = false }) {
+export function buildAcreditacionColumns({ camposForm, tieneCosto, tieneGrupos, mostrarAcreditado, acreditadoOculto = false, onVerDetalle }) {
   const columnasFijas = [
     {
       id: 'nombre',
@@ -96,7 +96,23 @@ export function buildAcreditacionColumns({ camposForm, tieneCosto, tieneGrupos, 
           ),
       }]
       : []),
+    {
+      id: 'acciones',
+      header: 'Acciones',
+      enableHiding: false,
+      cell: ({ row }) => (
+        <button
+          type="button"
+          onClick={() => onVerDetalle?.(row.original)}
+          className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+        >
+          <Eye className="h-4 w-4" />
+        </button>
+      ),
+    }
   ]
+
+
 
   return [...columnasFijas, ...columnasOpcionales]
 }
