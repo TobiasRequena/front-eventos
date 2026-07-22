@@ -1,6 +1,13 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Eye } from 'lucide-react'
+import { ReenviarMailDialog } from '@/components/ReenviarMailDialog'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 const ESTADO_PAGO_CONFIG = {
   no_aplica: { label: 'Sin costo', variant: 'secondary' },
@@ -88,13 +95,23 @@ export function buildColumns({ camposForm, tieneCosto, tieneGrupos, onVerDetalle
     header: 'Acciones',
     enableHiding: false,
     cell: ({ row }) => (
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => onVerDetalle(row.original)}
-      >
-        <Eye className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center gap-1">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => onVerDetalle?.(row.original)}
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                <Eye className="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Ver detalle</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <ReenviarMailDialog participante={row.original} />
+      </div>
     ),
   }
 

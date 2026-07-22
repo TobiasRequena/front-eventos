@@ -27,12 +27,14 @@
     "id": "organizacion",
     "label": "Organización",
     "icon": "Building2",
-    "to": "/organizacion"
-  },
-  {
-    "id": "miembros",
-    "label": "Miembros",
-    "icon": "Users",
-    "to": "/miembros"
+    "to": "/organizacion",
+    "children": [
+      {
+        "id": "miembros",
+        "label": "Miembros",
+        "icon": "Users",
+        "to": "/organizacion/miembros"
+      }
+    ]
   }
 ]

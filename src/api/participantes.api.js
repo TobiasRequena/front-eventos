@@ -28,3 +28,11 @@ export async function getInscriptosTaller(tallerId) {
   const { data } = await httpClient.get(`/talleres/${tallerId}/inscriptos`)
   return data.inscriptos ?? data.participantes
 }
+
+export async function reenviarMail(participanteId, email = undefined) {
+  const { data } = await httpClient.post(
+    `/participantes/${participanteId}/reenviar-mail`,
+    email ? { email } : {}
+  )
+  return data
+}

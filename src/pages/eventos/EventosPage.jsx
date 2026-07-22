@@ -52,7 +52,7 @@ function EstadoError({ onRetry }) {
 
 export default function EventosPage() {
   const { estado } = useParams()
-  const filtro = FILTROS_EVENTO[estado] ? estado : 'activos'
+  const filtro = FILTROS_EVENTO[estado] ? estado : 'todos'
 
   const { eventos, isLoading, isError, reintentar } = useEventos()
 

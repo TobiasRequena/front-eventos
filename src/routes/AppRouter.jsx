@@ -12,6 +12,8 @@ import EventoDetallePage from '@/pages/eventos/EventoDetallePage'
 import InscripcionPage from '@/pages/inscripcion/InscripcionPage'
 import PanelGrupoPage from '@/pages/panel-grupo/PanelGrupoPage'
 import AcreditacionPage from '@/pages/acreditacion/AcreditacionPage'
+import OrganizacionPage from '@/pages/organizacion/OrganizacionPage'
+import MiembrosPage from '@/pages/organizacion/MiembrosPage'
 
 export function AppRouter() {
   return (
@@ -35,10 +37,12 @@ export function AppRouter() {
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
                   <Route path="/dashboard" element={<DashboardPage />} />
-                  <Route path="/eventos" element={<Navigate to="/eventos/activos" replace />} />
+                  <Route path="/eventos" element={<Navigate to="/eventos/todos" replace />} />
                   <Route path="/eventos/nuevo" element={<CrearEventoPage />} />
                   <Route path="/eventos/:id/detalle" element={<EventoDetallePage />} />
                   <Route path="/eventos/:estado" element={<EventosPage />} />
+                  <Route path="/organizacion" element={<OrganizacionPage />} />
+                  <Route path="/organizacion/miembros" element={<MiembrosPage />} />
                 </Route>
               </Route>
 

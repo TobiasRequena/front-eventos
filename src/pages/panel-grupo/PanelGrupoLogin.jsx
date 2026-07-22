@@ -29,12 +29,14 @@ export function PanelGrupoLogin({ codigoGrupo, onLogin, isLoading, error }) {
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="hidden bg-muted lg:block" />
 
-      <div className="flex flex-col items-center justify-center p-6 sm:p-10">
+      <div className="flex flex-col items-center justify-center p-4 sm:p-6">
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Users className="h-5 w-5" />
-            </div>
+            <img
+              src="../../../talita.png"
+              alt="Logo"
+              className="mx-auto h-40 w-auto"
+            />
             <h1 className="text-xl font-semibold tracking-tight text-foreground">
               Panel de referente
             </h1>

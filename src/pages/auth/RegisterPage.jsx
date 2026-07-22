@@ -20,6 +20,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { Card, CardContent } from '@/components/ui/card'
 
 function RegisterStepOne({ datosIniciales, onContinuar }) {
   const form = useForm({
@@ -40,75 +41,79 @@ function RegisterStepOne({ datosIniciales, onContinuar }) {
         </div>
       </div> */}
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onContinuar)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="nombre"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Tobías" autoComplete="given-name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="apellido"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Apellido</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Requena" autoComplete="family-name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+      <Card>
+        <CardContent className="pt-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onContinuar)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="nombre"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Tobías" autoComplete="given-name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="apellido"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Apellido</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Requena" autoComplete="family-name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="tu@email.com" autoComplete="email" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="tu@email.com" autoComplete="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="contrasena"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Contraseña</FormLabel>
-                <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="Al menos 8 caracteres"
-                    autoComplete="new-password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="contrasena"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contraseña</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Al menos 8 caracteres"
+                        autoComplete="new-password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <Button type="submit" className="w-full">
-            Continuar
-          </Button>
-        </form>
-      </Form>
+              <Button type="submit" className="w-full">
+                Continuar
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
 
       <p className="text-center text-sm text-muted-foreground">
         ¿Ya tenés cuenta?{' '}
@@ -128,41 +133,45 @@ function RegisterStepTwo({ datosIniciales, isSubmitting, onConfirmar, onVolver }
 
   return (
     <div className="space-y-6">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onConfirmar)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="nombreOrganizacion"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nombre de tu organización</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ej. Parroquia San Juan" autoFocus {...field} />
-                </FormControl>
-                <FormDescription>
-                  Podés omitir este paso y completarlo más adelante.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <Card>
+        <CardContent className="pt-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onConfirmar)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="nombreOrganizacion"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nombre de tu organización</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej. Parroquia San Juan" autoFocus {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Podés omitir este paso y completarlo más adelante.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onVolver}
-              disabled={isSubmitting}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Atrás
-            </Button>
-            <Button type="submit" className="flex-1" disabled={isSubmitting}>
-              {isSubmitting ? 'Creando cuenta…' : 'Crear cuenta'}
-            </Button>
-          </div>
-        </form>
-      </Form>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onVolver}
+                  disabled={isSubmitting}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Atrás
+                </Button>
+                <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                  {isSubmitting ? 'Creando cuenta…' : 'Crear cuenta'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
 
       <button
         type="button"

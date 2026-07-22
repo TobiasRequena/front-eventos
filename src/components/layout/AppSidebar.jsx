@@ -37,22 +37,47 @@ function NavEntry({ item }) {
     return (
       <Collapsible defaultOpen={estaActivo} className="group/collapsible">
         <SidebarMenuItem>
-          <CollapsibleTrigger asChild>
-            <SidebarMenuButton isActive={estaActivo} tooltip={item.label}>
-              {Icon && <Icon />}
-              <span>{item.label}</span>
-              <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+          <div className="flex items-center">
+            <SidebarMenuButton
+              asChild
+              isActive={estaActivo}
+              className="flex-1"
+            >
+              <NavLink to={item.to}>
+                {Icon && <Icon />}
+                <span>{item.label}</span>
+              </NavLink>
             </SidebarMenuButton>
-          </CollapsibleTrigger>
+
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-sidebar-accent"
+              >
+                <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+              </button>
+            </CollapsibleTrigger>
+          </div>
+
           <CollapsibleContent>
             <SidebarMenuSub>
-              {item.children.map((child) => (
-                <SidebarMenuSubItem key={child.id}>
-                  <SidebarMenuSubButton asChild isActive={location.pathname === child.to}>
-                    <NavLink to={child.to}>{child.label}</NavLink>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-              ))}
+              {item.children.map((child) => {
+                const ChildIcon = iconMap[child.icon]
+
+                return (
+                  <SidebarMenuSubItem key={child.id}>
+                    <SidebarMenuSubButton
+                      asChild
+                      isActive={location.pathname === child.to}
+                    >
+                      <NavLink to={child.to}>
+                        {ChildIcon && <ChildIcon />}
+                        <span>{child.label}</span>
+                      </NavLink>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                )
+              })}
             </SidebarMenuSub>
           </CollapsibleContent>
         </SidebarMenuItem>
