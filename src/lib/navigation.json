@@ -14,12 +14,14 @@
       {
         "id": "eventos-activos",
         "label": "Activos",
-        "to": "/eventos/activos"
+        "to": "/eventos/activos",
+        "icon": "CalendarCheck"
       },
       {
         "id": "eventos-finalizados",
         "label": "Finalizados",
-        "to": "/eventos/finalizados"
+        "to": "/eventos/finalizados",
+        "icon": "CalendarX"
       }
     ]
   },

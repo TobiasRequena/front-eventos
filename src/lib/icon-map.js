@@ -3,14 +3,18 @@ import {
   Building2,
   Users,
   ChevronDown,
-  House
+  House,
+  CalendarCheck,
+  CalendarX
 } from 'lucide-react'
 
 export const iconMap = {
   CalendarRange,
   Building2,
   Users,
-  House
+  House,
+  CalendarCheck,
+  CalendarX
 }
 
 export {
