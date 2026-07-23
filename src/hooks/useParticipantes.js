@@ -3,12 +3,12 @@ import { getParticipantes } from '@/api/participantes.api'
 
 export function useParticipantes(eventoId) {
   const [participantes, setParticipantes] = useState([])
-  const [status, setStatus] = useState('idle')
+  const [status, setStatus] = useState('loading') // 'loading' | 'refreshing' | 'success' | 'error'
   const [error, setError] = useState(null)
 
-  const cargar = useCallback(async () => {
+  const cargar = useCallback(async (esRefresh = false) => {
     if (!eventoId) return
-    setStatus('loading')
+    setStatus(esRefresh ? 'refreshing' : 'loading')
     setError(null)
 
     try {
@@ -35,8 +35,9 @@ export function useParticipantes(eventoId) {
     participantes,
     setParticipantes,
     isLoading: status === 'loading',
+    isRefreshing: status === 'refreshing',
     isError: status === 'error',
     error,
-    reintentar: cargar,
+    reintentar: () => cargar(true),
   }
 }

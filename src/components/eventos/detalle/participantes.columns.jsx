@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Eye } from 'lucide-react'
+import { Eye, Trash2 } from 'lucide-react'
 import { ReenviarMailDialog } from '@/components/ReenviarMailDialog'
 import {
   Tooltip,
@@ -25,7 +25,7 @@ function formatearFecha(fechaIso) {
   }).format(new Date(fechaIso))
 }
 
-export function buildColumns({ camposForm, tieneCosto, tieneGrupos, onVerDetalle }) {
+export function buildColumns({ camposForm, tieneCosto, tieneGrupos, onVerDetalle, onEliminar }) {
   const columnasFijas = [
     {
       id: 'nombre',
@@ -111,6 +111,20 @@ export function buildColumns({ camposForm, tieneCosto, tieneGrupos, onVerDetalle
           </Tooltip>
         </TooltipProvider>
         <ReenviarMailDialog participante={row.original} />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => onEliminar?.(row.original)}
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Eliminar participante</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     ),
   }

@@ -57,7 +57,7 @@ const OPCIONES_EDAD = [
 
 const PAGE_SIZE = 10
 
-export function ParticipantesDataTable({ columns, data, evento, camposForm = [], onDescargar, descargando = false, onRefresh, refreshing = false }) {
+export function ParticipantesDataTable({ columns, data, evento, camposForm = [], onDescargar, descargando = false, onRefresh, refreshing = false, extraAcciones }) {
   const tieneCosto = parseFloat(evento?.costo ?? 0) > 0
   const tieneGrupos = evento?.tiene_grupos ?? false
 
@@ -281,28 +281,21 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
-          {datosFiltrados.length} participante{datosFiltrados.length !== 1 ? 's' : ''}
-          {datosFiltrados.length !== data.length && ` (de ${data.length} totales)`}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-muted-foreground">
+            {datosFiltrados.length} participante{datosFiltrados.length !== 1 ? 's' : ''}
+            {datosFiltrados.length !== data.length && ` (de ${data.length} totales)`}
+          </p>
+          {extraAcciones}
+        </div>
         <div className="flex items-center gap-2">
           <p className="text-xs text-muted-foreground">
-            Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
+            Página {table.getState().pagination.pageIndex + 1} de {Math.max(1, table.getPageCount())}
           </p>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
+          <Button variant="outline" size="icon" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
+          <Button variant="outline" size="icon" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

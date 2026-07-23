@@ -36,3 +36,12 @@ export async function reenviarMail(participanteId, email = undefined) {
   )
   return data
 }
+
+export async function eliminarParticipante(participanteId) {
+  await httpClient.delete(`/participantes/${participanteId}`)
+}
+
+export async function getParticipantesEliminados(eventoId) {
+  const { data } = await httpClient.get(`/eventos/${eventoId}/participantes/eliminados`)
+  return data.participantes
+}
