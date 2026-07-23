@@ -27,11 +27,12 @@ import {
 
 function NavEntry({ item }) {
   const location = useLocation()
+  const { state } = useSidebar()
   const Icon = iconMap[item.icon]
   const tieneSubmenu = Array.isArray(item.children) && item.children.length > 0
-
   const estaActivo =
     location.pathname === item.to || location.pathname.startsWith(`${item.to}/`)
+  const colapsada = state === 'collapsed'
 
   if (tieneSubmenu) {
     return (
@@ -42,6 +43,7 @@ function NavEntry({ item }) {
               asChild
               isActive={estaActivo}
               className="flex-1"
+              tooltip={item.label}
             >
               <NavLink to={item.to}>
                 {Icon && <Icon />}
@@ -49,37 +51,40 @@ function NavEntry({ item }) {
               </NavLink>
             </SidebarMenuButton>
 
-            <CollapsibleTrigger asChild>
-              <button
-                type="button"
-                className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-sidebar-accent"
-              >
-                <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-              </button>
-            </CollapsibleTrigger>
+            {!colapsada && (
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-sidebar-accent"
+                >
+                  <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                </button>
+              </CollapsibleTrigger>
+            )}
           </div>
 
-          <CollapsibleContent>
-            <SidebarMenuSub>
-              {item.children.map((child) => {
-                const ChildIcon = iconMap[child.icon]
-
-                return (
-                  <SidebarMenuSubItem key={child.id}>
-                    <SidebarMenuSubButton
-                      asChild
-                      isActive={location.pathname === child.to}
-                    >
-                      <NavLink to={child.to}>
-                        {ChildIcon && <ChildIcon />}
-                        <span>{child.label}</span>
-                      </NavLink>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                )
-              })}
-            </SidebarMenuSub>
-          </CollapsibleContent>
+          {!colapsada && (
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {item.children.map((child) => {
+                  const ChildIcon = iconMap[child.icon]
+                  return (
+                    <SidebarMenuSubItem key={child.id}>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={location.pathname === child.to}
+                      >
+                        <NavLink to={child.to}>
+                          {ChildIcon && <ChildIcon />}
+                          <span>{child.label}</span>
+                        </NavLink>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  )
+                })}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          )}
         </SidebarMenuItem>
       </Collapsible>
     )

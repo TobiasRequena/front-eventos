@@ -23,13 +23,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Link2, Check } from 'lucide-react'
+import { Pencil, Trash2, Lock, LockOpen, Link2, Check, Loader2 } from 'lucide-react'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { patchEvento } from '@/api/eventos.api'
+import { cn } from '@/lib/utils'
 
 const TABS = [
   { value: 'resumen', label: 'Resumen' },
@@ -37,7 +39,7 @@ const TABS = [
   { value: 'acreditacion', label: 'Acreditación' },
 ]
 
-function HeaderEvento({ evento, onEditar, onEliminar }) {
+function HeaderEvento({ evento, onEditar, onEliminar, onToggleInscripciones, toggleandoInscripciones }) {
   const [linkCopiado, setLinkCopiado] = useState(false)
   const imagenUrl = evento.imagen_url ?? evento.imagenUrl
 
@@ -90,10 +92,7 @@ function HeaderEvento({ evento, onEditar, onEliminar }) {
                     onClick={copiarLink}
                     className="shrink-0 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white backdrop-blur-sm"
                   >
-                    {linkCopiado
-                      ? <Check className="h-4 w-4" />
-                      : <Link2 className="h-4 w-4" />
-                    }
+                    {linkCopiado ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -102,20 +101,66 @@ function HeaderEvento({ evento, onEditar, onEliminar }) {
               </Tooltip>
             </TooltipProvider>
 
-            <Button
-              variant="outline"
-              onClick={onEditar}
-              className="shrink-0 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white backdrop-blur-sm"
-            >
-              Editar
-            </Button>
-            <Button
-              variant="outline"
-              onClick={onEliminar}
-              className="shrink-0 bg-destructive/20 text-white border-white/20 hover:bg-destructive/40 hover:text-white backdrop-blur-sm"
-            >
-              Eliminar
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={onToggleInscripciones}
+                    disabled={toggleandoInscripciones}
+                    className={cn(
+                      'shrink-0 border-white/20 backdrop-blur-sm',
+                      evento.inscripciones_cerradas
+                        ? 'bg-destructive/40 text-white hover:bg-destructive/60 hover:text-white'
+                        : 'bg-white/10 text-white hover:bg-white/20 hover:text-white'
+                    )}
+                  >
+                    {toggleandoInscripciones
+                      ? <Loader2 className="h-4 w-4 animate-spin" />
+                      : evento.inscripciones_cerradas
+                        ? <LockOpen className="h-4 w-4" />
+                        : <Lock className="h-4 w-4" />
+                    }
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {evento.inscripciones_cerradas ? 'Reabrir inscripciones' : 'Cerrar inscripciones'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={onEditar}
+                    className="shrink-0 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white backdrop-blur-sm"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Editar evento</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={onEliminar}
+                    className="shrink-0 bg-destructive/20 text-white border-white/20 hover:bg-destructive/40 hover:text-white backdrop-blur-sm"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Eliminar evento</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       </div>
@@ -136,11 +181,32 @@ export default function EventoDetallePage() {
   const [modoEdicion, setModoEdicion] = useState(false)
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
   const [eliminando, setEliminando] = useState(false)
+  const [toggleandoInscripciones, setToggleandoInscripciones] = useState(false)
 
   useBreadcrumb([
     { label: 'Eventos', to: '/eventos' },
     { label: isLoading ? '...' : (evento?.nombre ?? 'Detalle') },
   ])
+
+  async function handleToggleInscripciones() {
+    if (!evento) return
+    setToggleandoInscripciones(true)
+    try {
+      const actualizado = await patchEvento(evento.id, {
+        inscripcionesCerradas: !evento.inscripciones_cerradas,
+      })
+      setEvento((prev) => ({ ...prev, ...actualizado }))
+      toast.success(
+        actualizado.inscripciones_cerradas
+          ? 'Inscripciones cerradas.'
+          : 'Inscripciones reabiertas.'
+      )
+    } catch (err) {
+      toast.error('No pudimos actualizar las inscripciones.')
+    } finally {
+      setToggleandoInscripciones(false)
+    }
+  }
 
   async function handleEliminar() {
     setEliminando(true)
@@ -190,6 +256,8 @@ export default function EventoDetallePage() {
         evento={evento}
         onEditar={() => setModoEdicion(true)}
         onEliminar={() => setConfirmandoEliminar(true)}
+        onToggleInscripciones={handleToggleInscripciones}
+        toggleandoInscripciones={toggleandoInscripciones}
       />}
 
       <Tabs value={tabActivo} onValueChange={handleCambiarTab}>

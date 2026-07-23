@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ScanLine } from 'lucide-react'
+import { ScanLine, CalendarX2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -19,7 +19,7 @@ const schema = z.object({
   apellido: z.string().min(1, 'Ingresá tu apellido.'),
 })
 
-export function AcreditacionLogin({ evento, onLogin, isLoading, error }) {
+export function AcreditacionLogin({ evento, onLogin, isLoading, error, cerrada }) {
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: { nombre: '', apellido: '' },
@@ -46,6 +46,12 @@ export function AcreditacionLogin({ evento, onLogin, isLoading, error }) {
 
           <Card>
             <CardContent className="pt-6">
+              {cerrada && (
+                <div className="mb-4 flex items-center gap-2 rounded-md bg-muted p-3 text-sm text-muted-foreground">
+                  <CalendarX2 className="h-4 w-4 shrink-0" />
+                  Este evento ya finalizó. La acreditación está cerrada.
+                </div>
+              )}
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onLogin)} className="space-y-4">
                   <FormField

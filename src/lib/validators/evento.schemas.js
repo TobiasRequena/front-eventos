@@ -120,6 +120,7 @@ export const editarEventoSchema = z.object({
   fechaInicio: z.string().min(1, 'Definí la fecha de inicio.'),
   fechaFin: z.string().min(1, 'Definí la fecha de fin.'),
   politicaMenor: z.enum(['obligatorio', 'opcional', 'no_aplica']).default('no_aplica'),
+  inscripcionesCerradas: z.boolean().optional(),
   tieneGrupos: z.boolean().default(false),
   tieneTalleres: z.boolean().default(false),
   cbuCvu: z.string().max(50).optional().or(z.literal('')),

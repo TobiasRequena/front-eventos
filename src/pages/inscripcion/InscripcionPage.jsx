@@ -12,6 +12,7 @@ import StepTalleres from '@/pages/inscripcion/steps/StepTalleres'
 import StepFormulario from '@/pages/inscripcion/steps/StepFormulario'
 import StepPago from '@/pages/inscripcion/steps/StepPago'
 import StepConfirmacion from '@/pages/inscripcion/steps/StepConfirmacion'
+import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
 
 function InscripcionSkeleton() {
   return (
@@ -85,6 +86,26 @@ export default function InscripcionPage() {
     )
   }
 
+  const DOS_HORAS_MS = 2 * 60 * 60 * 1000
+  const eventoFinalizado = evento && new Date() > new Date(new Date(evento.fecha_fin).getTime() + DOS_HORAS_MS)
+  const inscripcionesCerradas = evento?.inscripciones_cerradas || eventoFinalizado
+
+  if (inscripcionesCerradas) {
+    return (
+      <InscripcionLayout>
+        <InscripcionStepLayout evento={evento} titulo="Inscripciones cerradas">
+          <div className="flex items-center gap-3 py-2">
+            <CalendarX2 className="h-5 w-5 shrink-0 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              {eventoFinalizado
+                ? 'Este evento ya finalizó.'
+                : 'Las inscripciones para este evento están cerradas.'}
+            </p>
+          </div>
+        </InscripcionStepLayout>
+      </InscripcionLayout>
+    )
+  }
   const StepComponent = STEP_COMPONENTS[wizard.pasoActual]
 
   return (
