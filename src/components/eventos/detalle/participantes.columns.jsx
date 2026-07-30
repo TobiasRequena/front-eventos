@@ -76,6 +76,19 @@ export function buildColumns({ camposForm, tieneCosto, tieneGrupos, onVerDetalle
         },
       ]
       : []),
+    {
+      id: 'estado_alta_plataforma',
+      header: 'Alta plataforma',
+      accessorKey: 'estado_alta_plataforma',
+      enableHiding: true,
+      cell: ({ getValue }) => {
+        const valor = getValue()
+        if (!valor) return null
+        return valor === 'confirmado'
+          ? <Badge variant="default">Confirmado</Badge>
+          : <Badge variant="outline">Pago pendiente org</Badge>
+      },
+    },
     ...camposForm.map((campo) => ({
       id: `campo_${campo.id}`,
       header: campo.etiqueta,

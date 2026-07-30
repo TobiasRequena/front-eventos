@@ -53,7 +53,7 @@ function RegisterStepOne({ datosIniciales, onContinuar }) {
                     <FormItem>
                       <FormLabel>Nombre</FormLabel>
                       <FormControl>
-                        <Input placeholder="Tobías" autoComplete="given-name" {...field} />
+                        <Input placeholder="Nombre" autoComplete="given-name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -66,7 +66,7 @@ function RegisterStepOne({ datosIniciales, onContinuar }) {
                     <FormItem>
                       <FormLabel>Apellido</FormLabel>
                       <FormControl>
-                        <Input placeholder="Requena" autoComplete="family-name" {...field} />
+                        <Input placeholder="Apellido" autoComplete="family-name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

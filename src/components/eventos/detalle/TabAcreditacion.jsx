@@ -218,13 +218,14 @@ export function TabAcreditacion({ evento }) {
   const [drawerAbierto, setDrawerAbierto] = useState(false)
 
   const { participantes, setParticipantes, isLoading } = useParticipantes(eventoActivo ? evento.id : null)
+  const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') ?? 'http://localhost:3000'
 
   const socketRef = useRef(null)
 
   useEffect(() => {
     if (!eventoActivo || !evento?.id) return
 
-    const socket = io('http://localhost:3001', { transports: ['websocket'] })
+    const socket = io(SOCKET_URL, { transports: ['websocket'] })
     socketRef.current = socket
 
     socket.emit('unirse_evento', evento.id)
@@ -304,84 +305,84 @@ export function TabAcreditacion({ evento }) {
   })
 
   return (
-  <div className="space-y-4">
-    <ProgressCard acreditados={acreditados.length} total={participantes.length} />
-    <Button
-      variant="outline"
-      className="w-full gap-2"
-      onClick={() => window.open(`/acreditar/${evento.codigo}`, '_blank')}
-    >
-      <ExternalLink className="h-4 w-4" />
-      Abrir interfaz de acreditación
-    </Button>
+    <div className="space-y-4">
+      <ProgressCard acreditados={acreditados.length} total={participantes.length} />
+      <Button
+        variant="outline"
+        className="w-full gap-2"
+        onClick={() => window.open(`/acreditar/${evento.codigo}`, '_blank')}
+      >
+        <ExternalLink className="h-4 w-4" />
+        Abrir interfaz de acreditación
+      </Button>
 
-    <Tabs defaultValue="acreditados">
-      <TabsList>
-        <TabsTrigger value="acreditados">
-          Acreditados ({acreditados.length})
-        </TabsTrigger>
-        <TabsTrigger value="sin_acreditar">
-          Sin acreditar ({sinAcreditar.length})
-        </TabsTrigger>
-        <TabsTrigger value="todos">
-          Todos ({participantes.length})
-        </TabsTrigger>
-      </TabsList>
+      <Tabs defaultValue="acreditados">
+        <TabsList>
+          <TabsTrigger value="acreditados">
+            Acreditados ({acreditados.length})
+          </TabsTrigger>
+          <TabsTrigger value="sin_acreditar">
+            Sin acreditar ({sinAcreditar.length})
+          </TabsTrigger>
+          <TabsTrigger value="todos">
+            Todos ({participantes.length})
+          </TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="acreditados" className="mt-4">
-        <AcreditacionDataTable
-          columns={columnasAcreditados}
-          data={acreditados}
-          evento={evento}
-          camposForm={camposForm}
-          mostrarFiltrosCompletos
-          onVerDetalle={(participante) => {
-            setParticipanteSeleccionado(participante)
-            setDrawerAbierto(true)
-          }}
-        />
-      </TabsContent>
+        <TabsContent value="acreditados" className="mt-4">
+          <AcreditacionDataTable
+            columns={columnasAcreditados}
+            data={acreditados}
+            evento={evento}
+            camposForm={camposForm}
+            mostrarFiltrosCompletos
+            onVerDetalle={(participante) => {
+              setParticipanteSeleccionado(participante)
+              setDrawerAbierto(true)
+            }}
+          />
+        </TabsContent>
 
-      <TabsContent value="sin_acreditar" className="mt-4">
-        <AcreditacionDataTable
-          columns={columnasSinAcreditar}
-          data={sinAcreditar}
-          evento={evento}
-          camposForm={camposForm}
-          mostrarFiltrosCompletos={false}
-          onVerDetalle={(participante) => {
-            setParticipanteSeleccionado(participante)
-            setDrawerAbierto(true)
-          }}
-        />
-      </TabsContent>
+        <TabsContent value="sin_acreditar" className="mt-4">
+          <AcreditacionDataTable
+            columns={columnasSinAcreditar}
+            data={sinAcreditar}
+            evento={evento}
+            camposForm={camposForm}
+            mostrarFiltrosCompletos={false}
+            onVerDetalle={(participante) => {
+              setParticipanteSeleccionado(participante)
+              setDrawerAbierto(true)
+            }}
+          />
+        </TabsContent>
 
-      <TabsContent value="todos" className="mt-4">
-        <AcreditacionDataTable
-          columns={columnasTodos}
-          data={participantes}
-          evento={evento}
-          camposForm={camposForm}
-          mostrarFiltrosCompletos={false}
-          initialColumnVisibility={{ acreditado: false }}
-          onVerDetalle={(participante) => {
-            setParticipanteSeleccionado(participante)
-            setDrawerAbierto(true)
-          }}
-        />
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="todos" className="mt-4">
+          <AcreditacionDataTable
+            columns={columnasTodos}
+            data={participantes}
+            evento={evento}
+            camposForm={camposForm}
+            mostrarFiltrosCompletos={false}
+            initialColumnVisibility={{ acreditado: false }}
+            onVerDetalle={(participante) => {
+              setParticipanteSeleccionado(participante)
+              setDrawerAbierto(true)
+            }}
+          />
+        </TabsContent>
+      </Tabs>
 
-    <ParticipanteDrawer
-      participante={participanteSeleccionado}
-      camposForm={evento.camposForm ?? []}
-      evento={evento}
-      open={drawerAbierto}
-      onClose={() => {
-        setDrawerAbierto(false)
-        setParticipanteSeleccionado(null)
-      }}
-    />
-  </div>
-)
+      <ParticipanteDrawer
+        participante={participanteSeleccionado}
+        camposForm={evento.camposForm ?? []}
+        evento={evento}
+        open={drawerAbierto}
+        onClose={() => {
+          setDrawerAbierto(false)
+          setParticipanteSeleccionado(null)
+        }}
+      />
+    </div>
+  )
 }

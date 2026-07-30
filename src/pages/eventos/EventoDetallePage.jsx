@@ -9,6 +9,7 @@ import { getEstadoEvento } from '@/lib/eventos.helpers'
 import { TabResumen } from '@/components/eventos/detalle/TabResumen'
 import { TabParticipantes } from '@/components/eventos/detalle/TabParticipantes'
 import { TabAcreditacion } from '@/components/eventos/detalle/TabAcreditacion'
+import { TabPagos } from '@/components/eventos/detalle/TabPagos'
 import { EditarEventoPanel } from '@/components/eventos/detalle/EditarEventoPanel'
 import { toast } from 'sonner'
 import { eliminarEvento } from '@/api/eventos.api'
@@ -37,6 +38,7 @@ const TABS = [
   { value: 'resumen', label: 'Resumen' },
   { value: 'participantes', label: 'Participantes' },
   { value: 'acreditacion', label: 'Acreditación' },
+  { value: 'pagos', label: 'Pagos' },
 ]
 
 function HeaderEvento({ evento, onEditar, onEliminar, onToggleInscripciones, toggleandoInscripciones }) {
@@ -279,6 +281,15 @@ export default function EventoDetallePage() {
 
         <TabsContent value="acreditacion" className="mt-6">
           {evento && <TabAcreditacion evento={evento} />}
+        </TabsContent>
+
+        <TabsContent value="pagos" className="mt-6">
+          {evento && (
+            <TabPagos
+              evento={evento}
+              onPagoConfirmado={() => setEvento((prev) => ({ ...prev, pagoPlatforma: null }))}
+            />
+          )}
         </TabsContent>
       </Tabs>
 

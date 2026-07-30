@@ -8,8 +8,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { escanearQr } from '@/api/acreditacion.api'
 import { AcreditacionResultado } from '@/pages/acreditacion/AcreditacionResultado'
 
-const SOCKET_URL = 'http://localhost:3001'
-
 export function AcreditacionEscaner({ evento, sesion, onCerrarSesion }) {
   const [resultado, setResultado] = useState(null)
   const [escaneando, setEscaneando] = useState(false)
@@ -19,6 +17,7 @@ export function AcreditacionEscaner({ evento, sesion, onCerrarSesion }) {
   const scannerRef = useRef(null)
   const procesandoRef = useRef(false)
   const mountedRef = useRef(false)
+  const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') ?? 'http://localhost:3000'
 
   // Socket.IO — una sola conexión durante toda la vida del componente
   useEffect(() => {
@@ -45,17 +44,24 @@ export function AcreditacionEscaner({ evento, sesion, onCerrarSesion }) {
       async (qrText) => {
         if (procesandoRef.current) return
         procesandoRef.current = true
-
         try {
-          await scanner.pause(true) // pausa sin detener
+          await scanner.pause(true)
           setEscaneando(false)
           const data = await escanearQr({ qr: qrText, eventoId: evento.id })
           setResultado(data)
         } catch (err) {
           procesandoRef.current = false
           const status = err?.response?.status
-          if (status === 404) toast.error('QR no válido para este evento.')
-          else toast.error('Error al leer el QR.')
+          if (status === 404) {
+            toast.error('QR no válido para este evento.')
+          } else if (status === 402) {
+            const { message, monto } = err.response.data.error
+            toast.error(`${message} Monto: $${parseFloat(monto).toLocaleString('es-AR')}`, {
+              duration: 8000,
+            })
+          } else {
+            toast.error('Error al leer el QR.')
+          }
           scanner.resume()
           setEscaneando(true)
         }

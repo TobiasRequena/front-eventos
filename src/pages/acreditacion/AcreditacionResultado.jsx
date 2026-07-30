@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckCircle2, XCircle, Users, User, ArrowLeft, AlertCircle, ScanLine } from 'lucide-react'
+import { CheckCircle2, XCircle, Users, User, ArrowLeft, AlertCircle, ScanLine, Eye } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ParticipanteDrawer } from '@/components/eventos/detalle/ParticipanteDrawer'
 
 const ESTADO_PAGO_CONFIG = {
   no_aplica: { label: 'Sin costo', variant: 'secondary' },
@@ -27,6 +28,7 @@ export function AcreditacionResultado({ resultado, sesion, evento, onVolver }) {
   const [procesando, setProcesando] = useState(false)
   const [acreditado, setAcreditado] = useState(false)
   const [resultadoGrupal, setResultadoGrupal] = useState(null)
+  const [drawerAbierto, setDrawerAbierto] = useState(false)
 
   const esReferente = participante.rol_grupo === 'responsable' && grupo
 
@@ -131,6 +133,15 @@ export function AcreditacionResultado({ resultado, sesion, evento, onVolver }) {
               </Badge>
             )}
           </div>
+
+          <button
+            type="button"
+            onClick={() => setDrawerAbierto(true)}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground underline-offset-4 hover:underline"
+          >
+            <Eye className="h-3.5 w-3.5" />
+            Ver detalle completo
+          </button>
 
           {participante.estado_pago === 'pendiente' && (
             <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
@@ -257,6 +268,14 @@ export function AcreditacionResultado({ resultado, sesion, evento, onVolver }) {
           Escanear siguiente
         </Button>
       )}
+
+      <ParticipanteDrawer
+        participante={participante}
+        camposForm={evento.camposForm ?? []}
+        evento={evento}
+        open={drawerAbierto}
+        onClose={() => setDrawerAbierto(false)}
+      />
     </div>
   )
 }

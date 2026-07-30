@@ -67,6 +67,7 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
   const [filtroGrupo, setFiltroGrupo] = useState('todos')
   const [columnVisibility, setColumnVisibility] = useState(() => {
     const initial = { dni: false }
+    initial['estado_alta_plataforma'] = false
     if (tieneGrupos) initial.grupo = false
     if (tieneCosto) initial.estado_pago = false
     camposForm.forEach((campo) => {

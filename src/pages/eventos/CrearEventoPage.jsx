@@ -120,9 +120,7 @@ export default function CrearEventoPage() {
         }
       }
 
-      if (resultado.esPrimerEventoGratis) {
-        toast.success('🎉 ¡Tu primer evento es gratis! Ya podés empezar a recibir inscripciones.')
-      } else {
+      if (resultado) {
         toast.success('Evento creado correctamente.')
       }
 
