@@ -43,6 +43,12 @@ export function buildColumns({ camposForm, tieneCosto, tieneGrupos, onVerDetalle
       enableHiding: false,
       cell: ({ getValue }) => formatearFecha(getValue()),
     },
+    {
+      id: 'edad',
+      header: 'Edad',
+      accessorKey: 'edad',
+      cell: ({ getValue }) => getValue() != null ? `${getValue()} años` : '—',
+    }
   ]
 
   const columnasOpcionales = [

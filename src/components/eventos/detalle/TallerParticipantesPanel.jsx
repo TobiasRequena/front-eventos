@@ -27,6 +27,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getInscriptosTaller } from '@/api/participantes.api'
+import { descargarInscriptosTaller } from '@/api/participantes.api'
+import { Download, Loader2 } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 const COLUMNAS = [
   {
@@ -75,6 +78,18 @@ export function TallerParticipantesPanel({ bloque, taller, onVolver }) {
 
   const [participantes, setParticipantes] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [descargando, setDescargando] = useState(false)
+
+  async function handleDescargar() {
+    setDescargando(true)
+    try {
+      await descargarInscriptosTaller(taller.id, taller.nombre)
+    } catch {
+      toast.error('No pudimos generar el Excel.')
+    } finally {
+      setDescargando(false)
+    }
+  }
 
   useEffect(() => {
     if (!taller?.id) return
@@ -183,6 +198,25 @@ export function TallerParticipantesPanel({ bloque, taller, onVolver }) {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleDescargar}
+                  disabled={descargando}
+                  className="border-primary/30 text-primary hover:bg-primary/5 hover:text-primary"
+                >
+                  {descargando
+                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : <Download className="h-4 w-4" />
+                  }
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Descargar Excel</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 

@@ -275,7 +275,7 @@ export default function EventoDetallePage() {
           {evento && <TabResumen evento={evento} />}
         </TabsContent>
 
-        <TabsContent value="participantes" className="mt-6">
+        <TabsContent value="participantes" className="mt-1">
           {evento && <TabParticipantes evento={evento} />}
         </TabsContent>
 

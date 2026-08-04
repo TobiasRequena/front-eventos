@@ -116,14 +116,10 @@ function TablaParticipantes({ participantes, loading, acciones }) {
         cell: ({ getValue }) => formatearFechaNac(getValue()),
       },
       {
-        id: 'es_mayor',
+        id: 'edad',
         header: 'Edad',
-        accessorKey: 'es_mayor',
-        cell: ({ getValue }) => (
-          <span className="text-sm text-muted-foreground">
-            {getValue() ? 'Mayor' : 'Menor'}
-          </span>
-        ),
+        accessorKey: 'edad',
+        cell: ({ getValue }) => getValue() != null ? `${getValue()} años` : '—',
       },
       {
         id: 'estado_pago',

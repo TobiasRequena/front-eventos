@@ -45,3 +45,17 @@ export async function getParticipantesEliminados(eventoId) {
   const { data } = await httpClient.get(`/eventos/${eventoId}/participantes/eliminados`)
   return data.participantes
 }
+
+export async function descargarInscriptosTaller(tallerId, nombreTaller) {
+  const response = await httpClient.get(`/talleres/${tallerId}/excel`, {
+    responseType: 'blob',
+  })
+  const url = window.URL.createObjectURL(new Blob([response.data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', `taller-${nombreTaller ?? tallerId}.xlsx`)
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}

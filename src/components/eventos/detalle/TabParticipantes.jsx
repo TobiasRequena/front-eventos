@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -25,6 +25,9 @@ import { Download, Loader2, Trash2 } from 'lucide-react'
 import { descargarInscriptosExcel } from '@/api/eventos.api'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { GruposTrabajoTab } from '@/components/eventos/detalle/grupos-trabajo/GruposTrabajoTab'
+import { getEsquemas } from '@/api/gruposTrabajo.api'
 
 function TablaSkeletonRows() {
   return (
@@ -47,6 +50,28 @@ export function TabParticipantes({ evento }) {
   const [eliminados, setEliminados] = useState([])
   const [cargandoEliminados, setCargandoEliminados] = useState(false)
   const [descargando, setDescargando] = useState(false)
+  const [esquemas, setEsquemas] = useState([])
+  const [esquemasCargados, setEsquemasCargados] = useState(false)
+  const [esquemasCargando, setEsquemasCargando] = useState(false)
+  const [gruposCache, setGruposCache] = useState({})
+
+  async function cargarEsquemas() {
+    setEsquemasCargando(true)
+    try {
+      const data = await getEsquemas(evento.id)
+      setEsquemas(data)
+      setEsquemasCargados(true)
+    } catch {
+      toast.error('No pudimos cargar los esquemas.')
+    } finally {
+      setEsquemasCargando(false)
+    }
+  }
+
+  useEffect(() => {
+    if (esquemasCargados) return
+    cargarEsquemas()
+  }, [evento.id])
 
   const camposForm = evento.camposForm ?? []
 
@@ -152,76 +177,100 @@ export function TabParticipantes({ evento }) {
 
   return (
     <>
-      <ParticipantesDataTable
-        columns={mostrarEliminados ? columnasEliminados : columns}
-        data={mostrarEliminados ? eliminados : participantes}
-        evento={evento}
-        camposForm={mostrarEliminados ? [] : camposForm}
-        onDescargar={!mostrarEliminados ? handleDescargar : undefined}
-        descargando={descargando}
-        onRefresh={!mostrarEliminados ? reintentar : undefined}
-        refreshing={isRefreshing}
-        extraAcciones={
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={() => handleToggleEliminados(!mostrarEliminados)}
-                  disabled={cargandoEliminados}
-                  className={cn(
-                    'rounded-md p-1.5 transition-colors',
-                    mostrarEliminados
-                      ? 'text-destructive bg-destructive/10'
-                      : 'text-muted-foreground hover:bg-accent hover:text-destructive'
-                  )}
+      <Tabs defaultValue="listado">
+        <TabsList>
+          <TabsTrigger value="listado">Listado</TabsTrigger>
+          <TabsTrigger value="grupos_trabajo">Grupos de trabajo</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="listado" className="mt-4">
+          {/* Todo el contenido actual de TabParticipantes va acá */}
+          <ParticipantesDataTable
+            columns={mostrarEliminados ? columnasEliminados : columns}
+            data={mostrarEliminados ? eliminados : participantes}
+            evento={evento}
+            camposForm={mostrarEliminados ? [] : camposForm}
+            onDescargar={!mostrarEliminados ? handleDescargar : undefined}
+            descargando={descargando}
+            onRefresh={!mostrarEliminados ? reintentar : undefined}
+            refreshing={isRefreshing}
+            extraAcciones={
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleEliminados(!mostrarEliminados)}
+                      disabled={cargandoEliminados}
+                      className={cn(
+                        'rounded-md p-1.5 transition-colors',
+                        mostrarEliminados
+                          ? 'text-destructive bg-destructive/10'
+                          : 'text-muted-foreground hover:bg-accent hover:text-destructive'
+                      )}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {mostrarEliminados ? 'Ocultar eliminados' : 'Ver eliminados'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            }
+          />
+
+          <ParticipanteDrawer
+            participante={participanteSeleccionado}
+            camposForm={camposForm}
+            evento={evento}
+            open={drawerAbierto}
+            onClose={() => {
+              setDrawerAbierto(false)
+              setParticipanteSeleccionado(null)
+            }}
+          />
+
+          <AlertDialog
+            open={!!participanteAEliminar}
+            onOpenChange={(v) => !v && setParticipanteAEliminar(null)}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Eliminar participante?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {participanteAEliminar?.nombre} {participanteAEliminar?.apellido} será eliminado
+                  de este evento. Esta acción es reversible durante 90 días.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={eliminando}>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleEliminar}
+                  disabled={eliminando}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {mostrarEliminados ? 'Ocultar eliminados' : 'Ver eliminados'}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        }
-      />
+                  {eliminando ? 'Eliminando...' : 'Eliminar'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </TabsContent>
+        <TabsContent value="grupos_trabajo" className="mt-4">
+          <GruposTrabajoTab
+            evento={evento}
+            participantes={participantes}
+            participantesCargando={isLoading}
+            esquemas={esquemas}
+            setEsquemas={setEsquemas}
+            esquemasCargando={esquemasCargando}
+            onRecargarEsquemas={cargarEsquemas}
+            gruposCache={gruposCache}
+            setGruposCache={setGruposCache}
+          />
+        </TabsContent>
+      </Tabs>
 
-      <ParticipanteDrawer
-        participante={participanteSeleccionado}
-        camposForm={camposForm}
-        evento={evento}
-        open={drawerAbierto}
-        onClose={() => {
-          setDrawerAbierto(false)
-          setParticipanteSeleccionado(null)
-        }}
-      />
-
-      <AlertDialog
-        open={!!participanteAEliminar}
-        onOpenChange={(v) => !v && setParticipanteAEliminar(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar participante?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {participanteAEliminar?.nombre} {participanteAEliminar?.apellido} será eliminado
-              de este evento. Esta acción es reversible durante 90 días.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={eliminando}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleEliminar}
-              disabled={eliminando}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {eliminando ? 'Eliminando...' : 'Eliminar'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }
