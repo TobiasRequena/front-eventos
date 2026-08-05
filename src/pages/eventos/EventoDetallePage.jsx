@@ -46,7 +46,7 @@ function HeaderEvento({ evento, onEditar, onEliminar, onToggleInscripciones, tog
   const imagenUrl = evento.imagen_url ?? evento.imagenUrl
 
   function copiarLink() {
-    const url = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5173'}/inscribirse/${evento.codigo}`
+    const url = `${import.meta.env.VITE_API_URL_FRONT ?? 'http://localhost:5173'}/inscribirse/${evento.codigo}`
     navigator.clipboard.writeText(url)
     setLinkCopiado(true)
     setTimeout(() => setLinkCopiado(false), 2000)
