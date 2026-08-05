@@ -1,8 +1,9 @@
+import { AuthCarousel } from "@/components/layout/AuthCarousel";
+
 export function AuthLayout({ title, description, children }) {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
-      {/* Panel izquierdo: placeholder, sin contenido todavía */}
-      <div className="hidden bg-muted lg:block" />
+      <AuthCarousel />
 
       {/* Panel derecho: formulario */}
       <div className="flex flex-col items-center justify-center p-4 sm:p-6">

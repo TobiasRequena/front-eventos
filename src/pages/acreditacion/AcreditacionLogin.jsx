@@ -13,6 +13,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { AuthCarousel } from '../../components/layout/AuthCarousel'
 
 const schema = z.object({
   nombre: z.string().min(1, 'Ingresá tu nombre.'),
@@ -27,7 +28,7 @@ export function AcreditacionLogin({ evento, onLogin, isLoading, error, cerrada }
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="hidden bg-muted lg:block" />
+      <AuthCarousel />
       <div className="flex flex-col items-center justify-center p-4 sm:p-6">
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
