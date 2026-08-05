@@ -24,6 +24,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import { useAuth } from '@/contexts/AuthContext'
+import { ShieldCheck } from 'lucide-react'
 
 function NavEntry({ item }) {
   const location = useLocation()
@@ -103,6 +105,7 @@ function NavEntry({ item }) {
 }
 
 export function AppSidebar() {
+  const { usuario } = useAuth()
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -120,6 +123,22 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      {usuario?.es_super_admin && (
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Panel Admin">
+                  <NavLink to="/admin">
+                    <ShieldCheck />
+                    <span>Panel Admin</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      )}
 
       <SidebarFooter>
         <UserMenu />

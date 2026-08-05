@@ -5,7 +5,8 @@ import {
   ChevronDown,
   House,
   CalendarCheck,
-  CalendarX
+  CalendarX,
+  HelpCircle
 } from 'lucide-react'
 
 export const iconMap = {
@@ -14,7 +15,8 @@ export const iconMap = {
   Users,
   House,
   CalendarCheck,
-  CalendarX
+  CalendarX,
+  HelpCircle
 }
 
 export {

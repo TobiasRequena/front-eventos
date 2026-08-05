@@ -14,6 +14,8 @@ import PanelGrupoPage from '@/pages/panel-grupo/PanelGrupoPage'
 import AcreditacionPage from '@/pages/acreditacion/AcreditacionPage'
 import OrganizacionPage from '@/pages/organizacion/OrganizacionPage'
 import MiembrosPage from '@/pages/organizacion/MiembrosPage'
+import SoportePage from '@/pages/soporte/SoportePage'
+import AdminPage from '@/pages/admin/AdminPage'
 
 export function AppRouter() {
   return (
@@ -43,6 +45,8 @@ export function AppRouter() {
                   <Route path="/eventos/:estado" element={<EventosPage />} />
                   <Route path="/organizacion" element={<OrganizacionPage />} />
                   <Route path="/organizacion/miembros" element={<MiembrosPage />} />
+                  <Route path="/soporte" element={<SoportePage />} />
+                  <Route path="/admin" element={<AdminPage />} />
                 </Route>
               </Route>
 

@@ -38,5 +38,11 @@
         "to": "/organizacion/miembros"
       }
     ]
+  },
+  {
+    "id": "soporte",
+    "label": "Soporte",
+    "icon": "HelpCircle",
+    "to": "/soporte"
   }
 ]

@@ -23,7 +23,7 @@ function combinarFechaYHora(fecha, horaStr) {
  *   (ej. fechaInicio), solo para resaltar el período entre medio. No cambia
  *   el modo de selección, que sigue siendo de un solo día por click.
  */
-export function DateTimePicker({ value, onChange, placeholder = 'Elegí fecha y hora', rangoDesde }) {
+export function DateTimePicker({ value, onChange, placeholder = 'Elegí fecha y hora', rangoDesde, soloFecha = false }) {
   const fechaActual = value ? new Date(value) : null
   const [horaInput, setHoraInput] = useState(
     fechaActual ? format(fechaActual, 'HH:mm') : '09:00'
@@ -73,12 +73,14 @@ export function DateTimePicker({ value, onChange, placeholder = 'Elegí fecha y 
           />
         </PopoverContent>
       </Popover>
-      <Input
-        type="time"
-        value={horaInput}
-        onChange={handleCambiarHora}
-        className="w-28"
-      />
+      {!soloFecha && (
+        <Input
+          type="time"
+          value={horaInput}
+          onChange={handleCambiarHora}
+          className="w-28"
+        />
+      )}
     </div>
   )
 }
