@@ -61,6 +61,7 @@ export const eventoSchema = z
     tieneGrupos: z.boolean().default(false),
     tieneTalleres: z.boolean().default(false),
     cbuCvu: z.string().max(50).optional().or(z.literal('')),
+    cupoMaximo: z.number({ invalid_type_error: 'Ingresá un número.' }).int().positive().optional().nullable(),
     aliasCobro: z.string().max(50).optional().or(z.literal('')),
     costo: z.preprocess(
       (val) => (val === '' || val === null || val === undefined ? 0 : Number(val)),
@@ -126,6 +127,7 @@ export const editarEventoSchema = z.object({
   cbuCvu: z.string().max(50).optional().or(z.literal('')),
   aliasCobro: z.string().max(50).optional().or(z.literal('')),
   costo: z.number({ invalid_type_error: 'Ingresá un número.' }).min(0).default(0),
+  cupoMaximo: z.number({ invalid_type_error: 'Ingresá un número.' }).int().positive().optional().nullable(),
 }).refine(
   (data) => new Date(data.fechaFin) >= new Date(data.fechaInicio),
   { message: 'La fecha de fin debe ser igual o posterior a la de inicio.', path: ['fechaFin'] }

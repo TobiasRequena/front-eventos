@@ -83,6 +83,11 @@ function HeaderEvento({ evento, onEditar, onEliminar, onToggleInscripciones, tog
                 year: 'numeric',
               }).format(new Date(evento.fecha_fin))}
             </p>
+            {evento.cupo_maximo && (
+              <p className="mt-0.5 text-sm text-white/70">
+                {evento.cantidadInscriptos ?? 0} / {evento.cupo_maximo} inscriptos
+              </p>
+            )}
           </div>
           <div className="flex gap-2">
             <TooltipProvider>
@@ -185,6 +190,10 @@ export default function EventoDetallePage() {
   const [eliminando, setEliminando] = useState(false)
   const [toggleandoInscripciones, setToggleandoInscripciones] = useState(false)
 
+  function handleActualizarInscriptos(cantidad) {
+    setEvento((prev) => ({ ...prev, cantidadInscriptos: cantidad }))
+  }
+
   useBreadcrumb([
     { label: 'Eventos', to: '/eventos' },
     { label: isLoading ? '...' : (evento?.nombre ?? 'Detalle') },
@@ -276,7 +285,7 @@ export default function EventoDetallePage() {
         </TabsContent>
 
         <TabsContent value="participantes" className="mt-1">
-          {evento && <TabParticipantes evento={evento} />}
+          {evento && <TabParticipantes evento={evento} onActualizarInscriptos={handleActualizarInscriptos} />}
         </TabsContent>
 
         <TabsContent value="acreditacion" className="mt-6">

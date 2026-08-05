@@ -164,58 +164,92 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
               </FormItem>
             </div>
 
-            <FormField
-              control={form.control}
-              name="politicaMenor"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center gap-1.5">
-                    <FormLabel>Política de menores</FormLabel>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className="h-3.5 w-3.5 cursor-help text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-56 text-center">
-                          Define si los participantes menores de 18 años necesitan estar
-                          vinculados a un adulto responsable para inscribirse.
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <Select value={field.value} onValueChange={field.onChange}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="politicaMenor"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-1.5">
+                      <FormLabel>Política de menores</FormLabel>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="h-3.5 w-3.5 cursor-help text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-56 text-center">
+                            Define si los participantes menores de 18 años necesitan estar
+                            vinculados a un adulto responsable para inscribirse.
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full sm:w-64">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {OPCIONES_POLITICA_MENOR.map((opcion) => (
+                          <SelectItem key={opcion.value} value={opcion.value}>
+                            {opcion.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {field.value === 'no_aplica' && (
+                      <p className="text-xs text-muted-foreground">
+                        Este evento no distingue entre mayores y menores. Cualquier persona puede inscribirse libremente.
+                      </p>
+                    )}
+                    {field.value === 'opcional' && (
+                      <p className="text-xs text-muted-foreground">
+                        Los menores pueden inscribirse solos o vincularse al grupo de un adulto responsable. La vinculación es voluntaria.
+                      </p>
+                    )}
+                    {field.value === 'obligatorio' && (
+                      <p className="text-xs text-muted-foreground">
+                        Los menores deben pertenecer al grupo de un adulto responsable para poder inscribirse. En caso de emergencia, se puede ubicar al referente de un menor escaneando su QR.
+                      </p>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="cupoMaximo"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-1.5">
+                      <FormLabel>Cupo máximo</FormLabel>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="h-3.5 w-3.5 cursor-help text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-48">
+                            Límite de inscriptos. Dejalo vacío para no tener límite.
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <FormControl>
-                      <SelectTrigger className="w-full sm:w-64">
-                        <SelectValue />
-                      </SelectTrigger>
+                      <Input
+                        type="number"
+                        min="1"
+                        placeholder="Sin límite"
+                        {...field}
+                        value={field.value ?? ''}
+                        onChange={(e) => field.onChange(e.target.value === '' ? null : parseInt(e.target.value))}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {OPCIONES_POLITICA_MENOR.map((opcion) => (
-                        <SelectItem key={opcion.value} value={opcion.value}>
-                          {opcion.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {field.value === 'no_aplica' && (
-                    <p className="text-xs text-muted-foreground">
-                      Este evento no distingue entre mayores y menores. Cualquier persona puede inscribirse libremente.
-                    </p>
-                  )}
-                  {field.value === 'opcional' && (
-                    <p className="text-xs text-muted-foreground">
-                      Los menores pueden inscribirse solos o vincularse al grupo de un adulto responsable. La vinculación es voluntaria.
-                    </p>
-                  )}
-                  {field.value === 'obligatorio' && (
-                    <p className="text-xs text-muted-foreground">
-                      Los menores deben pertenecer al grupo de un adulto responsable para poder inscribirse. En caso de emergencia, se puede ubicar al referente de un menor escaneando su QR.
-                    </p>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField

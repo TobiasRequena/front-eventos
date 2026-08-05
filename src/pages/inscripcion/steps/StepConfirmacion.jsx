@@ -190,12 +190,12 @@ export default function StepConfirmacion({ evento, wizard }) {
       setStatus('success')
     } catch (error) {
       yaEjecutado.current = false
-      const mensaje =
-        error?.response?.data?.error?.message ??
-        error?.response?.data?.error ??
-        'No pudimos completar tu inscripción. Revisá tu conexión e intentá de nuevo.'
+      const status = error?.response?.status
+      const mensaje = status === 409
+        ? error?.response?.data?.error?.message ?? 'El evento está completo.'
+        : error?.response?.data?.error?.message ?? 'No pudimos completar tu inscripción.'
       setErrorMensaje(mensaje)
-      toast.error('Algo salió mal con tu inscripción.')
+      toast.error(status === 409 ? 'Cupo lleno' : 'Algo salió mal con tu inscripción.')
       setStatus('error')
     }
   }

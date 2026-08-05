@@ -40,7 +40,7 @@ function TablaSkeletonRows() {
   )
 }
 
-export function TabParticipantes({ evento }) {
+export function TabParticipantes({ evento, onActualizarInscriptos }) {
   const { participantes, setParticipantes, isLoading, isRefreshing, isError, reintentar } = useParticipantes(evento.id)
   const [participanteSeleccionado, setParticipanteSeleccionado] = useState(null)
   const [drawerAbierto, setDrawerAbierto] = useState(false)
@@ -54,6 +54,12 @@ export function TabParticipantes({ evento }) {
   const [esquemasCargados, setEsquemasCargados] = useState(false)
   const [esquemasCargando, setEsquemasCargando] = useState(false)
   const [gruposCache, setGruposCache] = useState({})
+
+  useEffect(() => {
+    if (participantes.length > 0) {
+      onActualizarInscriptos?.(participantes.length)
+    }
+  }, [participantes.length])
 
   async function cargarEsquemas() {
     setEsquemasCargando(true)
