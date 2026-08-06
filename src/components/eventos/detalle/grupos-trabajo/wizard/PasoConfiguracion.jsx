@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus, Trash2, HelpCircle } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,14 +24,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { crearEsquema, patchEsquema, getNombresPresets } from '@/api/gruposTrabajo.api'
 import { getApiErrorMessage } from '@/api/httpClient'
+import { HelpTooltip } from '../../../../ui/help-tooltip'
 
 const ATRIBUTOS_FIJOS = [
   { value: 'edad', label: 'Edad' },
@@ -436,16 +431,9 @@ export function PasoConfiguracion({ evento, esquema, onCreado, onActualizado, on
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <CardTitle className="text-sm">Criterio de tandas</CardTitle>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-56">
-                      Atributo por el que se separan las tandas. Las condiciones de cada tanda se configuran en el paso siguiente.
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <HelpTooltip>
+                  Atributo por el que se separan las tandas. Las condiciones de cada tanda se configuran en el paso siguiente.
+                </HelpTooltip>
               </div>
               <FormField
                 control={form.control}
@@ -523,16 +511,9 @@ export function PasoConfiguracion({ evento, esquema, onCreado, onActualizado, on
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <CardTitle className="text-sm">Balanceo secundario</CardTitle>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-56">
-                      Distribuye los participantes para que cada grupo tenga la mayor mezcla posible de valores distintos del atributo elegido.
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <HelpTooltip>
+                  Distribuye los participantes para que cada grupo tenga la mayor mezcla posible de valores distintos del atributo elegido.
+                </HelpTooltip>
               </div>
               <FormField
                 control={form.control}
@@ -692,16 +673,9 @@ export function PasoConfiguracion({ evento, esquema, onCreado, onActualizado, on
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <CardTitle className="text-sm">Filtro de elegibilidad</CardTitle>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-56">
-                      Solo participarán en la generación quienes cumplan todas las condiciones. El resto quedará como "excluido por sistema".
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <HelpTooltip>
+                  Solo participarán en la generación quienes cumplan todas las condiciones. El resto quedará como "excluido por sistema".
+                </HelpTooltip>
               </div>
               {esBorrador && (
                 <Button

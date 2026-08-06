@@ -1,5 +1,5 @@
 import { useFormContext } from 'react-hook-form'
-import { CheckCircle2, XCircle, Loader2, HelpCircle } from 'lucide-react'
+import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
   FormControl,
@@ -15,6 +15,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useCodigoDisponible } from '@/hooks/useCodigoDisponible'
+import { HelpTooltip } from '@/components/ui/help-tooltip'
 
 const ESTADO_CONFIG = {
   checking: { icon: Loader2, className: 'animate-spin text-muted-foreground', texto: 'Verificando...' },
@@ -38,17 +39,10 @@ export function CodigoInput({ codigoOriginal }) {
         <FormItem>
           <div className="flex items-center gap-1.5">
             <FormLabel>Código</FormLabel>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <HelpCircle className="h-3.5 w-3.5 cursor-help text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-56 text-center">
-                  Identificador público del evento. Se usa en el link de inscripción y en los QRs
-                  de acreditación. Solo letras, números y guiones. Ej: RETIRO2026
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <HelpTooltip className="h-3.5 w-3.5 cursor-help text-muted-foreground">
+              Identificador público del evento. Se usa en el link de inscripción y en los QRs
+              de acreditación. Solo letras, números y guiones. Ej: RETIRO2026
+            </HelpTooltip>
           </div>
           <FormControl>
             <div className="space-y-1.5">

@@ -22,15 +22,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { HelpCircle } from 'lucide-react'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import { CodigoInput } from '@/components/eventos/CodigoInput'
+import { Separator } from '@/components/ui/separator'
+import { HelpTooltip } from '@/components/ui/help-tooltip'
 
 const OPCIONES_POLITICA_MENOR = [
   { value: 'no_aplica', label: 'No aplica' },
@@ -55,10 +50,10 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
     <Card>
       <Collapsible open={abierto} onOpenChange={setAbierto}>
         <CollapsibleTrigger asChild>
-          <button type="button" className="flex w-full items-center justify-between p-6">
+          <button type="button" className="flex w-full items-center justify-between px-4 py-3">
             <div className="text-left">
               <h2 className="text-base font-semibold text-foreground">Datos del evento</h2>
-              <p className="text-sm text-muted-foreground">Nombre, descripción, fechas y cobro.</p>
+              <p className="text-sm text-muted-foreground">A continuación podrás completar: nombre, descripción, fechas y cobro.</p>
             </div>
             <ChevronDown
               className={cn(
@@ -70,7 +65,10 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <CardContent className="space-y-6 pt-0">
+          <div className="px-4">
+            <Separator />
+          </div>
+          <CardContent className="space-y-6 pt-6">
             {/* Imagen de portada */}
             <div>
               <FormLabel className="mb-2 block">Imagen de portada</FormLabel>
@@ -172,17 +170,10 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                   <FormItem>
                     <div className="flex items-center gap-1.5">
                       <FormLabel>Política de menores</FormLabel>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <HelpCircle className="h-3.5 w-3.5 cursor-help text-muted-foreground" />
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-56 text-center">
-                            Define si los participantes menores de 18 años necesitan estar
-                            vinculados a un adulto responsable para inscribirse.
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <HelpTooltip>
+                        Define si los participantes menores de 18 años necesitan estar
+                        vinculados a un adulto responsable para inscribirse.
+                      </HelpTooltip>
                     </div>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
@@ -224,16 +215,9 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                   <FormItem>
                     <div className="flex items-center gap-1.5">
                       <FormLabel>Cupo máximo</FormLabel>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <HelpCircle className="h-3.5 w-3.5 cursor-help text-muted-foreground" />
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-48">
-                            Límite de inscriptos. Dejalo vacío para no tener límite.
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <HelpTooltip>
+                        Límite de inscriptos. Dejalo vacío para no tener límite.
+                      </HelpTooltip>
                     </div>
                     <FormControl>
                       <Input
@@ -260,18 +244,11 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-1.5">
                         <FormLabel>Inscripción por grupos</FormLabel>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <HelpCircle className="h-3.5 w-3.5 cursor-help text-muted-foreground" />
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-64 text-center">
-                              Permite que los participantes se organicen en grupos con un adulto
-                              responsable. El responsable crea el grupo, comparte el código de
-                              invitación, y el día del evento representa al grupo en la acreditación.
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <HelpTooltip>
+                          Permite que los participantes se organicen en grupos con un adulto
+                          responsable. El responsable crea el grupo, comparte el código de
+                          invitación, y el día del evento representa al grupo en la acreditación.
+                        </HelpTooltip>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {politicaMenor !== 'no_aplica'
