@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Card, CardContent } from '@/components/ui/card'
+import { PasswordInput } from '@/components/ui/password-input'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -85,12 +86,7 @@ export default function LoginPage() {
                     <FormItem>
                       <FormLabel>Contraseña</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="••••••••"
-                          autoComplete="current-password"
-                          {...field}
-                        />
+                        <PasswordInput placeholder="••••••••" autoComplete="current-password" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

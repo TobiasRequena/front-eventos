@@ -46,7 +46,7 @@ export function getTotalInscriptosActivos(eventos) {
 export const FILTROS_EVENTO = {
   todos: { label: 'Todos' },
   activos: { label: 'Activos' },
-  borradores: { label: 'Borradores' },
+  // borradores: { label: 'Borradores' },
   finalizados: { label: 'Finalizados' },
 }
 

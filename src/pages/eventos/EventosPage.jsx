@@ -24,7 +24,7 @@ function EventosSkeletonGrid() {
 
 function EstadoVacio({ filtro }) {
   const mensajes = {
-    borradores: 'Todavía no existe el concepto de borradores en esta versión.',
+    // borradores: 'Todavía no existe el concepto de borradores en esta versión.',
     activos: 'No tenés eventos activos en este momento.',
     finalizados: 'Todavía no tenés eventos finalizados.',
     todos: 'Todavía no creaste ningún evento.',

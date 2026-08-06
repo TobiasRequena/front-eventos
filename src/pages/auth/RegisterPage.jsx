@@ -21,6 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Card, CardContent } from '@/components/ui/card'
+import { PasswordInput } from '@/components/ui/password-input'
 
 function RegisterStepOne({ datosIniciales, onContinuar }) {
   const form = useForm({
@@ -95,12 +96,7 @@ function RegisterStepOne({ datosIniciales, onContinuar }) {
                   <FormItem>
                     <FormLabel>Contraseña</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Al menos 8 caracteres"
-                        autoComplete="new-password"
-                        {...field}
-                      />
+                      <PasswordInput placeholder="••••••••" autoComplete="current-password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

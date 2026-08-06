@@ -186,7 +186,7 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                     </div>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger className="w-full sm:w-64">
+                        <SelectTrigger className="w-full">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
