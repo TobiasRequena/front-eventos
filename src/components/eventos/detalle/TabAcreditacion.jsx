@@ -74,11 +74,11 @@ const PASOS_ACREDITACION = [
     titulo: 'Acreditación individual o grupal',
     descripcion: 'Si el participante llegó con su grupo, podés acreditar a todos los integrantes de una sola vez escaneando el QR del referente.',
   },
-  {
-    numero: 4,
-    titulo: 'Registro de talleres',
-    descripcion: 'Al ingresar a cada taller, volvé a escanear el QR para registrar la asistencia. Esto permite ubicar a cualquier participante en tiempo real.',
-  },
+  // {
+  //   numero: 4,
+  //   titulo: 'Registro de talleres',
+  //   descripcion: 'Al ingresar a cada taller, volvé a escanear el QR para registrar la asistencia. Esto permite ubicar a cualquier participante en tiempo real.',
+  // },
 ]
 
 function useCuentaRegresiva(fechaInicio) {

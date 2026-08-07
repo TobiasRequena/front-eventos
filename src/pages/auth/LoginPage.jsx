@@ -20,12 +20,14 @@ import {
 } from '@/components/ui/form'
 import { Card, CardContent } from '@/components/ui/card'
 import { PasswordInput } from '@/components/ui/password-input'
+import { recuperarContrasena } from '@/api/auth.api'
 
 export default function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [enviandoRecuperacion, setEnviandoRecuperacion] = useState(false)
 
   const form = useForm({
     resolver: zodResolver(loginSchema),
@@ -95,6 +97,14 @@ export default function LoginPage() {
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? 'Ingresando…' : 'Ingresar'}
                 </Button>
+                <p className="text-center text-sm text-muted-foreground">
+                  <Link
+                    to="/recuperar-contrasena"
+                    className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Link>
+                </p>
               </form>
             </Form>
           </CardContent>

@@ -16,6 +16,8 @@ import OrganizacionPage from '@/pages/organizacion/OrganizacionPage'
 import MiembrosPage from '@/pages/organizacion/MiembrosPage'
 import SoportePage from '@/pages/soporte/SoportePage'
 import AdminPage from '@/pages/admin/AdminPage'
+import RecuperarContrasenaPage from '@/pages/auth/RecuperarContrasenaPage'
+import ResetContrasenaPage from '@/pages/auth/ResetContrasenaPage'
 
 export function AppRouter() {
   return (
@@ -23,6 +25,8 @@ export function AppRouter() {
       <Route path="/inscribirse/:codigoEvento" element={<InscripcionPage />} />
       <Route path="/panel-grupo/:codigoGrupo" element={<PanelGrupoPage />} />
       <Route path="/acreditar/:codigoEvento" element={<AcreditacionPage />} />
+      <Route path="/recuperar-contrasena" element={<RecuperarContrasenaPage />} />
+      <Route path="/reset" element={<ResetContrasenaPage />} />
 
       <Route
         path="*"
