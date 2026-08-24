@@ -46,7 +46,8 @@ const MES_ACTUAL = OPCIONES_MES[0].value
 
 function formatearFechaCorta(fechaIso) {
   if (!fechaIso) return ''
-  return new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'short' }).format(new Date(fechaIso))
+  const [anio, mes, dia] = fechaIso.split('-').map(Number)
+  return new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'short' }).format(new Date(anio, mes - 1, dia))
 }
 
 const chartConfigBarra = { valor: { label: 'Cantidad', color: 'var(--primary)' } }
