@@ -30,55 +30,74 @@ import { getInscriptosTaller } from '@/api/participantes.api'
 import { descargarInscriptosTaller } from '@/api/participantes.api'
 import { Download, Loader2 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-
-const COLUMNAS = [
-  {
-    id: 'nombre',
-    header: 'Nombre',
-    enableHiding: false,
-    accessorFn: (row) => `${row.nombre} ${row.apellido}`,
-    cell: ({ getValue }) => (
-      <span className="font-medium text-foreground">{getValue()}</span>
-    ),
-  },
-  {
-    id: 'dni',
-    header: 'DNI',
-    accessorKey: 'dni',
-    enableHiding: true,
-  },
-  {
-    id: 'acreditado',
-    header: 'Acreditado',
-    accessorKey: 'acreditado',
-    enableHiding: true,
-    cell: ({ getValue }) =>
-      getValue() ? (
-        <span className="flex items-center gap-1.5 text-success text-sm">
-          <CheckCircle2 className="h-4 w-4" />
-          Sí
-        </span>
-      ) : (
-        <span className="flex items-center gap-1.5 text-muted-foreground text-sm">
-          <XCircle className="h-4 w-4" />
-          No
-        </span>
-      ),
-  },
-]
+import { useParticipanteDrawer } from '@/hooks/useParticipanteDrawer'
+import { ParticipanteDrawer } from '@/components/eventos/detalle/ParticipanteDrawer'
+import { Eye } from 'lucide-react'
 
 const PAGE_SIZE = 10
 
-export function TallerParticipantesPanel({ bloque, taller, onVolver }) {
+export function TallerParticipantesPanel({ bloque, taller, evento, onVolver }) {
+  const { participante: participanteSeleccionado, drawerAbierto, cargando, abrirDrawer, cerrarDrawer } = useParticipanteDrawer()
   const [busqueda, setBusqueda] = useState('')
   const [columnVisibility, setColumnVisibility] = useState({
     dni: false,
     acreditado: false,
   })
-
   const [participantes, setParticipantes] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [descargando, setDescargando] = useState(false)
+
+  const COLUMNAS = useMemo(() => [
+    {
+      id: 'nombre',
+      header: 'Nombre',
+      enableHiding: false,
+      accessorFn: (row) => `${row.nombre} ${row.apellido}`,
+      cell: ({ getValue }) => <span className="font-medium text-foreground">{getValue()}</span>,
+    },
+    {
+      id: 'dni',
+      header: 'DNI',
+      accessorKey: 'dni',
+      enableHiding: true,
+    },
+    {
+      id: 'acreditado',
+      header: 'Acreditado',
+      accessorKey: 'acreditado',
+      enableHiding: true,
+      cell: ({ getValue }) => getValue() ? (
+        <span className="flex items-center gap-1.5 text-success text-sm">
+          <CheckCircle2 className="h-4 w-4" /> Sí
+        </span>
+      ) : (
+        <span className="flex items-center gap-1.5 text-muted-foreground text-sm">
+          <XCircle className="h-4 w-4" /> No
+        </span>
+      ),
+    },
+    {
+      id: 'acciones',
+      header: 'Acciones',
+      enableHiding: false,
+      cell: ({ row }) => (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => abrirDrawer(row.original.id)}
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                <Eye className="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Ver detalle</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ),
+    },
+  ], [abrirDrawer])
 
   async function handleDescargar() {
     setDescargando(true)
@@ -137,7 +156,7 @@ export function TallerParticipantesPanel({ bloque, taller, onVolver }) {
             Volver
           </Button>
           <div>
-            <p className="text-xs text-muted-foreground">{bloque.nombre}</p>
+            {bloque && <p className="text-xs text-muted-foreground">{bloque.nombre}</p>}
             <h3 className="text-base font-semibold text-foreground">{taller.nombre}</h3>
           </div>
         </div>
@@ -157,13 +176,14 @@ export function TallerParticipantesPanel({ bloque, taller, onVolver }) {
           Volver
         </Button>
         <div>
-          <p className="text-xs text-muted-foreground">{bloque.nombre}</p>
+          {bloque && <p className="text-xs text-muted-foreground">{bloque.nombre}</p>}
           <h3 className="text-base font-semibold text-foreground">{taller.nombre}</h3>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="relative flex-1 min-w-48">
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Búsqueda */}
+        <div className="relative min-w-48 flex-1">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar por nombre..."
@@ -173,51 +193,55 @@ export function TallerParticipantesPanel({ bloque, taller, onVolver }) {
           />
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-muted-foreground">Columnas</Label>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Settings2 className="h-4 w-4" />
-                Columnas
+        {/* Columnas */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Settings2 className="h-4 w-4" />
+              Columnas
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuLabel>Mostrar columnas</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+
+            {columnasOcultables.map((column) => (
+              <DropdownMenuCheckboxItem
+                key={column.id}
+                checked={column.getIsVisible()}
+                onCheckedChange={(value) => column.toggleVisibility(value)}
+              >
+                {typeof column.columnDef.header === 'string'
+                  ? column.columnDef.header
+                  : column.id}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Descargar */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleDescargar}
+                disabled={descargando}
+                className="border-primary/30 text-primary hover:bg-primary/5 hover:text-primary"
+              >
+                {descargando ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuLabel>Mostrar columnas</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {columnasOcultables.map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.id}
-                  checked={column.getIsVisible()}
-                  onCheckedChange={(value) => column.toggleVisibility(value)}
-                >
-                  {typeof column.columnDef.header === 'string'
-                    ? column.columnDef.header
-                    : column.id}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleDescargar}
-                  disabled={descargando}
-                  className="border-primary/30 text-primary hover:bg-primary/5 hover:text-primary"
-                >
-                  {descargando
-                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                    : <Download className="h-4 w-4" />
-                  }
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Descargar Excel</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+            </TooltipTrigger>
+
+            <TooltipContent>Descargar Excel</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       <div className="rounded-md border border-border overflow-x-auto">
@@ -284,6 +308,14 @@ export function TallerParticipantesPanel({ bloque, taller, onVolver }) {
           </Button>
         </div>
       </div>
+      <ParticipanteDrawer
+        participante={participanteSeleccionado}
+        camposForm={evento?.camposForm ?? []}
+        evento={evento}
+        open={drawerAbierto}
+        cargando={cargando}
+        onClose={cerrarDrawer}
+      />
     </div>
   )
 }

@@ -54,12 +54,17 @@ export function DateTimePicker({ value, onChange, placeholder = 'Elegí fecha y 
             type="button"
             variant="outline"
             className={cn(
-              'flex-1 justify-start text-left font-normal',
+              'min-w-0 flex-1 justify-start text-left font-normal',
               !fechaActual && 'text-muted-foreground'
             )}
           >
-            <CalendarIcon className="h-4 w-4" />
-            {fechaActual ? format(fechaActual, "d 'de' MMMM, yyyy", { locale: es }) : placeholder}
+            <CalendarIcon className="h-4 w-4 shrink-0" />
+
+            <span className="min-w-0 truncate">
+              {fechaActual
+                ? format(fechaActual, "d 'de' MMMM, yyyy", { locale: es })
+                : placeholder}
+            </span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -75,10 +80,41 @@ export function DateTimePicker({ value, onChange, placeholder = 'Elegí fecha y 
       </Popover>
       {!soloFecha && (
         <Input
-          type="time"
+          type="text"
+          inputMode="numeric"
+          placeholder="HH:mm"
           value={horaInput}
-          onChange={handleCambiarHora}
-          className="w-28"
+          onChange={(e) => {
+            let valor = e.target.value.replace(/\D/g, '').slice(0, 4)
+
+            if (valor.length >= 1 && Number(valor[0]) > 2) {
+              valor = ''
+            }
+
+            if (valor.length >= 2 && Number(valor.slice(0, 2)) > 23) {
+              valor = valor.slice(0, 1)
+            }
+
+            if (valor.length >= 3 && Number(valor[2]) > 5) {
+              valor = valor.slice(0, 2)
+            }
+
+            if (valor.length >= 4 && Number(valor.slice(2, 4)) > 59) {
+              valor = valor.slice(0, 3)
+            }
+
+            if (valor.length >= 3) {
+              valor = `${valor.slice(0, 2)}:${valor.slice(2)}`
+            }
+
+            setHoraInput(valor)
+
+            if (valor.length === 5 && fechaActual) {
+              const combinado = combinarFechaYHora(fechaActual, valor)
+              onChange(combinado.toISOString())
+            }
+          }}
+          className="w-20 shrink-0 sm:w-28"
         />
       )}
     </div>

@@ -26,14 +26,15 @@ import { DateTimePicker } from '@/components/DateTimePicker'
 import { CodigoInput } from '@/components/eventos/CodigoInput'
 import { Separator } from '@/components/ui/separator'
 import { HelpTooltip } from '@/components/ui/help-tooltip'
+import { TemplateAutorizacionUploader } from '@/components/eventos/TemplateAutorizacionUploader'
 
 const OPCIONES_POLITICA_MENOR = [
   { value: 'no_aplica', label: 'No aplica' },
-  { value: 'opcional', label: 'Opcional' },
+  // { value: 'opcional', label: 'Opcional' },
   { value: 'obligatorio', label: 'Obligatorio' },
 ]
 
-export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarImagen, codigoOriginal }) {
+export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarImagen, codigoOriginal, eventoId, archivoTemplateRef }) {
   const form = useFormContext()
   const [abierto, setAbierto] = useState(true)
   const politicaMenor = form.watch('politicaMenor')
@@ -201,7 +202,7 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                     )}
                     {field.value === 'obligatorio' && (
                       <p className="text-xs text-muted-foreground">
-                        Los menores deben pertenecer al grupo de un adulto responsable para poder inscribirse. En caso de emergencia, se puede ubicar al referente de un menor escaneando su QR.
+                        Los menores deben pertenecer al grupo de un adulto responsable para poder inscribirse.
                       </p>
                     )}
                     <FormMessage />
@@ -285,6 +286,107 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                   </FormItem>
                 )}
               />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="configFichaMedica"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-1.5">
+                      <FormLabel>Ficha médica</FormLabel>
+                      <HelpTooltip>
+                        Define si los participantes deben completar una ficha médica al inscribirse.
+                      </HelpTooltip>
+                    </div>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="no">No requerida</SelectItem>
+                        <SelectItem value="obligatorio_todos">Requerida</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="configCertificado"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-1.5">
+                      <FormLabel>Certificado de antecedentes</FormLabel>
+                      <HelpTooltip>
+                        Define si los participantes deben presentar certificado de antecedentes.
+                      </HelpTooltip>
+                    </div>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="no">No requerido</SelectItem>
+                        <SelectItem value="obligatorio_mayores">Obligatorio — mayores de edad</SelectItem>
+                        <SelectItem value="obligatorio_referentes">Obligatorio — referentes de grupo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Autorización + template en el mismo bloque */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="requiereAutorizacionMenores"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <FormLabel>Autorización de menores</FormLabel>
+                        <HelpTooltip>
+                          Los menores deberán presentar una autorización firmada por su tutor.
+                        </HelpTooltip>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {field.value ? 'Se solicitará una autorización firmada.' : 'No se solicitará.'}
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-medium text-foreground">Template de autorización</p>
+                  <HelpTooltip>
+                    PDF opcional que los tutores descargan, firman y vuelven a subir.
+                  </HelpTooltip>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Si no subís ninguno, el participante sube el suyo.
+                </p>
+                <TemplateAutorizacionUploader
+                  eventoId={eventoId}
+                  urlActual={form.watch('autorizacionTemplateUrl')}
+                  onSubido={(url) => form.setValue('autorizacionTemplateUrl', url)}
+                  disabled={!form.watch('requiereAutorizacionMenores')}
+                  archivoTemplateRef={archivoTemplateRef}
+                />
+              </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">

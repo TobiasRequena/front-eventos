@@ -93,7 +93,7 @@ function EventoHeader({ evento, grupo }) {
   )
 }
 
-function TablaParticipantes({ participantes, loading, acciones }) {
+function TablaParticipantes({ participantes, loading, acciones, tieneCosto }) {
   const columns = useMemo(() => {
     const cols = [
       {
@@ -121,7 +121,24 @@ function TablaParticipantes({ participantes, loading, acciones }) {
         accessorKey: 'edad',
         cell: ({ getValue }) => getValue() != null ? `${getValue()} años` : '—',
       },
-      {
+      // {
+      //   id: 'estado_pago',
+      //   header: 'Pago',
+      //   accessorKey: 'estado_pago',
+      //   cell: ({ getValue }) => {
+      //     const config = {
+      //       no_aplica: { label: 'Sin costo', variant: 'secondary' },
+      //       pendiente: { label: 'Pendiente', variant: 'outline' },
+      //       aprobado: { label: 'Aprobado', variant: 'default' },
+      //       rechazado: { label: 'Rechazado', variant: 'destructive' },
+      //     }[getValue()] ?? { label: getValue(), variant: 'secondary' }
+      //     return <Badge variant={config.variant}>{config.label}</Badge>
+      //   },
+      // },
+    ]
+
+    if (tieneCosto) {
+      cols.push({
         id: 'estado_pago',
         header: 'Pago',
         accessorKey: 'estado_pago',
@@ -129,17 +146,19 @@ function TablaParticipantes({ participantes, loading, acciones }) {
           const config = {
             no_aplica: { label: 'Sin costo', variant: 'secondary' },
             pendiente: { label: 'Pendiente', variant: 'outline' },
+            pendiente_aprobacion: { label: 'Comprobante enviado', variant: 'outline' },
             aprobado: { label: 'Aprobado', variant: 'default' },
             rechazado: { label: 'Rechazado', variant: 'destructive' },
           }[getValue()] ?? { label: getValue(), variant: 'secondary' }
           return <Badge variant={config.variant}>{config.label}</Badge>
         },
-      },
-    ]
+      })
+    }
+
     if (acciones) {
       cols.push({
         id: 'acciones',
-        header: '',
+        header: 'Acciones',
         cell: ({ row }) => acciones(row.original),
       })
     }
@@ -321,6 +340,7 @@ export function PanelGrupoPanel({ sesion, onLogout }) {
                 <TablaParticipantes
                   participantes={integrantes}
                   loading={loadingIntegrantes}
+                  tieneCosto={parseFloat(evento?.costo ?? 0) > 0}
                 />
               </CardContent>
             </Card>
@@ -332,6 +352,7 @@ export function PanelGrupoPanel({ sesion, onLogout }) {
                 <TablaParticipantes
                   participantes={solicitudes}
                   loading={loadingSolicitudes}
+                  tieneCosto={parseFloat(evento?.costo ?? 0) > 0}
                   acciones={(solicitud) => (
                     <div className="flex gap-2">
                       <Button

@@ -56,7 +56,6 @@ function AsignarDialog({ pendiente, grupos, evento, esquema, open, onClose, onAs
   const [asignando, setAsignando] = useState(false)
 
   async function handleConfirmar() {
-    console.log("pendiente", pendiente)
     if (!grupoId) return
     setAsignando(true)
     try {
@@ -547,7 +546,6 @@ export function GruposResultado({ evento, esquema, onVolver, onRegenerar, cache,
   }, [grupos, pendientes, isLoading, esquema.id, setCache])
 
   async function handleVerDetalle(integrante) {
-    console.log("integrante", integrante)
     setDrawerAbierto(true)
     setParticipanteSeleccionado(null)
     setCargandoDetalle(true)

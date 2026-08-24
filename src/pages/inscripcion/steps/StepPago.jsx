@@ -5,9 +5,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
+import { toast } from 'sonner'
 
 export default function StepPago({ evento, wizard }) {
-  const { datosWizard, avanzar, retroceder } = wizard
+  const { datosWizard, avanzar, retroceder, esUltimoPasoVisible } = wizard
 
   const [comprobante, setComprobante] = useState(datosWizard.comprobantePago ?? null)
   const [pagoPostergado, setPagoPostergado] = useState(datosWizard.pagoPostergado ?? false)
@@ -35,6 +36,10 @@ export default function StepPago({ evento, wizard }) {
   }
 
   function handleAvanzar() {
+    if (!comprobante && !pagoPostergado) {
+      toast.error('Subí el comprobante de pago o elegí pagar después.')
+      return
+    }
     avanzar({
       comprobantePago: comprobante,
       pagoPostergado,
@@ -120,8 +125,24 @@ export default function StepPago({ evento, wizard }) {
           )}
 
           {pagoPostergado && (
-            <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-3">
-              <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/50 p-3">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
+
+                <p className="text-sm text-muted-foreground">
+                  Podés subir tu comprobante después desde{' '}
+                  <a
+                    href={`/comprobantepago/${evento.codigo}`}
+                    className="text-primary underline underline-offset-4 cursor-pointer hover:opacity-70"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    este link
+                  </a>
+                  .
+                </p>
+              </div>
+
               <p className="text-sm text-muted-foreground">
                 Vas a abonar después. Recordá que tu inscripción puede quedar pendiente hasta confirmar el pago.
               </p>
@@ -156,13 +177,12 @@ export default function StepPago({ evento, wizard }) {
           <Button
             type="button"
             onClick={handleAvanzar}
-            disabled={!puedeAvanzar}
             className="flex-1"
           >
-            Continuar
+            {esUltimoPasoVisible ? 'Enviar inscripción' : 'Continuar'}
           </Button>
         </div>
       </div>
-    </InscripcionStepLayout>
+    </InscripcionStepLayout >
   )
 }

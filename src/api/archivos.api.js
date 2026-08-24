@@ -41,3 +41,26 @@ export async function subirComprobantePago(archivo, participanteId, orgId) {
 
   return data.archivo
 }
+
+export async function subirTemplateAutorizacion(eventoId, archivo) {
+  const formData = new FormData()
+  formData.append('archivo', archivo)
+  formData.append('eventoId', eventoId)
+  const { data } = await httpClient.post(
+    '/archivos/autorizacion-template',
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  )
+  return data
+}
+
+export async function subirComprobantePublico(archivo, participanteId, eventoId) {
+  const formData = new FormData()
+  formData.append('archivo', archivo)
+  formData.append('participanteId', participanteId)
+  formData.append('eventoId', eventoId)
+  const { data } = await httpClient.post('/archivos/comprobante', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return data
+}

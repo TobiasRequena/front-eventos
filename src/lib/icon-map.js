@@ -6,7 +6,8 @@ import {
   House,
   CalendarCheck,
   CalendarX,
-  HelpCircle
+  HelpCircle,
+  Receipt
 } from 'lucide-react'
 
 export const iconMap = {
@@ -16,7 +17,8 @@ export const iconMap = {
   House,
   CalendarCheck,
   CalendarX,
-  HelpCircle
+  HelpCircle,
+  Receipt
 }
 
 export {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -7,7 +7,7 @@ import { useBreadcrumb } from '@/hooks/useBreadcrumb'
 import { useAuth } from '@/contexts/AuthContext'
 import { eventoSchema } from '@/lib/validators/evento.schemas'
 import { crearEvento } from '@/api/eventos.api'
-import { subirPortadaEvento } from '@/api/archivos.api'
+import { subirPortadaEvento, subirTemplateAutorizacion } from '@/api/archivos.api'
 import { getApiErrorMessage } from '@/api/httpClient'
 import { Button } from '@/components/ui/button'
 import { SeccionDatosEvento } from '@/components/eventos/SeccionDatosEvento'
@@ -29,7 +29,10 @@ const VALORES_INICIALES = {
   aliasCobro: '',
   costo: 0,
   camposForm: [],
-  bloquesTaller: [],
+  seccionTalleres: [],
+  configFichaMedica: 'no',
+  configCertificado: 'no',
+  requiereAutorizacionMenores: false,
 }
 
 function armarPayload(values) {
@@ -45,19 +48,32 @@ function armarPayload(values) {
     // por ahora hasta que el back lo soporte
   }))
 
-  const bloquesTaller = values.bloquesTaller.map((bloque, bloqueIndex) => ({
-    nombre: bloque.nombre,
-    cantidadElegible: bloque.cantidadElegible,
-    esObligatorio: bloque.esObligatorio,
-    orden: bloqueIndex,
-    talleres: bloque.talleres.map((taller) => ({
+  const bloquesTaller = values.seccionTalleres
+    .filter((item) => item.tipo === 'bloque')
+    .map((bloque, index) => ({
+      nombre: bloque.nombre,
+      cantidadElegible: bloque.cantidadElegible,
+      esObligatorio: bloque.esObligatorio,
+      orden: index,
+      inicio: bloque.inicio || undefined,
+      fin: bloque.fin || undefined,
+      talleres: bloque.talleres.map((taller) => ({
+        nombre: taller.nombre,
+        descripcion: taller.descripcion || undefined,
+        capacidad: taller.capacidad || undefined,
+      })),
+    }))
+
+  const talleresSueltos = values.seccionTalleres
+    .filter((item) => item.tipo === 'taller_suelto')
+    .map((taller) => ({
       nombre: taller.nombre,
       descripcion: taller.descripcion || undefined,
       inicio: taller.inicio,
       fin: taller.fin,
       capacidad: taller.capacidad || undefined,
-    })),
-  }))
+      esObligatorio: taller.esObligatorio,
+    }))
 
   return {
     nombre: values.nombre,
@@ -72,13 +88,18 @@ function armarPayload(values) {
     cbuCvu: values.cbuCvu || undefined,
     aliasCobro: values.aliasCobro || undefined,
     costo: values.costo,
+    configFichaMedica: values.configFichaMedica,
+    configCertificado: values.configCertificado,
+    requiereAutorizacionMenores: values.requiereAutorizacionMenores,
     camposForm,
-    bloquesTaller: values.tieneTalleres ? bloquesTaller : [],
+    bloquesTaller,
+    talleresSueltos,
   }
 }
 
 export default function CrearEventoPage() {
   const navigate = useNavigate()
+  const archivoTemplateRef = useRef(null)
   const { orgActiva } = useAuth()
   useBreadcrumb([{ label: 'Eventos', to: '/eventos' }, { label: 'Nuevo evento' }])
 
@@ -119,6 +140,14 @@ export default function CrearEventoPage() {
           // Error no bloqueante: el evento ya se creó, la imagen es opcional.
           // Avisamos pero seguimos con el flujo normal.
           toast.warning('El evento se creó, pero no pudimos subir la imagen de portada.')
+        }
+      }
+
+      if (archivoTemplateRef.current && eventoId) {
+        try {
+          await subirTemplateAutorizacion(eventoId, archivoTemplateRef.current)
+        } catch {
+          toast.error('El evento se creó pero no pudimos subir el template. Podés subirlo desde el editor.')
         }
       }
 
@@ -167,7 +196,15 @@ export default function CrearEventoPage() {
             <Button
               type="button"
               disabled={isSubmitting}
-              onClick={form.handleSubmit(onSubmit)}
+              onClick={form.handleSubmit(onSubmit, (errors) => {
+                const campos = Object.keys(errors)
+                if (campos.length === 1) {
+                  const primerError = Object.values(errors)[0]
+                  toast.error(primerError?.message ?? 'Hay un error en el formulario.')
+                } else {
+                  toast.error(`Hay ${campos.length} campos con errores. Revisá el formulario antes de continuar.`)
+                }
+              })}
             >
               {isSubmitting ? 'Creando...' : 'Crear evento'}
             </Button>
@@ -180,9 +217,42 @@ export default function CrearEventoPage() {
               imagenPreview={imagenPreview}
               onCambiarImagen={handleCambiarImagen}
               onQuitarImagen={handleQuitarImagen}
+              archivoTemplateRef={archivoTemplateRef}
             />
+
             <SeccionFormularioInscripcion />
             <SeccionTalleres />
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSubmitting}
+                onClick={() => navigate('/eventos')}
+              >
+                Cancelar
+              </Button>
+
+              <Button
+                type="button"
+                disabled={isSubmitting}
+                onClick={form.handleSubmit(onSubmit, (errors) => {
+                  const campos = Object.keys(errors)
+                  if (campos.length === 1) {
+                    const primerError = Object.values(errors)[0]
+                    toast.error(
+                      primerError?.message ?? 'Hay un error en el formulario.'
+                    )
+                  } else {
+                    toast.error(
+                      `Hay ${campos.length} campos con errores. Revisá el formulario antes de continuar.`
+                    )
+                  }
+                })}
+              >
+                {isSubmitting ? 'Creando...' : 'Crear evento'}
+              </Button>
+            </div>
           </div>
 
           <div className="lg:col-span-1">

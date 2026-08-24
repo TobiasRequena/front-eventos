@@ -10,7 +10,8 @@ import {
 
 const ESTADO_PAGO_CONFIG = {
   no_aplica: { label: 'Sin costo', variant: 'secondary' },
-  pendiente: { label: 'Pendiente', variant: 'outline' },
+  pendiente: { label: 'Pendiente de pago', variant: 'outline' },
+  pendiente_aprobacion: { label: 'Comprobante cargado', variant: 'outline' },
   aprobado: { label: 'Aprobado', variant: 'default' },
   rechazado: { label: 'Rechazado', variant: 'destructive' },
 }

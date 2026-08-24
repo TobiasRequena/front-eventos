@@ -23,11 +23,7 @@ export const grupoNuevoSchema = z.object({
   nombre: z.string().min(1, 'Ingresá el nombre del grupo.').max(100),
   parroquia: z.string().max(150).optional().or(z.literal('')),
   localidad: z.string().max(150).optional().or(z.literal('')),
-  maxIntegrantes: z
-    .number({ invalid_type_error: 'Ingresá un número.' })
-    .int()
-    .positive('Debe ser al menos 1.')
-    .default(10),
+  maxIntegrantes: z.number().int().positive().optional().nullable(),
 })
 
 export const pagoSchema = z.object({

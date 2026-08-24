@@ -131,7 +131,7 @@ export default function RecuperarContrasenaPage() {
           : `Revisá tu correo ${email} e ingresá el código que te enviamos.`
       }
     >
-      <Card>
+      <Card className="overflow-visible">
         <CardContent className="pt-6">
           {paso === 'email' ? (
             <Form {...formEmail}>

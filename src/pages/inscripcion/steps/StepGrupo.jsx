@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import { grupoNuevoSchema } from '@/lib/validators/inscripcion.schemas'
 import { getGrupoPorCodigoInvitacion } from '@/api/inscripcion.api'
 import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
+import { Checkbox } from "@/components/ui/checkbox"
 
 const OPCIONES_ROL = [
   {
@@ -146,6 +147,11 @@ function FormUnirseGrupo({ grupoPreseleccionado, onGrupoResuelto }) {
             {grupoEncontrado.localidad && (
               <p className="text-xs text-muted-foreground">{grupoEncontrado.localidad}</p>
             )}
+            {grupoEncontrado.max_integrantes != null && (
+              <p className="text-xs text-muted-foreground">
+                {grupoEncontrado.integrantes_count ?? '?'} / {grupoEncontrado.max_integrantes} integrantes
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -219,22 +225,32 @@ function FormCrearGrupo({ onDatosChange }) {
           name="maxIntegrantes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Máximo de integrantes</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  min="1"
-                  placeholder="10"
-                  defaultValue={10}
-                  {...form.register('maxIntegrantes', {
-                    valueAsNumber: true,
-                    setValueAs: (v) => {
-                      const num = parseInt(v, 10)
-                      return isNaN(num) || num < 1 ? 10 : num
-                    },
-                  })}
-                />
-              </FormControl>
+              <FormLabel>Cantidad de integrantes</FormLabel>
+              <div className="flex items-center gap-3">
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="1"
+                    placeholder="Ej. 15"
+                    disabled={field.value === null}
+                    value={field.value === null ? '' : (field.value ?? '')}
+                    onChange={(e) => field.onChange(e.target.value === '' ? null : parseInt(e.target.value))}
+                    className="flex-1"
+                  />
+                </FormControl>
+                <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer shrink-0">
+                  <Checkbox
+                    checked={field.value === null}
+                    onCheckedChange={(checked) => field.onChange(checked ? null : '')}
+                  />
+                  No lo sé
+                </label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {field.value === null
+                  ? 'El grupo no tendrá límite de integrantes.'
+                  : 'Cantidad máxima de personas que pueden unirse a tu grupo.'}
+              </p>
               <FormMessage />
             </FormItem>
           )}
@@ -245,7 +261,7 @@ function FormCrearGrupo({ onDatosChange }) {
 }
 
 export default function StepGrupo({ evento, wizard, codigoGrupoInicial }) {
-  const { datosWizard, avanzar, retroceder } = wizard
+  const { datosWizard, avanzar, retroceder, esUltimoPasoVisible } = wizard
   const { esMayor, rolGrupo: rolInicial } = datosWizard
 
   const soloDebeUnirse =
@@ -266,6 +282,7 @@ export default function StepGrupo({ evento, wizard, codigoGrupoInicial }) {
 
   const opcionesDisponibles = OPCIONES_ROL.filter((op) => {
     if (soloDebeUnirse) return op.id === 'unirse'
+    if (!esMayor && op.id === 'crear') return false
     if (puedeElegir && op.soloMayores) return false
     return true
   })
@@ -277,6 +294,14 @@ export default function StepGrupo({ evento, wizard, codigoGrupoInicial }) {
   }
 
   function handleAvanzar() {
+    if (rolElegido === 'unirse' && !grupoResuelto) {
+      toast.error('Buscá y seleccioná un grupo antes de continuar.')
+      return
+    }
+    if (rolElegido === 'crear' && !datosGrupoNuevo) {
+      toast.error('Completá los datos del grupo antes de continuar.')
+      return
+    }
     if (rolElegido === 'unirse') {
       avanzar({
         rolGrupo: 'autoinscripto',
@@ -349,10 +374,9 @@ export default function StepGrupo({ evento, wizard, codigoGrupoInicial }) {
           <Button
             type="button"
             onClick={handleAvanzar}
-            disabled={!puedeAvanzar()}
             className="flex-1"
           >
-            Continuar
+            {esUltimoPasoVisible ? 'Enviar inscripción' : 'Continuar'}
           </Button>
         </div>
       </div>

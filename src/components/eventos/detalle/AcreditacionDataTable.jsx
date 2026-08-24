@@ -5,7 +5,7 @@ import {
   getPaginationRowModel,
   flexRender,
 } from '@tanstack/react-table'
-import { Search, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight, Settings2, RefreshCw, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -32,6 +32,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 const OPCIONES_ESTADO_PAGO = [
   { value: 'todos', label: 'Todos' },
@@ -57,6 +58,8 @@ export function AcreditacionDataTable({
   mostrarFiltrosCompletos = false,
   initialColumnVisibility = {},
   onVerDetalle,
+  onRefresh,
+  refreshing = false,
 }) {
   const tieneCosto = parseFloat(evento?.costo ?? 0) > 0
   const tieneGrupos = evento?.tiene_grupos ?? false
@@ -206,6 +209,26 @@ export function AcreditacionDataTable({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+        )}
+        {onRefresh && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={onRefresh}
+                  disabled={refreshing}
+                >
+                  {refreshing
+                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : <RefreshCw className="h-4 w-4" />
+                  }
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Refrescar</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
       </div>
 

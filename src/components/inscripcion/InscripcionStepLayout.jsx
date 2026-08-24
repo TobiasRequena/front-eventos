@@ -35,7 +35,8 @@ export function InscripcionStepLayout({ evento, titulo, children }) {
                 month: 'long',
                 hour: '2-digit',
                 minute: '2-digit',
-              }).format(new Date(evento.fecha_inicio))}
+                hour12: false,
+              }).format(new Date(evento.fecha_inicio))} hs
             </div>
           )}
           {evento?.descripcion && (

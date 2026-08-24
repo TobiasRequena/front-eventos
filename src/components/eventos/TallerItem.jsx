@@ -79,7 +79,7 @@ export function TallerItem({ index, onEliminar }) {
       </div>
 
       {form.formState.errors.talleres?.[index] && (
-        <p className="text-xs text-destructive">
+        <p className="text-sm font-medium text-destructive">
           {form.formState.errors.talleres[index]?.inicio?.message ||
             form.formState.errors.talleres[index]?.fin?.message ||
             form.formState.errors.talleres[index]?.nombre?.message ||

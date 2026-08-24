@@ -17,7 +17,17 @@ export async function pagarTramoAdelantado(eventoId, participantesObjetivo) {
   return data
 }
 
-export async function getHistorialPagos(eventoId) {
+export async function getHistorialEvento(eventoId) {
   const { data } = await httpClient.get(`/pagos/eventos/${eventoId}/historial`)
   return data
+}
+
+export async function getEventosActivos() {
+  const { data } = await httpClient.get('/pagos/eventos-activos')
+  return data.eventos
+}
+
+export async function getHistorialOrganizacion() {
+  const { data } = await httpClient.get('/pagos/historial')
+  return data.eventos
 }

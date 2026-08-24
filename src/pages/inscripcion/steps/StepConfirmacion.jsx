@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { inscribirParticipante, crearGrupo } from '@/api/inscripcion.api'
 import { subirComprobantePago } from '@/api/archivos.api'
+import { subirAutorizacion, subirCertificado } from '@/api/participantes.api'
 import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
 
 function armarRespuestasForm(talleresSeleccionados) {
@@ -43,6 +44,12 @@ function armarPayload(evento, datosWizard) {
     }
   })
 
+  const tallerIdsSueltos = Object.entries(datosWizard.talleresSeleccionados ?? {})
+    .filter(([key, val]) => key.startsWith('suelto_') && val === true)
+    .map(([key]) => key.replace('suelto_', ''))
+
+  tallerIds.push(...tallerIdsSueltos)
+
   const tieneCosto = parseFloat(evento.costo ?? 0) > 0
   const subiendoComprobante = tieneCosto && datosWizard.comprobantePago && !datosWizard.pagoPostergado
 
@@ -58,18 +65,19 @@ function armarPayload(evento, datosWizard) {
     responsableId: null,
     respuestasForm: datosWizard.respuestasForm ?? {},
     ...(tallerIds.length > 0 ? { tallerIds } : {}),
-    ...(tieneCosto ? { estadoPago: subiendoComprobante ? 'aprobado' : 'pendiente' } : {}),
+    ...(tieneCosto ? { estadoPago: 'pendiente' } : {}),
+    ...(datosWizard.fichaMedica ? { fichaMedica: datosWizard.fichaMedica } : {}),
   }
 }
 
-function QrDisplay({ qrPersonal }) {
-  const [copiado, setCopiado] = useState(false)
+function QrDisplay({ qrPersonal, datosWizard }) {
+  // const [copiado, setCopiado] = useState(false)
 
-  function copiar() {
-    navigator.clipboard.writeText(qrPersonal)
-    setCopiado(true)
-    setTimeout(() => setCopiado(false), 2000)
-  }
+  // function copiar() {
+  //   navigator.clipboard.writeText(qrPersonal)
+  //   setCopiado(true)
+  //   setTimeout(() => setCopiado(false), 2000)
+  // }
 
   return (
     <div className="flex flex-col items-center gap-3">
@@ -77,9 +85,9 @@ function QrDisplay({ qrPersonal }) {
         <QrCode className="h-16 w-16 text-muted-foreground/50" />
       </div>
       <p className="text-xs text-muted-foreground">
-        Tu QR personal llegará por email a <strong>{ }</strong>
+        Tu QR personal llegará a <strong>{datosWizard.email}</strong>
       </p>
-      <button
+      {/* <button
         type="button"
         onClick={copiar}
         className="flex items-center gap-1.5 text-xs text-muted-foreground underline-offset-4 hover:underline"
@@ -88,7 +96,7 @@ function QrDisplay({ qrPersonal }) {
           ? <><Check className="h-3.5 w-3.5 text-success" /> Copiado</>
           : <><Copy className="h-3.5 w-3.5" /> Copiar código QR</>
         }
-      </button>
+      </button> */}
     </div>
   )
 }
@@ -120,7 +128,7 @@ function ResumenInscripcion({ datosWizard, evento, grupoCreado }) {
             <span className="text-muted-foreground">Grupo creado</span>
             <span className="font-medium text-foreground">{grupoCreado.nombre}</span>
           </div>
-          <div className="rounded-md bg-muted/50 p-3 space-y-1">
+          <div className="rounded-md bg-muted/50 p-3 space-y-2">
             <p className="text-xs text-muted-foreground">
               Código de invitación para tu grupo:
             </p>
@@ -130,22 +138,33 @@ function ResumenInscripcion({ datosWizard, evento, grupoCreado }) {
             <p className="text-xs text-muted-foreground">
               Compartí este código con los integrantes de tu grupo para que puedan unirse.
             </p>
+            <a
+              href={`/panel-grupo/${grupoCreado.codigo_inv}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs text-primary underline underline-offset-4 cursor-pointer hover:opacity-70"
+            >
+              Ir a mi panel de grupo
+            </a>
           </div>
         </>
-      )}
-      {datosWizard.pagoPostergado && (
-        <div className="rounded-md bg-muted/50 p-3">
-          <p className="text-xs text-muted-foreground">
-            Tu pago quedó pendiente. Recordá abonar antes del evento, o al llegar al mismo.
-          </p>
-        </div>
-      )}
-    </div>
+      )
+      }
+      {
+        datosWizard.pagoPostergado && (
+          <div className="rounded-md bg-muted/50 p-3">
+            <p className="text-xs text-muted-foreground">
+              Tu pago quedó pendiente. Recordá abonar antes del evento, o al llegar al mismo.
+            </p>
+          </div>
+        )
+      }
+    </div >
   )
 }
 
 export default function StepConfirmacion({ evento, wizard }) {
-  const { datosWizard, actualizarDatos } = wizard
+  const { datosWizard, actualizarDatos, esUltimoPasoVisible, limpiarStorage } = wizard
   const [status, setStatus] = useState('idle')
   const [errorMensaje, setErrorMensaje] = useState(null)
   const [participante, setParticipante] = useState(datosWizard.participanteCreado ?? null)
@@ -186,16 +205,39 @@ export default function StepConfirmacion({ evento, wizard }) {
         }
       }
 
+      // Subir autorización si existe
+      if (datosWizard.autorizacionArchivo) {
+        try {
+          await subirAutorizacion(participanteCreado.id, datosWizard.autorizacionArchivo)
+        } catch {
+          toast.warning('Tu inscripción se completó, pero no pudimos subir la autorización.')
+        }
+      }
+
+      // Subir certificado si existe
+      if (datosWizard.certificadoArchivo) {
+        try {
+          await subirCertificado(participanteCreado.id, datosWizard.certificadoArchivo)
+        } catch {
+          toast.warning('Tu inscripción se completó, pero no pudimos subir el certificado.')
+        }
+      }
+
       actualizarDatos({ participanteCreado, grupoCreado: grupoCreadoLocal })
+      limpiarStorage()
       setStatus('success')
     } catch (error) {
       yaEjecutado.current = false
+
       const status = error?.response?.status
-      const mensaje = status === 409
-        ? error?.response?.data?.error?.message ?? 'El evento está completo.'
-        : error?.response?.data?.error?.message ?? 'No pudimos completar tu inscripción.'
+      const mensaje =
+        error?.response?.data?.error?.message ??
+        (status === 409
+          ? 'El evento está completo.'
+          : 'No pudimos completar tu inscripción.')
+
       setErrorMensaje(mensaje)
-      toast.error(status === 409 ? 'Cupo lleno' : 'Algo salió mal con tu inscripción.')
+      toast.error(mensaje)
       setStatus('error')
     }
   }
@@ -246,21 +288,28 @@ export default function StepConfirmacion({ evento, wizard }) {
           <div className="flex gap-2">
             <Button
               type="button"
-              // variant="outline"
+              variant="outline"
               className="flex-1"
-              onClick={procesar}
+              onClick={() => wizard.retroceder()}
             >
-              Reenviar
+              Volver a revisar
             </Button>
             <Button
               type="button"
-              variant="secondary"
               className="flex-1"
-              onClick={() => window.location.reload()}
+              onClick={procesar}
             >
-              Reiniciar
+              Reintentar
             </Button>
           </div>
+          <button
+            type="button"
+            variant="secondary"
+            className="w-full text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
+            onClick={() => window.location.reload()}
+          >
+            Reiniciar desde el principio
+          </button>
         </div>
       </InscripcionStepLayout>
     )
@@ -277,11 +326,27 @@ export default function StepConfirmacion({ evento, wizard }) {
             ¡Inscripción completada!
           </h2>
           <p className="text-sm text-muted-foreground">
-            Te enviamos un email a <strong>{datosWizard.email}</strong> con tu QR personal.
+            {parseFloat(evento.costo ?? 0) > 0
+              ? datosWizard.comprobantePago && !datosWizard.pagoPostergado
+                ? 'Comprobante enviado. El organizador lo revisará y recibirás tu credencial por mail.'
+                : <>
+                  Realizá la transferencia y subí el comprobante en{' '}
+                  <a
+                    href={`/comprobantepago/${evento.codigo}`}
+                    className="text-primary underline underline-offset-4 cursor-pointer hover:opacity-70"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    este link
+                  </a>
+                  . Tu QR llegará por mail una vez aprobado el pago.
+                </>
+              : <>Tu QR personal llegará por email a <strong>{datosWizard.email}</strong>.</>
+            }
           </p>
         </div>
 
-        <QrDisplay qrPersonal={participante?.qr_personal} />
+        <QrDisplay qrPersonal={participante?.qr_personal} datosWizard={datosWizard} />
 
         <Separator />
 
@@ -301,7 +366,7 @@ export default function StepConfirmacion({ evento, wizard }) {
       <button
         type="button"
         onClick={() => window.location.reload()}
-        className="w-full text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
+        className="w-full text-center text-sm text-primary underline underline-offset-4 cursor-pointer hover:opacity-70"
       >
         Realizar otra inscripción
       </button>

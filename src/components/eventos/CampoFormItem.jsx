@@ -49,25 +49,31 @@ function OpcionesEditor({ opciones, onChange }) {
         )}
       </div>
       <div className="flex gap-2">
-        <Input
-          value={nuevaOpcion}
-          onChange={(e) => setNuevaOpcion(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              agregarOpcion()
-            }
-          }}
-          placeholder="Ej. S, M, L"
-          className="h-8 text-sm"
-        />
+        <div className="flex-1">
+          <Input
+            value={nuevaOpcion}
+            onChange={(e) => setNuevaOpcion(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                agregarOpcion()
+              }
+            }}
+            placeholder="Ej. S, M, L"
+            className="h-8 text-sm"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            No olvides hacer click en "Agregar" para guardar la opción.
+          </p>
+        </div>
+
         <button
           type="button"
           onClick={agregarOpcion}
           className="flex h-8 shrink-0 items-center gap-1 rounded-md border border-input px-2.5 text-xs hover:bg-accent"
         >
+          Agregar
           <Plus className="h-3.5 w-3.5" />
-          Opción
         </button>
       </div>
     </div>
@@ -76,7 +82,7 @@ function OpcionesEditor({ opciones, onChange }) {
 
 export function CampoFormItem({ id, index, onEliminar }) {
   const form = useFormContext()
-  const [expandido, setExpandido] = useState(false)
+  const [expandido, setExpandido] = useState(true)
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
@@ -155,7 +161,7 @@ export function CampoFormItem({ id, index, onEliminar }) {
                 name={`camposForm.${index}.tipo`}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="h-9 text-sm">
+                    <SelectTrigger className="h-9 text-sm w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

@@ -9,7 +9,7 @@ import { getEstadoEvento } from '@/lib/eventos.helpers'
 import { TabResumen } from '@/components/eventos/detalle/TabResumen'
 import { TabParticipantes } from '@/components/eventos/detalle/TabParticipantes'
 import { TabAcreditacion } from '@/components/eventos/detalle/TabAcreditacion'
-import { TabPagos } from '@/components/eventos/detalle/TabPagos'
+// import { TabPagos } from '@/components/eventos/detalle/TabPagos'
 import { EditarEventoPanel } from '@/components/eventos/detalle/EditarEventoPanel'
 import { toast } from 'sonner'
 import { eliminarEvento } from '@/api/eventos.api'
@@ -33,12 +33,13 @@ import {
 } from '@/components/ui/tooltip'
 import { patchEvento } from '@/api/eventos.api'
 import { cn } from '@/lib/utils'
+import { useEffect, useRef } from 'react'
 
 const TABS = [
   { value: 'resumen', label: 'Resumen' },
   { value: 'participantes', label: 'Participantes' },
   { value: 'acreditacion', label: 'Acreditación' },
-  { value: 'pagos', label: 'Pagos' },
+  // { value: 'pagos', label: 'Pagos' },
 ]
 
 function HeaderEvento({ evento, onEditar, onEliminar, onToggleInscripciones, toggleandoInscripciones }) {
@@ -83,11 +84,6 @@ function HeaderEvento({ evento, onEditar, onEliminar, onToggleInscripciones, tog
                 year: 'numeric',
               }).format(new Date(evento.fecha_fin))}
             </p>
-            {evento.cupo_maximo && (
-              <p className="mt-0.5 text-sm text-white/70">
-                {evento.cantidadInscriptos ?? 0} / {evento.cupo_maximo} inscriptos
-              </p>
-            )}
           </div>
           <div className="flex gap-2">
             <TooltipProvider>
@@ -189,6 +185,29 @@ export default function EventoDetallePage() {
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
   const [eliminando, setEliminando] = useState(false)
   const [toggleandoInscripciones, setToggleandoInscripciones] = useState(false)
+  const toastIdRef = useRef(null)
+
+  useEffect(() => {
+    if (!evento) return
+
+    if (evento.pagoPlatforma) {
+      toastIdRef.current = toast.warning(
+        `Pago pendiente: $${parseFloat(evento.pagoPlatforma.monto).toLocaleString('es-AR')}. Regularizá antes de que se bloquee la acreditación.`,
+        {
+          duration: Infinity,
+          id: 'pago-pendiente',
+          action: {
+            label: 'Ver pagos',
+            onClick: () => handleCambiarTab('pagos'),
+          },
+        }
+      )
+    } else {
+      toast.dismiss('pago-pendiente')
+    }
+
+    return () => toast.dismiss('pago-pendiente')
+  }, [evento?.pagoPlatforma])
 
   function handleActualizarInscriptos(cantidad) {
     setEvento((prev) => ({ ...prev, cantidadInscriptos: cantidad }))
@@ -292,14 +311,14 @@ export default function EventoDetallePage() {
           {evento && <TabAcreditacion evento={evento} />}
         </TabsContent>
 
-        <TabsContent value="pagos" className="mt-6">
+        {/* <TabsContent value="pagos" className="mt-6">
           {evento && (
             <TabPagos
               evento={evento}
               onPagoConfirmado={() => setEvento((prev) => ({ ...prev, pagoPlatforma: null }))}
             />
           )}
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
 
       <AlertDialog open={confirmandoEliminar} onOpenChange={setConfirmandoEliminar}>

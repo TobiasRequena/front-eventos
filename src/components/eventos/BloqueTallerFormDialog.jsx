@@ -11,8 +11,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
+import { DateTimePicker } from '@/components/DateTimePicker'
 
-const VALORES_VACIOS = { nombre: '', cantidadElegible: 1, esObligatorio: true }
+const VALORES_VACIOS = { nombre: '', cantidadElegible: 1, esObligatorio: true, inicio: '', fin: '' }
 
 function textoAyuda({ cantidadElegible, esObligatorio }) {
   const cantidad = cantidadElegible || 1
@@ -36,6 +37,7 @@ function textoAyuda({ cantidadElegible, esObligatorio }) {
  */
 export function BloqueTallerFormDialog({ open, onOpenChange, valoresIniciales, onConfirmar }) {
   const [valores, setValores] = useState(VALORES_VACIOS)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     if (open) {
@@ -45,13 +47,26 @@ export function BloqueTallerFormDialog({ open, onOpenChange, valoresIniciales, o
 
   function handleConfirmar() {
     if (!valores.nombre.trim()) return
+    if (!valores.inicio) {
+      setError('El horario de inicio es obligatorio.')
+      return
+    }
+    if (!valores.fin) {
+      setError('El horario de fin es obligatorio.')
+      return
+    }
+    if (new Date(valores.fin) <= new Date(valores.inicio)) {
+      setError('El fin del bloque debe ser posterior al inicio.')
+      return
+    }
+    setError(null)
     onConfirmar(valores)
     onOpenChange(false)
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="w-[calc(100%-2rem)] !max-w-2xl ">
         <DialogHeader>
           <DialogTitle>{valoresIniciales ? 'Editar bloque' : 'Nuevo bloque de talleres'}</DialogTitle>
           <DialogDescription>
@@ -98,11 +113,32 @@ export function BloqueTallerFormDialog({ open, onOpenChange, valoresIniciales, o
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Inicio del bloque</Label>
+              <DateTimePicker
+                value={valores.inicio}
+                onChange={(val) => setValores((prev) => ({ ...prev, inicio: val }))}
+                placeholder="Fecha y hora"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Fin del bloque</Label>
+              <DateTimePicker
+                value={valores.fin}
+                onChange={(val) => setValores((prev) => ({ ...prev, fin: val }))}
+                placeholder="Fecha y hora"
+                rangoDesde={valores.inicio}
+              />
+            </div>
+          </div>
+
+          {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+
           <p className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
             {textoAyuda(valores)}
           </p>
         </div>
-
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar

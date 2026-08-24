@@ -13,9 +13,10 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { datosPersonalesSchema } from '@/lib/validators/inscripcion.schemas'
+import { toast } from 'sonner'
 
 export default function StepDatosPersonales({ evento, wizard }) {
-  const { datosWizard, avanzar } = wizard
+  const { datosWizard, avanzar, esUltimoPasoVisible } = wizard
 
   const form = useForm({
     resolver: zodResolver(datosPersonalesSchema),
@@ -36,7 +37,13 @@ export default function StepDatosPersonales({ evento, wizard }) {
   return (
     <InscripcionStepLayout evento={evento} titulo="Tus datos personales">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit(
+            onSubmit,
+            () => toast.error('Completá los campos obligatorios antes de continuar.')
+          )}
+          className="space-y-4"
+        >
           <div className="grid grid-cols-2 gap-3">
             <FormField
               control={form.control}
@@ -110,7 +117,7 @@ export default function StepDatosPersonales({ evento, wizard }) {
           </div>
 
           <Button type="submit" className="w-full">
-            Continuar
+            {esUltimoPasoVisible ? 'Enviar inscripción' : 'Continuar'}
           </Button>
         </form>
       </Form>

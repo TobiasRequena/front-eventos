@@ -23,9 +23,12 @@ function Variacion({ valor }) {
   )
 }
 
-export function KpiCard({ icon: Icon, label, value, variacion, sublabel, className }) {
+export function KpiCard({ icon: Icon, label, value, variacion, className, onClick }) {
   return (
-    <Card className={cn(className)}>
+    <Card
+      className={cn(className, onClick && 'cursor-pointer hover:bg-accent/50 transition-colors')}
+      onClick={onClick}
+    >
       <CardContent className="flex items-center gap-4 p-6">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-muted">
           <Icon className="h-5 w-5 text-muted-foreground" />
@@ -38,9 +41,6 @@ export function KpiCard({ icon: Icon, label, value, variacion, sublabel, classNa
             <Variacion valor={variacion} />
           </div>
           <p className="mt-1 truncate text-sm text-muted-foreground">{label}</p>
-          {sublabel && (
-            <p className="mt-0.5 text-xs text-muted-foreground">{sublabel}</p>
-          )}
         </div>
       </CardContent>
     </Card>

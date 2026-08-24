@@ -13,6 +13,7 @@ import StepFormulario from '@/pages/inscripcion/steps/StepFormulario'
 import StepPago from '@/pages/inscripcion/steps/StepPago'
 import StepConfirmacion from '@/pages/inscripcion/steps/StepConfirmacion'
 import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
+import { StepDocumentacion } from '@/pages/inscripcion/steps/StepDocumentacion'
 
 function InscripcionSkeleton() {
   return (
@@ -41,6 +42,7 @@ const STEP_COMPONENTS = {
   grupo: StepGrupo,
   talleres: StepTalleres,
   formulario: StepFormulario,
+  documentacion: StepDocumentacion,
   pago: StepPago,
   confirmacion: StepConfirmacion,
 }

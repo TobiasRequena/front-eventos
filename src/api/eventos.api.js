@@ -76,3 +76,23 @@ export async function getEstadisticasInscripciones(rango = '7d') {
   })
   return data
 }
+
+export async function crearTallerSuelto(eventoId, payload) {
+  const { data } = await httpClient.post(`/eventos/${eventoId}/talleres`, payload)
+  return data.taller
+}
+
+export async function getTalleresSueltos(eventoId) {
+  const { data } = await httpClient.get(`/eventos/${eventoId}/talleres`)
+  return data.talleres
+}
+
+export async function getParticipantesPendientesPago(eventoId) {
+  const { data } = await httpClient.get(`/eventos/${eventoId}/participantes/pendientes-pago`)
+  return data.participantes
+}
+
+export async function getFichasMedicas(eventoId) {
+  const { data } = await httpClient.get(`/eventos/${eventoId}/fichas-medicas`)
+  return data.fichas
+}

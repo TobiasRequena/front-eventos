@@ -25,6 +25,14 @@ function adaptarEventoAForm(evento) {
     cbuCvu: evento.cbu_cvu ?? '',
     aliasCobro: evento.alias_cobro ?? '',
     costo: parseFloat(evento.costo ?? 0),
+    configFichaMedica: evento.config_ficha_medica ?? 'no',
+    configCertificado: evento.config_certificado ?? 'no',
+    requiereAutorizacionMenores: evento.requiere_autorizacion_menores ?? false,
+    autorizacionTemplateUrl: evento.autorizacion_template_url ?? null,
+    seccionTalleres: [
+      ...(evento.bloquesTaller ?? []).map((b) => ({ tipo: 'bloque', ...b })),
+      ...(evento.talleresSueltos ?? []).map((t) => ({ tipo: 'taller_suelto', ...t })),
+    ],
   }
 }
 
@@ -71,6 +79,10 @@ export function EditarEventoPanel({ evento, onVolver, onGuardado }) {
         cbuCvu: values.cbuCvu || undefined,
         aliasCobro: values.aliasCobro || undefined,
         costo: values.costo,
+        configFichaMedica: values.configFichaMedica,
+        configCertificado: values.configCertificado,
+        requiereAutorizacionMenores: values.requiereAutorizacionMenores,
+        autorizacionTemplateUrl: values.autorizacionTemplateUrl,
       })
 
       if (imagenArchivo && orgActiva?.id) {
@@ -121,7 +133,15 @@ export function EditarEventoPanel({ evento, onVolver, onGuardado }) {
             <Button
               type="button"
               disabled={isSubmitting}
-              onClick={form.handleSubmit(onSubmit)}
+              onClick={form.handleSubmit(onSubmit, (errors) => {
+                const campos = Object.keys(errors)
+                if (campos.length === 1) {
+                  const primerError = Object.values(errors)[0]
+                  toast.error(primerError?.message ?? 'Hay un error en el formulario.')
+                } else {
+                  toast.error(`Hay ${campos.length} campos con errores. Revisá el formulario antes de continuar.`)
+                }
+              })}
             >
               {isSubmitting ? 'Guardando...' : 'Guardar cambios'}
             </Button>
@@ -135,6 +155,7 @@ export function EditarEventoPanel({ evento, onVolver, onGuardado }) {
               onCambiarImagen={handleCambiarImagen}
               onQuitarImagen={handleQuitarImagen}
               codigoOriginal={evento.codigo}
+              eventoId={evento.id}
             />
           </div>
           <div className="lg:col-span-1">

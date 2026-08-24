@@ -15,20 +15,22 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ParticipanteDrawer } from '@/components/eventos/detalle/ParticipanteDrawer'
+import { useParticipanteDrawer } from '@/hooks/useParticipanteDrawer'
 
 const ESTADO_PAGO_CONFIG = {
   no_aplica: { label: 'Sin costo', variant: 'secondary' },
-  pendiente: { label: 'Pago pendiente', variant: 'outline' },
-  aprobado: { label: 'Pago aprobado', variant: 'default' },
-  rechazado: { label: 'Pago rechazado', variant: 'destructive' },
+  pendiente: { label: 'Pendiente de pago', variant: 'outline' },
+  pendiente_aprobacion: { label: 'Comprobante cargado', variant: 'outline' },
+  aprobado: { label: 'Pago Aprobado', variant: 'default' },
+  rechazado: { label: 'Pago Rechazado', variant: 'destructive' },
 }
 
 export function AcreditacionResultado({ resultado, sesion, evento, onVolver }) {
+  const { participante: participanteDetalle, drawerAbierto, cargando, abrirDrawer, cerrarDrawer } = useParticipanteDrawer()
   const { participante, grupo } = resultado
   const [procesando, setProcesando] = useState(false)
   const [acreditado, setAcreditado] = useState(false)
   const [resultadoGrupal, setResultadoGrupal] = useState(null)
-  const [drawerAbierto, setDrawerAbierto] = useState(false)
 
   const esReferente = participante.rol_grupo === 'responsable' && grupo
 
@@ -132,11 +134,25 @@ export function AcreditacionResultado({ resultado, sesion, evento, onVolver }) {
                 Referente — {grupo.nombre}
               </Badge>
             )}
+            {(participante.rol_grupo === 'integrante' || participante.rol_grupo === 'autoinscripto') && grupo && (
+              <Badge variant="secondary">
+                <Users className="mr-1 h-3 w-3" />
+                {grupo.nombre}
+                {grupo.localidad && ` · ${grupo.localidad}`}
+              </Badge>
+            )}
           </div>
+
+          {esReferente && grupo?.solicitudesPendientes > 0 && (
+            <div className="flex items-center gap-2 rounded-md bg-orange-500/10 p-3 text-sm text-orange-600">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              Tenés {grupo.solicitudesPendientes} solicitud{grupo.solicitudesPendientes !== 1 ? 'es' : ''} de ingreso pendiente{grupo.solicitudesPendientes !== 1 ? 's' : ''} en tu grupo.
+            </div>
+          )}
 
           <button
             type="button"
-            onClick={() => setDrawerAbierto(true)}
+            onClick={() => abrirDrawer(participante.id)}
             className="flex items-center gap-1.5 text-xs text-muted-foreground underline-offset-4 hover:underline"
           >
             <Eye className="h-3.5 w-3.5" />
@@ -147,6 +163,20 @@ export function AcreditacionResultado({ resultado, sesion, evento, onVolver }) {
             <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
               <AlertCircle className="h-4 w-4 shrink-0" />
               Tiene pago pendiente.
+            </div>
+          )}
+
+          {participante.autorizacion_pendiente && (
+            <div className="flex items-center gap-2 rounded-md bg-warning/10 p-3 text-sm text-warning">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              Autorización pendiente de presentación.
+            </div>
+          )}
+
+          {participante.certificado_pendiente && (
+            <div className="flex items-center gap-2 rounded-md bg-warning/10 p-3 text-sm text-warning">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              Certificado de antecedentes pendiente.
             </div>
           )}
         </CardContent>
@@ -160,7 +190,7 @@ export function AcreditacionResultado({ resultado, sesion, evento, onVolver }) {
                 <TableHead className="w-10"></TableHead>
                 <TableHead className="font-medium text-foreground">Nombre</TableHead>
                 <TableHead className="font-medium text-foreground">Pago</TableHead>
-                <TableHead className="w-8 font-medium text-foreground">Estado</TableHead>
+                <TableHead className="w-8 font-medium text-foreground">Acreditado</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -270,11 +300,12 @@ export function AcreditacionResultado({ resultado, sesion, evento, onVolver }) {
       )}
 
       <ParticipanteDrawer
-        participante={participante}
+        participante={participanteDetalle}
         camposForm={evento.camposForm ?? []}
         evento={evento}
         open={drawerAbierto}
-        onClose={() => setDrawerAbierto(false)}
+        cargando={cargando}
+        onClose={cerrarDrawer}
       />
     </div>
   )

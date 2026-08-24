@@ -17,6 +17,8 @@ import MiembrosPage from '@/pages/organizacion/MiembrosPage'
 import SoportePage from '@/pages/soporte/SoportePage'
 import AdminPage from '@/pages/admin/AdminPage'
 import RecuperarContrasenaPage from '@/pages/auth/RecuperarContrasenaPage'
+import ComprobantePagoPage from '@/pages/ComprobantePagoPage'
+import FacturacionPage from '@/pages/facturacion/FacturacionPage'
 
 export function AppRouter() {
   return (
@@ -25,6 +27,7 @@ export function AppRouter() {
       <Route path="/panel-grupo/:codigoGrupo" element={<PanelGrupoPage />} />
       <Route path="/acreditar/:codigoEvento" element={<AcreditacionPage />} />
       <Route path="/recuperar-contrasena" element={<RecuperarContrasenaPage />} />
+      <Route path="/comprobantepago/:codigoEvento" element={<ComprobantePagoPage />} />
 
       <Route
         path="*"
@@ -47,6 +50,7 @@ export function AppRouter() {
                   <Route path="/eventos/:estado" element={<EventosPage />} />
                   <Route path="/organizacion" element={<OrganizacionPage />} />
                   <Route path="/organizacion/miembros" element={<MiembrosPage />} />
+                  <Route path="/facturacion" element={<FacturacionPage />} />
                   <Route path="/soporte" element={<SoportePage />} />
                   <Route path="/admin" element={<AdminPage />} />
                 </Route>

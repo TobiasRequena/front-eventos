@@ -18,6 +18,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { BloqueTallerCard } from '@/components/eventos/BloqueTallerCard'
 import { BloqueTallerFormDialog } from '@/components/eventos/BloqueTallerFormDialog'
+import { TallerSueltoItem } from '@/components/eventos/TallerSueltoItem'
 import { cn } from '@/lib/utils'
 
 export function SeccionTalleres() {
@@ -30,7 +31,7 @@ export function SeccionTalleres() {
 
   const { fields, append, remove, move, update } = useFieldArray({
     control: form.control,
-    name: 'bloquesTaller',
+    name: 'seccionTalleres',
   })
 
   useEffect(() => {
@@ -45,7 +46,6 @@ export function SeccionTalleres() {
   function handleDragEnd(event) {
     const { active, over } = event
     if (!over || active.id === over.id) return
-
     const indexActivo = fields.findIndex((f) => f.id === active.id)
     const indexDestino = fields.findIndex((f) => f.id === over.id)
     move(indexActivo, indexDestino)
@@ -61,23 +61,18 @@ export function SeccionTalleres() {
     setDialogoAbierto(true)
   }
 
-  function handleConfirmarDialogo(valores) {
+  function handleConfirmarBloque(valores) {
     if (indiceEditando === null) {
-      append({
-        nombre: valores.nombre,
-        cantidadElegible: valores.cantidadElegible,
-        esObligatorio: valores.esObligatorio,
-        orden: fields.length,
-        talleres: [],
-      })
+      append({ tipo: 'bloque', ...valores, talleres: [] })
     } else {
-      const bloqueActual = form.getValues(`bloquesTaller.${indiceEditando}`)
-      update(indiceEditando, { ...bloqueActual, ...valores })
+      const actual = form.getValues(`seccionTalleres.${indiceEditando}`)
+      update(indiceEditando, { ...actual, ...valores })
     }
   }
 
-  const valoresIniciales =
-    indiceEditando !== null ? form.getValues(`bloquesTaller.${indiceEditando}`) : null
+  const valoresInicialesBloque = indiceEditando !== null
+    ? form.getValues(`seccionTalleres.${indiceEditando}`)
+    : null
 
   return (
     <Card className={cn(!tieneTalleres && 'opacity-60')}>
@@ -94,15 +89,13 @@ export function SeccionTalleres() {
                 {!tieneTalleres && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
               </div>
               <p className="text-sm text-muted-foreground">
-                Actividades dentro del evento con horario propio. Organizá los talleres en bloques con su propia regla de selección.
+                Actividades dentro del evento. Organizalas en bloques o agregalas sueltas.
               </p>
-              {
-                !tieneTalleres ?
-                  <p className="text-sm text-muted-foreground">
-                    Activá "Este evento tiene talleres" para habilitar esta sección.
-                  </p>
-                  : null
-              }
+              {!tieneTalleres && (
+                <p className="text-sm text-muted-foreground">
+                  Activá "Este evento tiene talleres" para habilitar esta sección.
+                </p>
+              )}
             </div>
             <ChevronDown
               className={cn(
@@ -122,7 +115,7 @@ export function SeccionTalleres() {
                   Todavía no agregaste talleres
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Creá un bloque para empezar a agregar talleres.
+                  Creá un bloque o agregá un taller suelto.
                 </p>
               </div>
             )}
@@ -138,28 +131,65 @@ export function SeccionTalleres() {
                   strategy={verticalListSortingStrategy}
                 >
                   <div className="space-y-2">
-                    {fields.map((field, index) => (
-                      <BloqueTallerCard
-                        key={field.id}
-                        id={field.id}
-                        index={index}
-                        onEliminar={() => remove(index)}
-                        onEditar={() => abrirDialogoEditar(index)}
-                      />
-                    ))}
+                    {(() => {
+                      let contadorTalleres = 0
+                      return fields.map((field, index) => {
+                        if (field.tipo === 'bloque') {
+                          return (
+                            <BloqueTallerCard
+                              key={field.id}
+                              id={field.id}
+                              index={index}
+                              fieldArrayName="seccionTalleres"
+                              onEliminar={() => remove(index)}
+                              onEditar={() => abrirDialogoEditar(index)}
+                            />
+                          )
+                        }
+                        contadorTalleres++
+                        return (
+                          <TallerSueltoItem
+                            key={field.id}
+                            id={field.id}
+                            index={index}
+                            numeroTaller={contadorTalleres}
+                            fieldArrayName="seccionTalleres"
+                            onEliminar={() => remove(index)}
+                          />
+                        )
+                      })
+                    })()}
                   </div>
                 </SortableContext>
               </DndContext>
             )}
 
-            <button
-              type="button"
-              onClick={abrirDialogoCrear}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border py-2.5 text-sm text-muted-foreground hover:bg-accent/50"
-            >
-              <Plus className="h-4 w-4" />
-              Agregar bloque
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={abrirDialogoCrear}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border py-2.5 text-sm text-muted-foreground hover:bg-accent/50"
+              >
+                <Plus className="h-4 w-4" />
+                Agregar bloque
+              </button>
+              <button
+                type="button"
+                onClick={() => append({
+                  tipo: 'taller_suelto',
+                  nombre: '',
+                  descripcion: '',
+                  inicio: '',
+                  fin: '',
+                  capacidad: undefined,
+                  esObligatorio: false,
+                })}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border py-2.5 text-sm text-muted-foreground hover:bg-accent/50"
+              >
+                <Plus className="h-4 w-4" />
+                Agregar taller
+              </button>
+            </div>
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
@@ -167,8 +197,8 @@ export function SeccionTalleres() {
       <BloqueTallerFormDialog
         open={dialogoAbierto}
         onOpenChange={setDialogoAbierto}
-        valoresIniciales={valoresIniciales}
-        onConfirmar={handleConfirmarDialogo}
+        valoresIniciales={valoresInicialesBloque}
+        onConfirmar={handleConfirmarBloque}
       />
     </Card>
   )

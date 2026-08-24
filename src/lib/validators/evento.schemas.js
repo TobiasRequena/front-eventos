@@ -22,17 +22,43 @@ export const tallerSchema = z
   .object({
     nombre: z.string().min(1, 'El nombre del taller es obligatorio.'),
     descripcion: z.string().max(500).optional().or(z.literal('')),
-    inicio: z.string().min(1, 'Definí el horario de inicio.'),
-    fin: z.string().min(1, 'Definí el horario de fin.'),
     capacidad: z.preprocess(
       (val) => (typeof val === 'number' && isNaN(val) ? undefined : val),
       z.number().int().positive('La capacidad debe ser mayor a 0.').optional()
     ),
   })
-  .refine((taller) => new Date(taller.fin) > new Date(taller.inicio), {
-    message: 'El fin debe ser posterior al inicio.',
-    path: ['fin'],
-  })
+
+const tallerSueltoSchema = z.object({
+  tipo: z.literal('taller_suelto'),
+  nombre: z.string().min(1, 'El nombre es obligatorio.'),
+  descripcion: z.string().optional().or(z.literal('')),
+  inicio: z.string().min(1, 'El inicio es obligatorio.'),
+  fin: z.string().min(1, 'El fin es obligatorio.'),
+  capacidad: z.preprocess(
+    (val) => (typeof val === 'number' && isNaN(val) ? undefined : val),
+    z.number().int().positive().optional().nullable()
+  ),
+  esObligatorio: z.boolean().default(false),
+}).refine(
+  (t) => !t.inicio || !t.fin || new Date(t.fin) > new Date(t.inicio),
+  { message: 'El fin del taller debe ser posterior al inicio.', path: ['fin'] }
+)
+
+const bloqueSchema = z.object({
+  tipo: z.literal('bloque'),
+  nombre: z.string().min(1, 'El nombre del bloque es obligatorio.').max(100),
+  cantidadElegible: z.number().int().positive().default(1),
+  esObligatorio: z.boolean().default(true),
+  orden: z.number().default(0),
+  inicio: z.string().min(1, 'El horario de inicio es obligatorio.'),
+  fin: z.string().min(1, 'El horario de fin es obligatorio.'),
+  talleres: z.array(tallerSchema).min(1, 'Agregá al menos un taller a este bloque.'),
+}).refine(
+  (b) => !b.inicio || !b.fin || new Date(b.fin) > new Date(b.inicio),
+  { message: 'El fin del bloque debe ser posterior al inicio.', path: ['fin'] }
+)
+
+const seccionTallerItem = z.discriminatedUnion('tipo', [bloqueSchema, tallerSueltoSchema])
 
 export const bloqueTallerSchema = z.object({
   nombre: z.string().min(1, 'El nombre del bloque es obligatorio.').max(100),
@@ -68,7 +94,18 @@ export const eventoSchema = z
       z.number({ invalid_type_error: 'Ingresá un número válido.' }).min(0, 'El costo no puede ser negativo.')
     ),
     camposForm: z.array(campoFormSchema).default([]),
-    bloquesTaller: z.array(bloqueTallerSchema).default([]),
+    // bloquesTaller: z.array(bloqueTallerSchema).default([]),
+    configFichaMedica: z.enum([
+      'no', 'opcional_menores', 'opcional_mayores', 'opcional_todos',
+      'obligatorio_menores', 'obligatorio_mayores', 'obligatorio_todos',
+    ]).default('no'),
+
+    configCertificado: z.enum([
+      'no', 'opcional_menores', 'opcional_mayores', 'opcional_todos', 'opcional_referentes',
+      'obligatorio_menores', 'obligatorio_mayores', 'obligatorio_todos', 'obligatorio_referentes',
+    ]).default('no'),
+    requiereAutorizacionMenores: z.boolean().default(false),
+    seccionTalleres: z.array(seccionTallerItem).default([]),
   })
   .superRefine((evento, ctx) => {
     const inicioEvento = new Date(evento.fechaInicio)
@@ -84,29 +121,70 @@ export const eventoSchema = z
 
     if (!evento.fechaInicio || !evento.fechaFin) return
 
-    evento.bloquesTaller.forEach((bloque, bloqueIndex) => {
-      bloque.talleres.forEach((taller, tallerIndex) => {
-        if (!taller.inicio || !taller.fin) return
-
-        const inicioTaller = new Date(taller.inicio)
-        const finTaller = new Date(taller.fin)
-
-        if (inicioTaller < inicioEvento) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'El taller no puede empezar antes que el evento.',
-            path: ['bloquesTaller', bloqueIndex, 'talleres', tallerIndex, 'inicio'],
-          })
+    evento.seccionTalleres.forEach((item, itemIndex) => {
+      if (item.tipo === 'bloque') {
+        // Validar horario del bloque
+        if (item.inicio && item.fin) {
+          if (new Date(item.fin) <= new Date(item.inicio)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'El fin del bloque debe ser posterior al inicio.',
+              path: ['seccionTalleres', itemIndex, 'fin'],
+            })
+          }
+          if (new Date(item.inicio) < inicioEvento) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'El bloque no puede empezar antes que el evento.',
+              path: ['seccionTalleres', itemIndex, 'inicio'],
+            })
+          }
+          if (new Date(item.fin) > finEvento) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'El bloque no puede terminar después que el evento.',
+              path: ['seccionTalleres', itemIndex, 'fin'],
+            })
+          }
         }
 
-        if (finTaller > finEvento) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'El taller no puede terminar después que el evento.',
-            path: ['bloquesTaller', bloqueIndex, 'talleres', tallerIndex, 'fin'],
-          })
+        // Validar talleres dentro del bloque
+        item.talleres?.forEach((taller, tallerIndex) => {
+          if (!taller.nombre?.trim()) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'El nombre del taller es obligatorio.',
+              path: ['seccionTalleres', itemIndex, 'talleres', tallerIndex, 'nombre'],
+            })
+          }
+        })
+      }
+
+      if (item.tipo === 'taller_suelto') {
+        if (item.inicio && item.fin) {
+          if (new Date(item.fin) <= new Date(item.inicio)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'El fin del taller debe ser posterior al inicio.',
+              path: ['seccionTalleres', itemIndex, 'fin'],
+            })
+          }
+          if (new Date(item.inicio) < inicioEvento) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'El taller no puede empezar antes que el evento.',
+              path: ['seccionTalleres', itemIndex, 'inicio'],
+            })
+          }
+          if (new Date(item.fin) > finEvento) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'El taller no puede terminar después que el evento.',
+              path: ['seccionTalleres', itemIndex, 'fin'],
+            })
+          }
         }
-      })
+      }
     })
   })
 
@@ -128,7 +206,18 @@ export const editarEventoSchema = z.object({
   aliasCobro: z.string().max(50).optional().or(z.literal('')),
   costo: z.number({ invalid_type_error: 'Ingresá un número.' }).min(0).default(0),
   cupoMaximo: z.number({ invalid_type_error: 'Ingresá un número.' }).int().positive().optional().nullable(),
+  configFichaMedica: z.enum([
+    'no', 'opcional_menores', 'opcional_mayores', 'opcional_todos',
+    'obligatorio_menores', 'obligatorio_mayores', 'obligatorio_todos',
+  ]).default('no'),
+  configCertificado: z.enum([
+    'no', 'opcional_menores', 'opcional_mayores', 'opcional_todos', 'opcional_referentes',
+    'obligatorio_menores', 'obligatorio_mayores', 'obligatorio_todos', 'obligatorio_referentes',
+  ]).default('no'),
+  requiereAutorizacionMenores: z.boolean().default(false),
+  seccionTalleres: z.array(seccionTallerItem).default([]),
 }).refine(
   (data) => new Date(data.fechaFin) >= new Date(data.fechaInicio),
   { message: 'La fecha de fin debe ser igual o posterior a la de inicio.', path: ['fechaFin'] }
 )
+

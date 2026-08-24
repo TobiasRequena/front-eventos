@@ -1,4 +1,4 @@
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, useWatch } from 'react-hook-form'
 import { CalendarRange, ImageOff, Users } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
@@ -10,14 +10,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Checkbox } from '@/components/ui/checkbox'
+import { FileText, FileCheck, Shield } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 function formatearFechaHora(fechaIso) {
   if (!fechaIso) return null
   return new Intl.DateTimeFormat('es-AR', {
-    day: 'numeric',
-    month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
+    day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', hour12: false,
   }).format(new Date(fechaIso))
 }
 
@@ -30,21 +29,32 @@ function adaptarEventoAForm(evento) {
     tieneGrupos: evento.tiene_grupos,
     politicaMenor: evento.politica_menor,
     camposForm: evento.camposForm ?? [],
+    talleresSueltos: evento.talleresSueltos ?? [],
     bloquesTaller: evento.bloquesTaller ?? [],
+    seccionTalleres: [
+      ...(evento.bloquesTaller ?? []).map((b) => ({ tipo: 'bloque', ...b })),
+      ...(evento.talleresSueltos ?? []).map((t) => ({ tipo: 'taller_suelto', ...t })),
+    ],
     costo: parseFloat(evento.costo ?? 0),
     cbuCvu: evento.cbu_cvu,
     aliasCobro: evento.alias_cobro,
     imagenUrl: evento.imagenUrl,
+    configFichaMedica: evento.config_ficha_medica ?? 'no',
+    configCertificado: evento.config_certificado ?? 'no',
+    requiereAutorizacionMenores: evento.requiere_autorizacion_menores ?? false,
+    autorizacionTemplateUrl: evento.autorizacion_template_url ?? null,
   }
 }
 
 function useDatos(eventoExterno, imagenPreviewExterna) {
   if (eventoExterno) {
     const datos = adaptarEventoAForm(eventoExterno)
-    return { ...datos, imagenPreview: datos.imagenUrl }
+    return { ...datos, imagenPreview: datos.imagenUrl, form: null }
   }
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+
   const form = useFormContext()
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const seccionTalleres = useWatch({ control: form.control, name: 'seccionTalleres' }) ?? []
   return {
     nombre: form.watch('nombre'),
     descripcion: form.watch('descripcion'),
@@ -53,22 +63,27 @@ function useDatos(eventoExterno, imagenPreviewExterna) {
     tieneGrupos: form.watch('tieneGrupos'),
     politicaMenor: form.watch('politicaMenor'),
     camposForm: form.watch('camposForm') ?? [],
-    bloquesTaller: form.watch('bloquesTaller') ?? [],
+    seccionTalleres,
     costo: form.watch('costo'),
     cbuCvu: form.watch('cbuCvu'),
     aliasCobro: form.watch('aliasCobro'),
     imagenPreview: imagenPreviewExterna,
+    configFichaMedica: form.watch('configFichaMedica') ?? 'no',
+    configCertificado: form.watch('configCertificado') ?? 'no',
+    requiereAutorizacionMenores: form.watch('requiereAutorizacionMenores') ?? false,
+    form,
   }
 }
 
 export function EventoPreviewPanel({ evento, imagenPreview: imagenPreviewExterna, readOnly = false }) {
-  const datos = useDatos(readOnly ? evento : null, imagenPreviewExterna)
+  const { form, ...datos } = useDatos(readOnly ? evento : null, imagenPreviewExterna)
 
   const {
     nombre, descripcion, fechaInicio,
     tieneTalleres, tieneGrupos, politicaMenor,
-    camposForm, bloquesTaller,
+    camposForm, bloquesTaller, talleresSueltos,
     costo, cbuCvu, aliasCobro, imagenPreview,
+    configFichaMedica, configCertificado, requiereAutorizacionMenores, seccionTalleres
   } = datos
 
   const tieneSeccionGrupos = tieneGrupos || politicaMenor !== 'no_aplica'
@@ -166,82 +181,158 @@ export function EventoPreviewPanel({ evento, imagenPreview: imagenPreviewExterna
         )}
 
         {/* 6. Talleres */}
-        {tieneTalleres && bloquesTaller.length > 0 && (
+        {tieneTalleres && seccionTalleres.length > 0 && (
           <>
             <Separator />
             <div className="space-y-4">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Talleres disponibles
               </p>
-              {bloquesTaller.map((bloque, bloqueIndex) => {
-                const esInformativo = bloque.talleres.length <= 1
-                const cantidadElegible = bloque.cantidad_elegible ?? bloque.cantidadElegible ?? 1
-                const esObligatorio = bloque.es_obligatorio ?? bloque.esObligatorio ?? true
-                const usaRadio = !esInformativo && cantidadElegible === 1
+              {seccionTalleres.map((item, itemIndex) => {
+                if (item.tipo === 'bloque') {
+                  const esInformativo = item.talleres.length <= 1
+                  const cantidadElegible = item.cantidad_elegible ?? item.cantidadElegible ?? 1
+                  const esObligatorio = item.es_obligatorio ?? item.esObligatorio ?? true
+                  const usaRadio = !esInformativo && cantidadElegible === 1
+                  return (
+                    <div key={item.id ?? itemIndex} className="space-y-2">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground">
+                            {item.nombre || `Bloque ${itemIndex + 1}`}
+                          </p>
 
-                return (
-                  <div key={bloque.id ?? bloqueIndex} className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-foreground">
-                        {bloque.nombre || `Bloque ${bloqueIndex + 1}`}
-                      </p>
+                          {item.inicio && item.fin && (
+                            <span className="text-xs text-muted-foreground">
+                              {formatearFechaHora(item.inicio)} — {formatearFechaHora(item.fin)}
+                            </span>
+                          )}
+                        </div>
+
+                        {esInformativo ? (
+                          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            Informativo
+                          </span>
+                        ) : (
+                          <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">
+                            {esObligatorio
+                              ? `Elegí ${cantidadElegible}`
+                              : `Elegí hasta ${cantidadElegible}`}
+                          </span>
+                        )}
+                      </div>
                       {esInformativo ? (
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                          Informativo
-                        </span>
+                        item.talleres.map((_, tallerIndex) => (
+                          <div key={tallerIndex} className="rounded-md border border-border p-3 text-sm">
+                            {form ? <TallerPreview bloqueIndex={itemIndex} tallerIndex={tallerIndex} /> : <TallerDetalle taller={item.talleres[tallerIndex]} />}
+                          </div>
+                        ))
+                      ) : usaRadio ? (
+                        <RadioGroup disabled className="space-y-2">
+                          {item.talleres.map((_, tallerIndex) => (
+                            <Label key={tallerIndex} className="flex cursor-not-allowed items-start gap-3 rounded-md border border-border p-3 text-sm font-normal">
+                              <RadioGroupItem value={String(tallerIndex)} className="mt-0.5" />
+                              {form ? <TallerPreview bloqueIndex={itemIndex} tallerIndex={tallerIndex} /> : <TallerDetalle taller={item.talleres[tallerIndex]} />}
+                            </Label>
+                          ))}
+                        </RadioGroup>
                       ) : (
-                        <span className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">
-                          {esObligatorio
-                            ? `Elegí exactamente ${cantidadElegible}`
-                            : `Elegí hasta ${cantidadElegible}`}
-                        </span>
+                        <div className="space-y-2">
+                          {item.talleres.map((_, tallerIndex) => (
+                            <Label key={tallerIndex} className="flex cursor-not-allowed items-start gap-3 rounded-md border border-border p-3 text-sm font-normal">
+                              <Checkbox disabled className="mt-0.5" />
+                              {form ? <TallerPreview bloqueIndex={itemIndex} tallerIndex={tallerIndex} /> : <TallerDetalle taller={item.talleres[tallerIndex]} />}
+                            </Label>
+                          ))}
+                        </div>
                       )}
                     </div>
-
-                    {esInformativo ? (
-                      bloque.talleres.map((taller, i) => (
-                        <div key={taller.id ?? i} className="rounded-md border border-border p-3 text-sm">
-                          <TallerDetalle taller={taller} />
+                  )
+                }
+                return (
+                  <div key={item.id ?? itemIndex} className="rounded-md border border-border p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">{item.nombre}</p>
+                        {item.descripcion && (
+                          <p className="mt-0.5 text-xs text-muted-foreground">{item.descripcion}</p>
+                        )}
+                        <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                          {item.inicio && (
+                            <span className="flex items-center gap-1">
+                              <CalendarRange className="h-4 w-4" />
+                              {formatearFechaHora(item.inicio)}
+                              {item.fin && ` — ${formatearFechaHora(item.fin)}`}
+                            </span>
+                          )}
+                          {Number.isFinite(Number(item.capacidad)) && item.capacidad !== null && (
+                            <span className="flex items-center gap-1">
+                              <Users className="h-4 w-4" />
+                              {item.capacidad} cupos
+                            </span>
+                          )}
                         </div>
-                      ))
-                    ) : usaRadio ? (
-                      <RadioGroup disabled className="space-y-2">
-                        {bloque.talleres.map((taller, i) => (
-                          <Label
-                            key={taller.id ?? i}
-                            htmlFor={`preview-bloque-${bloqueIndex}-taller-${i}`}
-                            className="flex cursor-not-allowed items-start gap-3 rounded-md border border-border p-3 text-sm font-normal"
-                          >
-                            <RadioGroupItem
-                              value={String(i)}
-                              id={`preview-bloque-${bloqueIndex}-taller-${i}`}
-                              className="mt-0.5"
-                            />
-                            <TallerDetalle taller={taller} />
-                          </Label>
-                        ))}
-                      </RadioGroup>
-                    ) : (
-                      <div className="space-y-2">
-                        {bloque.talleres.map((taller, i) => (
-                          <Label
-                            key={taller.id ?? i}
-                            htmlFor={`preview-bloque-${bloqueIndex}-taller-${i}`}
-                            className="flex cursor-not-allowed items-start gap-3 rounded-md border border-border p-3 text-sm font-normal"
-                          >
-                            <Checkbox
-                              disabled
-                              id={`preview-bloque-${bloqueIndex}-taller-${i}`}
-                              className="mt-0.5"
-                            />
-                            <TallerDetalle taller={taller} />
-                          </Label>
-                        ))}
                       </div>
-                    )}
+                      <span className={cn(
+                        'shrink-0 rounded-full px-2 py-0.5 text-xs',
+                        (item.esObligatorio || item.es_obligatorio) ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
+                      )}>
+                        {(item.esObligatorio || item.es_obligatorio) ? 'Obligatorio' : 'Opcional'}
+                      </span>
+                    </div>
                   </div>
                 )
               })}
+            </div>
+          </>
+        )}
+
+        {/* 8. Documentación */}
+        {(configFichaMedica !== 'no' || configCertificado !== 'no' || requiereAutorizacionMenores) && (
+          <>
+            <Separator />
+            <div className="space-y-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Documentación requerida
+              </p>
+              <div className="space-y-2">
+                {configFichaMedica !== 'no' && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <p className="text-foreground">
+                      Ficha médica —{' '}
+                      <span className="text-muted-foreground">
+                        {configFichaMedica.startsWith('obligatorio') ? 'Obligatoria' : 'Opcional'}
+                        {configFichaMedica.includes('menores') ? ' para menores' :
+                          configFichaMedica.includes('mayores') ? ' para mayores' : ' para todos'}
+                      </span>
+                    </p>
+                  </div>
+                )}
+                {requiereAutorizacionMenores && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <FileCheck className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <p className="text-foreground">
+                      Autorización de menor —{' '}
+                      <span className="text-muted-foreground">Obligatoria para menores</span>
+                    </p>
+                  </div>
+                )}
+                {configCertificado !== 'no' && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Shield className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <p className="text-foreground">
+                      Certificado de antecedentes —{' '}
+                      <span className="text-muted-foreground">
+                        {configCertificado.startsWith('obligatorio') ? 'Obligatorio' : 'Opcional'}
+                        {configCertificado.includes('menores') ? ' para menores' :
+                          configCertificado.includes('mayores') ? ' para mayores' :
+                            configCertificado.includes('referentes') ? ' para referentes' : ' para todos'}
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}
@@ -276,7 +367,17 @@ export function EventoPreviewPanel({ evento, imagenPreview: imagenPreviewExterna
   )
 }
 
+function TallerPreview({ bloqueIndex, tallerIndex }) {
+  const form = useFormContext()
+  const taller = useWatch({
+    control: form.control,
+    name: `seccionTalleres.${bloqueIndex}.talleres.${tallerIndex}`,
+  })
+  return <TallerDetalle taller={taller} />
+}
+
 function TallerDetalle({ taller }) {
+  if (!taller) return null
   return (
     <div className="flex-1">
       <p className="font-medium text-foreground">{taller.nombre}</p>
@@ -295,7 +396,7 @@ function TallerDetalle({ taller }) {
             }).format(new Date(taller.inicio))}
           </span>
         )}
-        {taller.capacidad && (
+        {taller.capacidad && !isNaN(taller.capacidad) && (
           <span className="flex items-center gap-1">
             <Users className="h-3 w-3" />
             {taller.capacidad} cupos

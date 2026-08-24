@@ -32,8 +32,11 @@ function TallerProgressCard({ taller, onClick }) {
   )
 }
 
-export function TalleresProgreso({ bloquesTaller, onSeleccionarTaller }) {
-  if (!bloquesTaller?.length) return null
+export function TalleresProgreso({ bloquesTaller, talleresSueltos, onSeleccionarTaller }) {
+  const hayBloques = bloquesTaller?.length > 0
+  const haySueltos = talleresSueltos?.length > 0
+
+  if (!hayBloques && !haySueltos) return null
 
   return (
     <Card>
@@ -41,7 +44,7 @@ export function TalleresProgreso({ bloquesTaller, onSeleccionarTaller }) {
         <CardTitle className="text-base">Talleres</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {bloquesTaller.map((bloque) => (
+        {bloquesTaller?.map((bloque) => (
           <div key={bloque.id ?? bloque.nombre} className="space-y-2">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {bloque.nombre}
@@ -57,6 +60,23 @@ export function TalleresProgreso({ bloquesTaller, onSeleccionarTaller }) {
             </div>
           </div>
         ))}
+
+        {haySueltos && (
+          <div className="space-y-2">
+            {hayBloques && (
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Talleres sueltos
+              </p>
+            )}
+            {talleresSueltos.map((taller) => (
+              <TallerProgressCard
+                key={taller.id ?? taller.nombre}
+                taller={taller}
+                onClick={() => onSeleccionarTaller(null, taller)}
+              />
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   )

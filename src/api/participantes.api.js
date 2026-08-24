@@ -1,4 +1,8 @@
 import { httpClient } from '@/api/httpClient'
+import axios from 'axios'
+
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1'
+const publicClient = axios.create({ baseURL: BASE_URL })
 
 /**
  * @param {string} eventoId
@@ -58,4 +62,48 @@ export async function descargarInscriptosTaller(tallerId, nombreTaller) {
   link.click()
   link.remove()
   window.URL.revokeObjectURL(url)
+}
+
+export async function getFichaMedica(participanteId) {
+  const { data } = await httpClient.get(`/participantes/${participanteId}/ficha-medica`)
+  return data.ficha
+}
+
+export async function patchFichaMedica(participanteId, payload) {
+  const { data } = await httpClient.patch(`/participantes/${participanteId}/ficha-medica`, payload)
+  return data.ficha
+}
+
+export async function subirAutorizacion(participanteId, archivo) {
+  const formData = new FormData()
+  formData.append('archivo', archivo)
+  const { data } = await publicClient.patch(
+    `/participantes/${participanteId}/autorizacion`,
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  )
+  return data
+}
+
+export async function subirCertificado(participanteId, archivo) {
+  const formData = new FormData()
+  formData.append('archivo', archivo)
+  const { data } = await publicClient.patch(
+    `/participantes/${participanteId}/certificado`,
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  )
+  return data
+}
+
+export async function verificarDni(dni, eventoId) {
+  const { data } = await httpClient.get('/participantes/verificar-dni', {
+    params: { dni, eventoId },
+  })
+  return data
+}
+
+export async function patchEstadoPago(participanteId, estadoPago) {
+  const { data } = await httpClient.patch(`/participantes/${participanteId}/estado-pago`, { estadoPago })
+  return data
 }

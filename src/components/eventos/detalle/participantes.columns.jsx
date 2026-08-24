@@ -11,7 +11,8 @@ import {
 
 const ESTADO_PAGO_CONFIG = {
   no_aplica: { label: 'Sin costo', variant: 'secondary' },
-  pendiente: { label: 'Pendiente', variant: 'outline' },
+  pendiente: { label: 'Pendiente de pago', variant: 'outline' },
+  pendiente_aprobacion: { label: 'Comprobante cargado', variant: 'outline' },
   aprobado: { label: 'Aprobado', variant: 'default' },
   rechazado: { label: 'Rechazado', variant: 'destructive' },
 }
@@ -38,7 +39,7 @@ export function buildColumns({ camposForm, tieneCosto, tieneGrupos, onVerDetalle
     },
     {
       id: 'fecha_nacimiento',
-      accessorKey: 'fecha_nacimiento',
+      accessorFn: (row) => row.nacimiento ?? row.fecha_nacimiento,
       header: 'Fecha de nac.',
       enableHiding: false,
       cell: ({ getValue }) => formatearFecha(getValue()),
@@ -57,6 +58,33 @@ export function buildColumns({ camposForm, tieneCosto, tieneGrupos, onVerDetalle
       accessorKey: 'dni',
       header: 'DNI',
       enableHiding: true,
+    },
+    {
+      id: 'ficha_medica',
+      header: 'Ficha médica',
+      accessorKey: 'tiene_ficha_medica',
+      enableHiding: true,
+      cell: ({ getValue }) => getValue()
+        ? <Badge variant="default" className="text-xs">Completa</Badge>
+        : <Badge variant="outline" className="text-xs">Sin ficha</Badge>,
+    },
+    {
+      id: 'autorizacion',
+      header: 'Autorización',
+      accessorKey: 'tiene_autorizacion',
+      enableHiding: true,
+      cell: ({ getValue }) => getValue()
+        ? <Badge variant="default" className="text-xs">Presentada</Badge>
+        : <Badge variant="outline" className="text-xs">Pendiente</Badge>,
+    },
+    {
+      id: 'certificado',
+      header: 'Certificado',
+      accessorKey: 'tiene_certificado',
+      enableHiding: true,
+      cell: ({ getValue }) => getValue()
+        ? <Badge variant="default" className="text-xs">Presentado</Badge>
+        : <Badge variant="outline" className="text-xs">Pendiente</Badge>,
     },
     ...(tieneGrupos
       ? [

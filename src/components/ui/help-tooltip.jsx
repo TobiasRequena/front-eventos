@@ -17,9 +17,14 @@ export function HelpTooltip({ children, className }) {
           asChild
           onClick={() => setOpen((v) => !v)}
         >
-          <HelpCircle className={`h-3.5 w-3.5 cursor-help text-muted-foreground ${className ?? ''}`} />
+          <HelpCircle
+            className={`h-3.5 w-3.5 cursor-help text-muted-foreground ${className ?? ''}`}
+          />
         </TooltipTrigger>
-        <TooltipContent className="max-w-56">
+
+        <TooltipContent
+          className="w-70 text-justify"
+        >
           {children}
         </TooltipContent>
       </Tooltip>

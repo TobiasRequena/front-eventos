@@ -6,6 +6,7 @@ const PASO_LABELS = {
   grupo: 'Grupo',
   talleres: 'Talleres',
   formulario: 'Formulario',
+  documentacion: 'Documentación',
   pago: 'Pago',
 }
 

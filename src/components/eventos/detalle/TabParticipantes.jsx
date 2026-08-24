@@ -186,11 +186,10 @@ export function TabParticipantes({ evento, onActualizarInscriptos }) {
       <Tabs defaultValue="listado">
         <TabsList>
           <TabsTrigger value="listado">Listado</TabsTrigger>
-          <TabsTrigger value="grupos_trabajo">Grupos de trabajo</TabsTrigger>
+          <TabsTrigger value="grupos_trabajo">Agrupar</TabsTrigger>
         </TabsList>
 
         <TabsContent value="listado" className="mt-4">
-          {/* Todo el contenido actual de TabParticipantes va acá */}
           <ParticipantesDataTable
             columns={mostrarEliminados ? columnasEliminados : columns}
             data={mostrarEliminados ? eliminados : participantes}
@@ -235,6 +234,7 @@ export function TabParticipantes({ evento, onActualizarInscriptos }) {
               setDrawerAbierto(false)
               setParticipanteSeleccionado(null)
             }}
+            onActualizar={reintentar}
           />
 
           <AlertDialog

@@ -40,6 +40,12 @@
     ]
   },
   {
+    "id": "facturacion",
+    "label": "Facturación",
+    "icon": "Receipt",
+    "to": "/facturacion"
+  },
+  {
     "id": "soporte",
     "label": "Soporte",
     "icon": "HelpCircle",

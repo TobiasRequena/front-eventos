@@ -73,6 +73,9 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
     camposForm.forEach((campo) => {
       initial[`campo_${campo.id}`] = false
     })
+    initial['ficha_medica'] = false
+    initial['autorizacion'] = false
+    initial['certificado'] = false
     return initial
   })
 
@@ -96,7 +99,8 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
       if (filtroPago !== 'todos' && p.estado_pago !== filtroPago) return false
       if (filtroEdad === 'mayores' && !p.es_mayor) return false
       if (filtroEdad === 'menores' && p.es_mayor) return false
-      if (filtroGrupo !== 'todos' && p.grupo?.nombre !== filtroGrupo) return false
+      if (filtroGrupo === 'sin_grupo' && p.grupo?.nombre) return false
+      if (filtroGrupo !== 'todos' && filtroGrupo !== 'sin_grupo' && p.grupo?.nombre !== filtroGrupo) return false
       return true
     })
   }, [data, busqueda, filtroPago, filtroEdad, filtroGrupo])
@@ -171,6 +175,7 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los grupos</SelectItem>
+                <SelectItem value="sin_grupo">Sin grupo</SelectItem>
                 {grupos.map((grupo) => (
                   <SelectItem key={grupo} value={grupo}>{grupo}</SelectItem>
                 ))}

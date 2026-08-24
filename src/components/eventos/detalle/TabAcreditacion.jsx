@@ -10,6 +10,8 @@ import { AcreditacionDataTable } from '@/components/eventos/detalle/Acreditacion
 import { ParticipanteDrawer } from '@/components/eventos/detalle/ParticipanteDrawer'
 import { buildAcreditacionColumns } from '@/components/eventos/detalle/acreditacion.columns'
 import { useParticipantes } from '@/hooks/useParticipantes'
+import { toast } from 'sonner'
+import { Loader2, RefreshCw } from 'lucide-react'
 
 function ProgressCard({ acreditados, total }) {
   const porcentaje = total > 0 ? Math.round((acreditados / total) * 100) : 0
@@ -18,7 +20,7 @@ function ProgressCard({ acreditados, total }) {
     <Card>
       <CardContent className="p-5 space-y-3">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-foreground">Acreditación en curso</p>
+          <p className="text-lg font-medium text-foreground">Acreditación en curso</p>
           <span className="text-2xl font-semibold text-foreground">
             {acreditados}
             <span className="text-base font-normal text-muted-foreground"> / {total}</span>
@@ -213,14 +215,39 @@ function EstadoInformativo({ evento }) {
 
 export function TabAcreditacion({ evento }) {
   const DOS_HORAS_MS = 2 * 60 * 60 * 1000
-  const eventoActivo = new Date() >= new Date(new Date(evento.fecha_inicio).getTime() - DOS_HORAS_MS)
   const [participanteSeleccionado, setParticipanteSeleccionado] = useState(null)
   const [drawerAbierto, setDrawerAbierto] = useState(false)
+  const [eventoActivo, setEventoActivo] = useState(() => {
+    return new Date() >= new Date(new Date(evento.fecha_inicio).getTime() - DOS_HORAS_MS)
+  })
 
-  const { participantes, setParticipantes, isLoading } = useParticipantes(eventoActivo ? evento.id : null)
+  const { participantes, setParticipantes, isLoading, isRefreshing, reintentar } = useParticipantes(eventoActivo ? evento.id : null)
   const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') ?? 'http://localhost:3000'
 
   const socketRef = useRef(null)
+
+  const handleCheckin = useRef(null)
+  handleCheckin.current = (data) => {
+    const payload = Array.isArray(data) ? data[0] : data
+    if (payload.tipo === 'individual') {
+      const encontrado = participantes.some(p => p.id === payload.participanteId)
+      if (!encontrado) {
+        toast.info(`${payload.nombre} ${payload.apellido} fue acreditado pero no está en la lista. Refrescá para verlo.`)
+      }
+      setParticipantes((prev) =>
+        prev.map((p) => p.id === payload.participanteId ? { ...p, acreditado: true } : p)
+      )
+    } else if (payload.tipo === 'grupal') {
+      const ids = new Set(payload.acreditados.map((a) => a.participanteId))
+      const algunoFuera = payload.acreditados.some(a => !participantes.find(p => p.id === a.participanteId))
+      if (algunoFuera) {
+        toast.info('Algunos participantes acreditados no están en la lista. Refrescá para verlos.')
+      }
+      setParticipantes((prev) =>
+        prev.map((p) => ids.has(p.id) ? { ...p, acreditado: true } : p)
+      )
+    }
+  }
 
   useEffect(() => {
     if (!eventoActivo || !evento?.id) return
@@ -229,30 +256,16 @@ export function TabAcreditacion({ evento }) {
     socketRef.current = socket
 
     socket.emit('unirse_evento', evento.id)
-
-    socket.on('checkin:nuevo', (data) => {
-      if (data.tipo === 'individual') {
-        setParticipantes((prev) =>
-          prev.map((p) =>
-            p.id === data.participanteId
-              ? { ...p, acreditado: true }
-              : p
-          )
-        )
-      } else if (data.tipo === 'grupal') {
-        const idsAcreditados = new Set(data.acreditados.map((a) => a.participanteId))
-        setParticipantes((prev) =>
-          prev.map((p) =>
-            idsAcreditados.has(p.id)
-              ? { ...p, acreditado: true }
-              : p
-          )
-        )
-      }
+    socket.onAny((event, ...args) => {
     })
+    socket.on('checkin:nuevo', (data) => handleCheckin.current(data))
 
     return () => {
-      socket.disconnect()
+      if (socket.connected) {
+        socket.disconnect()
+      } else {
+        socket.close()
+      }
     }
   }, [eventoActivo, evento?.id])
 
@@ -340,6 +353,8 @@ export function TabAcreditacion({ evento }) {
               setParticipanteSeleccionado(participante)
               setDrawerAbierto(true)
             }}
+            onRefresh={reintentar}
+            refreshing={isRefreshing}
           />
         </TabsContent>
 
@@ -354,6 +369,8 @@ export function TabAcreditacion({ evento }) {
               setParticipanteSeleccionado(participante)
               setDrawerAbierto(true)
             }}
+            onRefresh={reintentar}
+            refreshing={isRefreshing}
           />
         </TabsContent>
 
@@ -369,6 +386,8 @@ export function TabAcreditacion({ evento }) {
               setParticipanteSeleccionado(participante)
               setDrawerAbierto(true)
             }}
+            onRefresh={reintentar}
+            refreshing={isRefreshing}
           />
         </TabsContent>
       </Tabs>
