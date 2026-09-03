@@ -22,7 +22,8 @@ export const datosPersonalesSchema = z.object({
 export const grupoNuevoSchema = z.object({
   nombre: z.string().min(1, 'Ingresá el nombre del grupo.').max(100),
   parroquia: z.string().max(150).optional().or(z.literal('')),
-  localidad: z.string().max(150).optional().or(z.literal('')),
+  provincia: z.string().min(1, 'Seleccioná una provincia.'),
+  localidad: z.string().min(1, 'Seleccioná una localidad.'),
   maxIntegrantes: z.number().int().positive().optional().nullable(),
 })
 

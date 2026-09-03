@@ -34,6 +34,8 @@ import {
 import { patchEvento } from '@/api/eventos.api'
 import { cn } from '@/lib/utils'
 import { useEffect, useRef } from 'react'
+import { AlertTriangle } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 const TABS = [
   { value: 'resumen', label: 'Resumen' },
@@ -175,6 +177,30 @@ function HeaderSkeleton() {
   return <Skeleton className="h-52 w-full rounded-xl" />
 }
 
+function PantallaBloqueoPago({ monto, onIrAFacturacion }) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-xl border border-destructive/40 bg-destructive/5 py-16 text-center px-6 space-y-4">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+        <AlertTriangle className="h-7 w-7 text-destructive" />
+      </div>
+      <div>
+        <p className="text-base font-semibold text-foreground">Este evento está bloqueado</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Hay un pago pendiente de{' '}
+          <span className="font-medium text-foreground">
+            ${parseFloat(monto).toLocaleString('es-AR')}
+          </span>{' '}
+          con la plataforma. Regularizá el pago para desbloquear el acceso.
+        </p>
+      </div>
+      <Button onClick={onIrAFacturacion} className="gap-2">
+        <ArrowRight className="h-4 w-4" />
+        Ir a Facturación
+      </Button>
+    </div>
+  )
+}
+
 export default function EventoDetallePage() {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -185,29 +211,8 @@ export default function EventoDetallePage() {
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
   const [eliminando, setEliminando] = useState(false)
   const [toggleandoInscripciones, setToggleandoInscripciones] = useState(false)
-  const toastIdRef = useRef(null)
 
-  useEffect(() => {
-    if (!evento) return
-
-    if (evento.pagoPlatforma) {
-      toastIdRef.current = toast.warning(
-        `Pago pendiente: $${parseFloat(evento.pagoPlatforma.monto).toLocaleString('es-AR')}. Regularizá antes de que se bloquee la acreditación.`,
-        {
-          duration: Infinity,
-          id: 'pago-pendiente',
-          action: {
-            label: 'Ver pagos',
-            onClick: () => handleCambiarTab('pagos'),
-          },
-        }
-      )
-    } else {
-      toast.dismiss('pago-pendiente')
-    }
-
-    return () => toast.dismiss('pago-pendiente')
-  }, [evento?.pagoPlatforma])
+  const bloqueoPago = evento?.pagoPlataforma ?? null
 
   function handleActualizarInscriptos(cantidad) {
     setEvento((prev) => ({ ...prev, cantidadInscriptos: cantidad }))
@@ -299,23 +304,33 @@ export default function EventoDetallePage() {
           ))}
         </TabsList>
 
-        <TabsContent value="resumen" className="mt-6">
-          {evento && <TabResumen evento={evento} />}
+        <TabsContent value="resumen" className="mt-3">
+          {evento && (
+            bloqueoPago
+              ? <PantallaBloqueoPago monto={bloqueoPago.monto} onIrAFacturacion={() => navigate('/facturacion')} />
+              : <TabResumen evento={evento} />
+          )}
         </TabsContent>
-
         <TabsContent value="participantes" className="mt-1">
-          {evento && <TabParticipantes evento={evento} onActualizarInscriptos={handleActualizarInscriptos} />}
+          {evento && (
+            bloqueoPago
+              ? <PantallaBloqueoPago monto={bloqueoPago.monto} onIrAFacturacion={() => navigate('/facturacion')} />
+              : <TabParticipantes evento={evento} onActualizarInscriptos={handleActualizarInscriptos} />
+          )}
         </TabsContent>
-
-        <TabsContent value="acreditacion" className="mt-6">
-          {evento && <TabAcreditacion evento={evento} />}
+        <TabsContent value="acreditacion" className="mt-3">
+          {evento && (
+            bloqueoPago
+              ? <PantallaBloqueoPago monto={bloqueoPago.monto} onIrAFacturacion={() => navigate('/facturacion')} />
+              : <TabAcreditacion evento={evento} />
+          )}
         </TabsContent>
 
         {/* <TabsContent value="pagos" className="mt-6">
           {evento && (
             <TabPagos
               evento={evento}
-              onPagoConfirmado={() => setEvento((prev) => ({ ...prev, pagoPlatforma: null }))}
+              onPagoConfirmado={() => setEvento((prev) => ({ ...prev, pagoPlataforma: null }))}
             />
           )}
         </TabsContent> */}

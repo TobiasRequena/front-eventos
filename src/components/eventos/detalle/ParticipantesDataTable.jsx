@@ -60,6 +60,9 @@ const PAGE_SIZE = 10
 export function ParticipantesDataTable({ columns, data, evento, camposForm = [], onDescargar, descargando = false, onRefresh, refreshing = false, extraAcciones }) {
   const tieneCosto = parseFloat(evento?.costo ?? 0) > 0
   const tieneGrupos = evento?.tiene_grupos ?? false
+  const tieneFicha = evento?.config_ficha_medica !== 'no'
+  const tieneAutorizacion = evento?.requiere_autorizacion_menores ?? false
+  const tieneCertificado = evento?.config_certificado !== 'no'
 
   const [busqueda, setBusqueda] = useState('')
   const [filtroPago, setFiltroPago] = useState('todos')
@@ -67,15 +70,17 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
   const [filtroGrupo, setFiltroGrupo] = useState('todos')
   const [columnVisibility, setColumnVisibility] = useState(() => {
     const initial = { dni: false }
-    initial['estado_alta_plataforma'] = false
     if (tieneGrupos) initial.grupo = false
     if (tieneCosto) initial.estado_pago = false
     camposForm.forEach((campo) => {
       initial[`campo_${campo.id}`] = false
     })
-    initial['ficha_medica'] = false
-    initial['autorizacion'] = false
-    initial['certificado'] = false
+    if (tieneFicha) initial['ficha_medica'] = false
+    else initial['ficha_medica'] = false  // ocultar siempre si no aplica
+    if (tieneAutorizacion) initial['autorizacion'] = false
+    else initial['autorizacion'] = false
+    if (tieneCertificado) initial['certificado'] = false
+    else initial['certificado'] = false
     return initial
   })
 

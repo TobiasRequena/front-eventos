@@ -26,7 +26,7 @@ function formatearFecha(fechaIso) {
   }).format(new Date(fechaIso))
 }
 
-export function buildColumns({ camposForm, tieneCosto, tieneGrupos, onVerDetalle, onEliminar }) {
+export function buildColumns({ camposForm, tieneCosto, tieneGrupos, tieneFicha, tieneAutorizacion, tieneCertificado, onVerDetalle, onEliminar }) {
   const columnasFijas = [
     {
       id: 'nombre',
@@ -59,7 +59,7 @@ export function buildColumns({ camposForm, tieneCosto, tieneGrupos, onVerDetalle
       header: 'DNI',
       enableHiding: true,
     },
-    {
+    ...(tieneFicha ? [{
       id: 'ficha_medica',
       header: 'Ficha médica',
       accessorKey: 'tiene_ficha_medica',
@@ -67,8 +67,8 @@ export function buildColumns({ camposForm, tieneCosto, tieneGrupos, onVerDetalle
       cell: ({ getValue }) => getValue()
         ? <Badge variant="default" className="text-xs">Completa</Badge>
         : <Badge variant="outline" className="text-xs">Sin ficha</Badge>,
-    },
-    {
+    }] : []),
+    ...(tieneAutorizacion ? [{
       id: 'autorizacion',
       header: 'Autorización',
       accessorKey: 'tiene_autorizacion',
@@ -76,8 +76,8 @@ export function buildColumns({ camposForm, tieneCosto, tieneGrupos, onVerDetalle
       cell: ({ getValue }) => getValue()
         ? <Badge variant="default" className="text-xs">Presentada</Badge>
         : <Badge variant="outline" className="text-xs">Pendiente</Badge>,
-    },
-    {
+    }] : []),
+    ...(tieneCertificado ? [{
       id: 'certificado',
       header: 'Certificado',
       accessorKey: 'tiene_certificado',
@@ -85,7 +85,7 @@ export function buildColumns({ camposForm, tieneCosto, tieneGrupos, onVerDetalle
       cell: ({ getValue }) => getValue()
         ? <Badge variant="default" className="text-xs">Presentado</Badge>
         : <Badge variant="outline" className="text-xs">Pendiente</Badge>,
-    },
+    }] : []),
     ...(tieneGrupos
       ? [
         {
@@ -110,19 +110,19 @@ export function buildColumns({ camposForm, tieneCosto, tieneGrupos, onVerDetalle
         },
       ]
       : []),
-    {
-      id: 'estado_alta_plataforma',
-      header: 'Alta plataforma',
-      accessorKey: 'estado_alta_plataforma',
-      enableHiding: true,
-      cell: ({ getValue }) => {
-        const valor = getValue()
-        if (!valor) return null
-        return valor === 'confirmado'
-          ? <Badge variant="default">Confirmado</Badge>
-          : <Badge variant="outline">Pago pendiente org</Badge>
-      },
-    },
+    // {
+    //   id: 'estado_alta_plataforma',
+    //   // header: 'Alta plataforma',
+    //   accessorKey: 'estado_alta_plataforma',
+    //   enableHiding: true,
+    //   cell: ({ getValue }) => {
+    //     const valor = getValue()
+    //     if (!valor) return null
+    //     return valor === 'confirmado'
+    //       ? <Badge variant="default">Confirmado</Badge>
+    //       : <Badge variant="outline">Pago pendiente org</Badge>
+    //   },
+    // },
     ...camposForm.map((campo) => ({
       id: `campo_${campo.id}`,
       header: campo.etiqueta,

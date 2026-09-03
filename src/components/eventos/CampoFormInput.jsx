@@ -97,15 +97,23 @@ export function CampoFormInput({ campo, preview = false, control, name }) {
     }
 
     if (campo.tipo === 'seleccion' && !campo.multiple) {
-      const opciones = campo.opciones?.length ? campo.opciones : ['Opción']
+      const opciones = (campo.opciones?.length
+        ? campo.opciones
+        : ['Opción']
+      ).filter(Boolean)
+
       return (
-        <Select disabled={preview} value={valor ?? undefined} onValueChange={onChange}>
+        <Select disabled={preview} value={valor ?? ''} onValueChange={onChange}>
           <SelectTrigger>
             <SelectValue placeholder="Elegí una opción" />
           </SelectTrigger>
+
           <SelectContent>
             {opciones.map((opcion, i) => (
-              <SelectItem key={`${opcion}-${i}`} value={opcion || `opcion-${i}`}>
+              <SelectItem
+                key={`${campo.id}-${i}`}
+                value={opcion}
+              >
                 {opcion}
               </SelectItem>
             ))}

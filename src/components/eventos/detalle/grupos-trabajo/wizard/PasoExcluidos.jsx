@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Checkbox } from '@/components/ui/checkbox'
 import { getParticipantes } from '@/api/participantes.api'
-import { agregarExcluido, quitarExcluido, getEsquema } from '@/api/gruposTrabajo.api'
+import { agregarExcluido, quitarExcluido, getAgrupacion } from '@/api/gruposTrabajo.api'
 import { getApiErrorMessage } from '@/api/httpClient'
 
 export function PasoExcluidos({ evento, esquema, participantes, participantesCargando, onSiguiente, onAnterior }) {
@@ -25,7 +25,7 @@ export function PasoExcluidos({ evento, esquema, participantes, participantesCar
     async function cargarExcluidos() {
       setIsLoading(true)
       try {
-        const esquemaDetalle = await getEsquema(evento.id, esquema.id)
+        const esquemaDetalle = await getAgrupacion(evento.id, esquema.id)
         const ids = new Set((esquemaDetalle.excluidos ?? []).map((e) => e.participante_id))
         setExcluidosOriginales(ids)
         setExcluidosLocales(new Set(ids))

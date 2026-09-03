@@ -2,27 +2,27 @@ import { httpClient } from '@/api/httpClient'
 
 const base = (eventoId) => `/eventos/${eventoId}/esquemas-grupos-trabajo`
 
-export async function getEsquemas(eventoId) {
+export async function getAgrupaciones(eventoId) {
   const { data } = await httpClient.get(base(eventoId))
   return data.esquemas
 }
 
-export async function getEsquema(eventoId, esquemaId) {
+export async function getAgrupacion(eventoId, esquemaId) {
   const { data } = await httpClient.get(`${base(eventoId)}/${esquemaId}`)
   return data.esquema
 }
 
-export async function crearEsquema(eventoId, payload) {
+export async function crearAgrupacion(eventoId, payload) {
   const { data } = await httpClient.post(base(eventoId), payload)
   return data.esquema
 }
 
-export async function patchEsquema(eventoId, esquemaId, payload) {
+export async function patchAgrupacion(eventoId, esquemaId, payload) {
   const { data } = await httpClient.patch(`${base(eventoId)}/${esquemaId}`, payload)
   return data.esquema
 }
 
-export async function eliminarEsquema(eventoId, esquemaId) {
+export async function eliminarAgrupacion(eventoId, esquemaId) {
   await httpClient.delete(`${base(eventoId)}/${esquemaId}`)
 }
 
@@ -31,31 +31,12 @@ export async function getNombresPresets(eventoId) {
   return data.presets
 }
 
-export async function crearTanda(eventoId, esquemaId, payload) {
-  const { data } = await httpClient.post(`${base(eventoId)}/${esquemaId}/tandas`, payload)
-  return data.tanda
-}
-
-export async function patchTanda(eventoId, esquemaId, tandaId, payload) {
-  const { data } = await httpClient.patch(`${base(eventoId)}/${esquemaId}/tandas/${tandaId}`, payload)
-  return data.tanda
-}
-
-export async function eliminarTanda(eventoId, esquemaId, tandaId) {
-  await httpClient.delete(`${base(eventoId)}/${esquemaId}/tandas/${tandaId}`)
-}
-
-export async function reordenarTandas(eventoId, esquemaId, tandas) {
-  const { data } = await httpClient.patch(`${base(eventoId)}/${esquemaId}/tandas/reordenar`, { tandas })
-  return data
-}
-
 export async function getPreview(eventoId, esquemaId) {
   const { data } = await httpClient.get(`${base(eventoId)}/${esquemaId}/preview`)
   return data
 }
 
-export async function generarEsquema(eventoId, esquemaId) {
+export async function generarAgrupacion(eventoId, esquemaId) {
   const { data } = await httpClient.post(`${base(eventoId)}/${esquemaId}/generar`)
   return data
 }
@@ -97,15 +78,15 @@ export async function quitarExcluido(eventoId, esquemaId, participanteId) {
   await httpClient.delete(`${base(eventoId)}/${esquemaId}/excluidos/${participanteId}`)
 }
 
-export async function descargarExcelEsquema(eventoId, esquemaId, nombreEsquema) {
+export async function descargarExcelAgrupacion(eventoId, esquemaId, nombre) {
   const response = await httpClient.get(
-    `/eventos/${eventoId}/esquemas-grupos-trabajo/${esquemaId}/excel`,
+    `${base(eventoId)}/${esquemaId}/excel`,
     { responseType: 'blob' }
   )
   const url = window.URL.createObjectURL(new Blob([response.data]))
   const link = document.createElement('a')
   link.href = url
-  link.setAttribute('download', `grupos-${nombreEsquema ?? esquemaId}.xlsx`)
+  link.setAttribute('download', `grupos-${nombre ?? esquemaId}.xlsx`)
   document.body.appendChild(link)
   link.click()
   link.remove()
@@ -114,7 +95,7 @@ export async function descargarExcelEsquema(eventoId, esquemaId, nombreEsquema) 
 
 export async function descargarExcelGrupo(eventoId, esquemaId, grupoId, nombreGrupo) {
   const response = await httpClient.get(
-    `/eventos/${eventoId}/esquemas-grupos-trabajo/${esquemaId}/grupos/${grupoId}/excel`,
+    `${base(eventoId)}/${esquemaId}/grupos/${grupoId}/excel`,
     { responseType: 'blob' }
   )
   const url = window.URL.createObjectURL(new Blob([response.data]))
@@ -127,16 +108,17 @@ export async function descargarExcelGrupo(eventoId, esquemaId, grupoId, nombreGr
   window.URL.revokeObjectURL(url)
 }
 
-export async function notificarEsquema(eventoId, esquemaId) {
-  const { data } = await httpClient.post(
-    `/eventos/${eventoId}/esquemas-grupos-trabajo/${esquemaId}/notificar`
-  )
+export async function notificarAgrupacion(eventoId, esquemaId) {
+  const { data } = await httpClient.post(`${base(eventoId)}/${esquemaId}/notificar`)
+  return data
+}
+
+export async function notificarGrupo(eventoId, esquemaId, grupoId) {
+  const { data } = await httpClient.post(`${base(eventoId)}/${esquemaId}/grupos/${grupoId}/notificar`)
   return data
 }
 
 export async function notificarParticipante(eventoId, esquemaId, participanteId) {
-  const { data } = await httpClient.post(
-    `/eventos/${eventoId}/esquemas-grupos-trabajo/${esquemaId}/notificar/${participanteId}`
-  )
+  const { data } = await httpClient.post(`${base(eventoId)}/${esquemaId}/notificar/${participanteId}`)
   return data
 }

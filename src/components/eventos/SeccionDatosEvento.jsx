@@ -404,7 +404,7 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                         placeholder="0"
                         {...field}
                         value={field.value !== undefined && field.value !== '' ? field.value : ''}
-                        onChange={(e) => field.onChange(e.target.value === '' ? '' : e.target.value)}
+                        onChange={(e) => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))}
                         onFocus={(e) => { if (Number(field.value) === 0) field.onChange('') }}
                         onBlur={(e) => { if (e.target.value === '') field.onChange(0) }}
                       />

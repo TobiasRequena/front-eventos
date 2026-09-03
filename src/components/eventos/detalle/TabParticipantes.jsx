@@ -27,7 +27,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { GruposTrabajoTab } from '@/components/eventos/detalle/grupos-trabajo/GruposTrabajoTab'
-import { getEsquemas } from '@/api/gruposTrabajo.api'
+import { getAgrupaciones } from '@/api/gruposTrabajo.api'
+import { ComunicacionesTab } from '@/components/eventos/detalle/ComunicacionesTab'
 
 function TablaSkeletonRows() {
   return (
@@ -55,6 +56,10 @@ export function TabParticipantes({ evento, onActualizarInscriptos }) {
   const [esquemasCargando, setEsquemasCargando] = useState(false)
   const [gruposCache, setGruposCache] = useState({})
 
+  const tieneFicha = evento?.config_ficha_medica !== 'no'
+  const tieneAutorizacion = evento?.requiere_autorizacion_menores ?? false
+  const tieneCertificado = evento?.config_certificado !== 'no'
+
   useEffect(() => {
     if (participantes.length > 0) {
       onActualizarInscriptos?.(participantes.length)
@@ -64,7 +69,7 @@ export function TabParticipantes({ evento, onActualizarInscriptos }) {
   async function cargarEsquemas() {
     setEsquemasCargando(true)
     try {
-      const data = await getEsquemas(evento.id)
+      const data = await getAgrupaciones(evento.id)
       setEsquemas(data)
       setEsquemasCargados(true)
     } catch {
@@ -159,6 +164,9 @@ export function TabParticipantes({ evento, onActualizarInscriptos }) {
         camposForm,
         tieneCosto: parseFloat(evento?.costo ?? 0) > 0,
         tieneGrupos: evento?.tiene_grupos ?? false,
+        tieneFicha,
+        tieneAutorizacion,
+        tieneCertificado,
         onVerDetalle: (participante) => {
           setParticipanteSeleccionado(participante)
           setDrawerAbierto(true)
@@ -174,7 +182,7 @@ export function TabParticipantes({ evento, onActualizarInscriptos }) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-destructive/40 py-16 text-center">
         <p className="text-sm font-medium text-foreground">No pudimos cargar los participantes</p>
-        <Button variant="outline" className="mt-4" onClick={reintentar}>
+        <Button variant="outline" className="mt-2" onClick={reintentar}>
           Reintentar
         </Button>
       </div>
@@ -186,10 +194,11 @@ export function TabParticipantes({ evento, onActualizarInscriptos }) {
       <Tabs defaultValue="listado">
         <TabsList>
           <TabsTrigger value="listado">Listado</TabsTrigger>
+          <TabsTrigger value="comunicaciones">Comunicaciones</TabsTrigger>
           <TabsTrigger value="grupos_trabajo">Agrupar</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="listado" className="mt-4">
+        <TabsContent value="listado" className="mt-2">
           <ParticipantesDataTable
             columns={mostrarEliminados ? columnasEliminados : columns}
             data={mostrarEliminados ? eliminados : participantes}
@@ -262,7 +271,10 @@ export function TabParticipantes({ evento, onActualizarInscriptos }) {
             </AlertDialogContent>
           </AlertDialog>
         </TabsContent>
-        <TabsContent value="grupos_trabajo" className="mt-4">
+        <TabsContent value="comunicaciones" className="mt-2">
+          <ComunicacionesTab evento={evento} />
+        </TabsContent>
+        <TabsContent value="grupos_trabajo" className="mt-2">
           <GruposTrabajoTab
             evento={evento}
             participantes={participantes}
@@ -273,6 +285,8 @@ export function TabParticipantes({ evento, onActualizarInscriptos }) {
             onRecargarEsquemas={cargarEsquemas}
             gruposCache={gruposCache}
             setGruposCache={setGruposCache}
+            onRefresh={cargarEsquemas}
+            refreshing={esquemasCargando}
           />
         </TabsContent>
       </Tabs>

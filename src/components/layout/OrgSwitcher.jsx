@@ -45,11 +45,11 @@ export function OrgSwitcher() {
                 {org.id === orgActiva.id && <Check className="h-4 w-4" />}
               </DropdownMenuItem>
             ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem disabled>
+            {/* <DropdownMenuSeparator /> */}
+            {/* <DropdownMenuItem disabled>
               <Plus className="h-4 w-4" />
               Crear organización
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

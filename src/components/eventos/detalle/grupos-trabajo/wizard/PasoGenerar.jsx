@@ -3,7 +3,7 @@ import { Zap, CheckCircle2, AlertCircle, LayoutGrid } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { generarEsquema } from '@/api/gruposTrabajo.api'
+import { generarAgrupacion } from '@/api/gruposTrabajo.api'
 import { getApiErrorMessage } from '@/api/httpClient'
 
 export function PasoGenerar({ evento, esquema, onGenerado, onAnterior }) {
@@ -16,20 +16,17 @@ export function PasoGenerar({ evento, esquema, onGenerado, onAnterior }) {
     setGenerando(true)
     setError(null)
     try {
-      const data = await generarEsquema(evento.id, esquema.id)
-      setResultado(data)
-      toast.success(`¡Grupos generados! ${data.gruposGenerados} grupos creados.`)
+      await generarAgrupacion(evento.id, esquema.id)
+      toast.success('¡Grupos generados!')
+      onGenerado() // lleva al resultado mientras recarga
     } catch (err) {
       const status = err?.response?.status
       if (status === 422) {
-        setError(err?.response?.data?.error?.message ?? 'No se pueden generar los grupos.')
-      } else if (status === 402) {
-        setError(`Pago pendiente: $${parseFloat(err?.response?.data?.error?.monto ?? 0).toLocaleString('es-AR')}. Regularizá el pago antes de generar.`)
+        setError(err?.response?.data?.error?.message ?? 'No se pueden generar los grupos — los nombres no alcanzan.')
       } else {
         setError(getApiErrorMessage(err, 'No pudimos generar los grupos.'))
       }
       toast.error('No pudimos generar los grupos.')
-    } finally {
       setGenerando(false)
     }
   }
@@ -57,7 +54,7 @@ export function PasoGenerar({ evento, esquema, onGenerado, onAnterior }) {
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  {resultado ? '¡Grupos generados exitosamente!' : 'Este esquema ya fue generado.'}
+                  {resultado ? '¡Grupos generados exitosamente!' : 'Esta agrupación ya fue generada.'}
                 </p>
                 {resultado && (
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -88,17 +85,18 @@ export function PasoGenerar({ evento, esquema, onGenerado, onAnterior }) {
                 <p className="text-sm font-medium text-foreground">Listo para generar</p>
                 <p className="mt-1 text-xs text-muted-foreground max-w-sm">
                   Se van a crear los grupos según la configuración definida.
+                  {yaGenerado && ' Como ya fue generada, los grupos actuales se van a reemplazar.'}
                 </p>
               </div>
               {error && (
-                <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-left w-full">
+                <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-left w-full max-w-sm">
                   <AlertCircle className="h-4 w-4 shrink-0 text-destructive mt-0.5" />
                   <p className="text-sm text-destructive">{error}</p>
                 </div>
               )}
               <Button onClick={handleGenerar} disabled={generando} className="gap-2">
                 <Zap className="h-4 w-4" />
-                Generar grupos
+                {yaGenerado ? 'Regenerar grupos' : 'Generar grupos'}
               </Button>
             </div>
           )}
@@ -106,7 +104,7 @@ export function PasoGenerar({ evento, esquema, onGenerado, onAnterior }) {
       </Card>
 
       <div className="flex justify-between">
-        <Button type="button" variant="outline" onClick={onAnterior}>
+        <Button type="button" variant="outline" onClick={onAnterior} disabled={generando}>
           Atrás
         </Button>
       </div>

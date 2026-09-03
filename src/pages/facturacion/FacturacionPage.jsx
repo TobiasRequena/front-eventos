@@ -58,6 +58,7 @@ function EventoActivoCard({ evento, tramos }) {
               tramos={tramos}
               participantesFacturados={evento.participantes_facturados}
               eventoId={evento.id}
+              tramoPendienteId={evento.tramo_pendiente_id}
             />
             <Button
               variant="outline"
@@ -65,7 +66,7 @@ function EventoActivoCard({ evento, tramos }) {
               className="w-full gap-2"
               onClick={() => navigate(`/eventos/${evento.id}/detalle`)}
             >
-              Gestionar evento
+              Ir al evento
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
@@ -99,9 +100,15 @@ function HistorialEventoCard({ evento }) {
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Tramo alcanzado</span>
             <span className="font-medium text-foreground">
-              {evento.tramo_alcanzado.participantes_desde.toLocaleString('es-AR')}+ participantes
-              {' · '}
-              ${parseFloat(evento.tramo_alcanzado.precio_por_participante).toLocaleString('es-AR')}/participante
+              {evento.tramo_alcanzado.participantes_desde?.toLocaleString('es-AR') ?? '—'}
+              {evento.tramo_alcanzado.participantes_hasta
+                ? ` — ${evento.tramo_alcanzado.participantes_hasta.toLocaleString('es-AR')} participantes`
+                : '+ participantes'
+              }
+              {evento.tramo_alcanzado.monto_fijo
+                ? ` · ${parseFloat(evento.tramo_alcanzado.monto_fijo) === 0 ? 'Gratis' : `$${parseFloat(evento.tramo_alcanzado.monto_fijo).toLocaleString('es-AR')}`}`
+                : ''
+              }
             </span>
           </div>
         )}
@@ -153,13 +160,15 @@ export default function FacturacionPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Facturación</h1>
-        <HelpTooltip>
-          La plataforma cobra por participante según el tramo alcanzado. Al cruzar un nuevo tramo,
-          se genera automáticamente un cargo por los participantes adicionales.
-          Podés pagar un tramo superior de forma adelantada haciendo click en él.
-        </HelpTooltip>
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Facturación
+        </h1>
+
+        <p className="mt-1 text-sm text-muted-foreground">
+          La plataforma cobra un monto fijo por tramo de inscriptos. En la tercer columna podrás visualizar cuanto puede costar por participante. La suma se genera de forma automática y en el caso de no abonar se bloquearán determinadas funciones. Si tenés un estimativo de participantes, podés pagar por adelantado pero no se realizan devoluciones en el caso de no llegar a la cantidad de inscriptos esperada.
+          Ejemplo: con el tramo 501-2000, abonas $440.000. Si se inscriben 550 personas, el costo por participante será de $800 y si de inscriben 1200 $366 por cada uno de ellos.
+        </p>
       </div>
 
       <Tabs defaultValue="activos">

@@ -22,6 +22,11 @@ export function useParticipantes(eventoId) {
       setParticipantes(normalizados)
       setStatus('success')
     } catch (err) {
+      if (err?.response?.status === 402) {
+        const { monto, pagoId } = err.response.data.error
+        onBloqueo?.({ monto, pagoId })
+        return
+      }
       setError(err)
       setStatus('error')
     }

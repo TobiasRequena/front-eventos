@@ -243,10 +243,10 @@ function FichaMedicaForm({ form, obligatoria }) {
                 {[
                   { campo: 'movilidad', label: 'Movilidad reducida' },
                   { campo: 'lengua_senas', label: 'Lengua de señas' },
-                  { campo: 'material_accesible', label: 'Material accesible' },
+                  // { campo: 'material_accesible', label: 'Material accesible' },
                   { campo: 'acompanante', label: 'Acompañante' },
-                  { campo: 'espacio_tranquilo', label: 'Espacio tranquilo' },
-                  { campo: 'participacion', label: 'Adaptación en participación' },
+                  // { campo: 'espacio_tranquilo', label: 'Espacio tranquilo' },
+                  // { campo: 'participacion', label: 'Adaptación en participación' },
                 ].map(({ campo, label }) => (
                   <div key={campo} className="flex items-center gap-2">
                     <Checkbox

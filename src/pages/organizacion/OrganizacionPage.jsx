@@ -75,6 +75,9 @@ export default function OrganizacionPage() {
     )
   }
 
+  const nombreActual = form.watch('nombre')
+  const sinCambios = nombreActual === (org?.nombre ?? '')
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
@@ -133,7 +136,7 @@ export default function OrganizacionPage() {
                   >
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={guardando}>
+                  <Button type="submit" disabled={guardando || sinCambios}>
                     {guardando ? 'Guardando...' : 'Guardar'}
                   </Button>
                 </div>

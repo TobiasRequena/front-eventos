@@ -38,7 +38,7 @@ const ESTADO_INICIAL_FORM = {
   valor2: '',
 }
 
-function TandaForm({ tanda, onGuardar, onCancelar, guardando }) {
+function TandaForm({ tanda, onGuardar, onCancelar, guardando, esquema }) {
   const [form, setForm] = useState(
     tanda
       ? {

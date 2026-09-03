@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { ArrowLeft, Search, ChevronDown, ChevronUp, RefreshCw, Users, UserX, Eye, UserPlus, UserMinus, Loader2, Download, Send } from 'lucide-react'
+import { ArrowLeft, Search, ChevronDown, ChevronUp, RefreshCw, Users, UserX, Eye, UserPlus, UserMinus, Loader2, Download, Send, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,11 +15,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { getGrupos, getPendientes } from '@/api/gruposTrabajo.api'
+import { getGrupos, getPendientes, notificarGrupo, agregarAGrupo, quitarDeGrupo, descargarExcelAgrupacion, descargarExcelGrupo, notificarAgrupacion, notificarParticipante } from '@/api/gruposTrabajo.api'
 import { getApiErrorMessage } from '@/api/httpClient'
 import { ParticipanteDrawer } from '@/components/eventos/detalle/ParticipanteDrawer'
 import { getParticipantePorId } from '@/api/participantes.api'
-import { agregarAGrupo } from '@/api/gruposTrabajo.api'
 import {
   Dialog,
   DialogContent,
@@ -34,15 +33,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { quitarDeGrupo } from '@/api/gruposTrabajo.api'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { descargarExcelEsquema, descargarExcelGrupo } from '@/api/gruposTrabajo.api'
-import { notificarEsquema, notificarParticipante } from '@/api/gruposTrabajo.api'
 
 const MOTIVO_CONFIG = {
   excluido_admin: { label: 'Excluido por admin', variant: 'outline' },
@@ -113,6 +109,20 @@ function GrupoCard({ grupo, busquedaIntegrantes, onVerDetalle, onQuitar, quitand
   const [abierto, setAbierto] = useState(false)
   const [descargando, setDescargando] = useState(false)
   const [notificandoId, setNotificandoId] = useState(null)
+  const [notificandoGrupo, setNotificandoGrupo] = useState(false)
+
+  async function handleNotificarGrupo(e) {
+    e.stopPropagation()
+    setNotificandoGrupo(true)
+    try {
+      const data = await notificarGrupo(eventoId, esquemaId, grupo.id)
+      toast.success(`Mail enviado a ${data.enviados} integrante${data.enviados !== 1 ? 's' : ''}.`)
+    } catch {
+      toast.error('No pudimos enviar los mails del grupo.')
+    } finally {
+      setNotificandoGrupo(false)
+    }
+  }
 
   async function handleNotificarParticipante(integrante) {
     setNotificandoId(integrante.id)
@@ -189,6 +199,24 @@ function GrupoCard({ grupo, busquedaIntegrantes, onVerDetalle, onQuitar, quitand
                 </TooltipTrigger>
                 <TooltipContent>Descargar Excel del grupo</TooltipContent>
               </Tooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={handleNotificarGrupo}
+                      disabled={notificandoGrupo}
+                      className="rounded-md p-1.5 text-muted-foreground hover:bg-accent"
+                    >
+                      {notificandoGrupo
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : <Send className="h-3.5 w-3.5" />
+                      }
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Notificar grupo por mail</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </TooltipProvider>
             {abierto
               ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -470,7 +498,7 @@ function TabPendientes({ pendientes, setPendientes, grupos, setGrupos, isLoading
   )
 }
 
-export function GruposResultado({ evento, esquema, onVolver, onRegenerar, cache, setCache }) {
+export function GruposResultado({ evento, esquema, onVolver, onVolverConfiguracion, onRegenerar, cache, setCache }) {
   const [participanteSeleccionado, setParticipanteSeleccionado] = useState(null)
   const [drawerAbierto, setDrawerAbierto] = useState(false)
   const [cargandoDetalle, setCargandoDetalle] = useState(false)
@@ -485,7 +513,7 @@ export function GruposResultado({ evento, esquema, onVolver, onRegenerar, cache,
   async function handleNotificar() {
     setNotificando(true)
     try {
-      const data = await notificarEsquema(evento.id, esquema.id)
+      const data = await notificarAgrupacion(evento.id, esquema.id)
 
       if (data.enviados === 0) {
         toast.error(`No se pudo enviar ningún mail. ${data.errores} error${data.errores !== 1 ? 'es' : ''}.`)
@@ -506,7 +534,7 @@ export function GruposResultado({ evento, esquema, onVolver, onRegenerar, cache,
   async function handleDescargar() {
     setDescargando(true)
     try {
-      await descargarExcelEsquema(evento.id, esquema.id, esquema.nombre)
+      await descargarExcelAgrupacion(evento.id, esquema.id, esquema.nombre)
     } catch {
       toast.error('No pudimos generar el Excel.')
     } finally {
@@ -587,15 +615,23 @@ export function GruposResultado({ evento, esquema, onVolver, onRegenerar, cache,
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={onVolver} className="gap-1.5">
+      <div className="flex items-end justify-between">
+        <div className="space-y-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onVolver}
+            className="-ml-2 h-8 gap-1.5 text-muted-foreground cursor-pointer"
+          >
             <ArrowLeft className="h-4 w-4" />
-            Volver al wizard
+            Volver
           </Button>
+
           <div>
             <p className="text-xs text-muted-foreground">Resultado</p>
-            <h3 className="text-base font-semibold text-foreground">{esquema.nombre}</h3>
+            <h3 className="text-lg font-semibold text-foreground">
+              {esquema.nombre}
+            </h3>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -627,7 +663,23 @@ export function GruposResultado({ evento, esquema, onVolver, onRegenerar, cache,
             </Tooltip>
           </TooltipProvider>
 
-          <Button variant="outline" size="sm" onClick={onRegenerar} className="gap-1.5">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" onClick={onVolverConfiguracion} >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Volver a la configuración</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRegenerar}
+            className="h-9 gap-1.5"
+          >
             <RefreshCw className="h-4 w-4" />
             Regenerar
           </Button>

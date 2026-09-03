@@ -41,7 +41,7 @@ function formatearFechaNac(fechaIso) {
 
 function EventoHeader({ evento, grupo }) {
   const [copiado, setCopiado] = useState(false)
-  const linkGrupo = `${import.meta.env.VITE_APP_URL ?? 'http://localhost:5173'}/inscribirse/${evento.codigo}?grupo=${grupo.codigoInv}`
+  const linkGrupo = `${import.meta.env.VITE_API_URL_FRONT ?? 'http://localhost:5173'}/inscribirse/${evento.codigo}?grupo=${grupo.codigoInv}`
 
   function copiarLink() {
     navigator.clipboard.writeText(linkGrupo)

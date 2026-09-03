@@ -10,6 +10,7 @@ import { patchEvento } from '@/api/eventos.api'
 import { subirPortadaEvento } from '@/api/archivos.api'
 import { getApiErrorMessage } from '@/api/httpClient'
 import { useAuth } from '@/contexts/AuthContext'
+import { EventoPreviewPanel } from '@/components/eventos/EventoPreviewPanel'
 
 function adaptarEventoAForm(evento) {
   return {
@@ -159,8 +160,8 @@ export function EditarEventoPanel({ evento, onVolver, onGuardado }) {
             />
           </div>
           <div className="lg:col-span-1">
-            <div className="sticky top-6 rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-              Preview disponible en el creador de evento. Acá mostramos solo los datos básicos.
+            <div className="sticky top-6">
+              <EventoPreviewPanel imagenPreview={imagenPreview} />
             </div>
           </div>
         </div>

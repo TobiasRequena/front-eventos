@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Search, Users, UserPlus, User, CheckCircle2 } from 'lucide-react'
@@ -19,6 +19,16 @@ import { grupoNuevoSchema } from '@/lib/validators/inscripcion.schemas'
 import { getGrupoPorCodigoInvitacion } from '@/api/inscripcion.api'
 import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
 import { Checkbox } from "@/components/ui/checkbox"
+import { useProvincias, useLocalidades, useBuscarLocalidades } from '@/hooks/useGeoref'
+import { Loader2 } from 'lucide-react'
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/components/ui/combobox'
 
 const OPCIONES_ROL = [
   {
@@ -68,6 +78,69 @@ function OpcionRol({ opcion, seleccionada, onClick, deshabilitada }) {
         <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
       )}
     </button>
+  )
+}
+
+function LocalidadSearch({ provinciaId, value, onChange }) {
+  const [busqueda, setBusqueda] = useState(value ?? '')
+  const [abierto, setAbierto] = useState(false)
+  const inputRef = useRef(null)
+  const seleccionando = useRef(false)
+  const { resultados, isLoading, buscar } = useBuscarLocalidades(provinciaId)
+
+  useEffect(() => {
+    if (seleccionando.current) {
+      seleccionando.current = false
+      return
+    }
+    const timer = setTimeout(() => buscar(busqueda), 300)
+    return () => clearTimeout(timer)
+  }, [busqueda, provinciaId])
+
+  useEffect(() => {
+    if (resultados.length > 0) setAbierto(true)
+  }, [resultados])
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <Input
+          ref={inputRef}
+          value={busqueda}
+          onChange={(e) => {
+            setBusqueda(e.target.value)
+            onChange('')
+          }}
+          onBlur={() => setTimeout(() => setAbierto(false), 150)}
+          onFocus={() => busqueda.length >= 2 && resultados.length > 0 && setAbierto(true)}
+          placeholder={provinciaId ? 'Buscar localidad...' : 'Primero seleccioná provincia'}
+          disabled={!provinciaId}
+        />
+        {isLoading && (
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+        )}
+      </div>
+      {abierto && resultados.length > 0 && (
+        <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-md">
+          {resultados.map((loc) => (
+            <button
+              key={loc.id}
+              type="button"
+              className="flex w-full items-center px-3 py-2 text-sm hover:bg-muted text-left transition-colors"
+              onClick={() => {
+                seleccionando.current = true
+                setBusqueda(loc.nombre)
+                onChange(loc.nombre)
+                setAbierto(false)
+                inputRef.current?.blur()
+              }}
+            >
+              {loc.nombre}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -159,21 +232,27 @@ function FormUnirseGrupo({ grupoPreseleccionado, onGrupoResuelto }) {
   )
 }
 
-function FormCrearGrupo({ onDatosChange }) {
+function FormCrearGrupo({ onDatosChange, defaultValues }) {
+  const [provinciaId, setProvinciaId] = useState('')
+  const { provincias, isLoading: cargandoProvincias } = useProvincias()
+
   const form = useForm({
     resolver: zodResolver(grupoNuevoSchema),
-    defaultValues: {
+    defaultValues: defaultValues ?? {
       nombre: '',
       parroquia: '',
+      provincia: '',
       localidad: '',
       maxIntegrantes: 10,
     },
   })
 
+  const { trigger } = form
+
   function handleChange() {
     const valores = form.getValues()
-    const valido = form.formState.isValid
-    onDatosChange(valido ? valores : null)
+    const resultado = grupoNuevoSchema.safeParse(valores)
+    onDatosChange(resultado.success ? valores : null)
   }
 
   return (
@@ -192,34 +271,80 @@ function FormCrearGrupo({ onDatosChange }) {
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="parroquia"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Parroquia / Institución</FormLabel>
+              <FormControl>
+                <Input placeholder="Ej. Parroquia San Martín" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <div className="grid grid-cols-2 gap-3">
           <FormField
             control={form.control}
-            name="parroquia"
+            name="provincia"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Parroquia / Institución</FormLabel>
-                <FormControl>
-                  <Input placeholder="Opcional" {...field} />
-                </FormControl>
+                <FormLabel>Provincia</FormLabel>
+                <Combobox
+                  items={provincias.map(p => p.nombre)}
+                  value={field.value}
+                  onValueChange={(v) => {
+                    const prov = provincias.find(p => p.nombre === v)
+                    setProvinciaId(prov?.id ?? '')
+                    field.onChange(v)
+                    form.setValue('localidad', '')
+                    handleChange()
+                  }}
+                >
+                  <ComboboxInput placeholder="Seleccioná una provincia" disabled={cargandoProvincias} />
+                  <ComboboxContent>
+                    <ComboboxEmpty>No se encontraron provincias.</ComboboxEmpty>
+                    <ComboboxList>
+                      {(item) => (
+                        <ComboboxItem key={item} value={item}>{item}</ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="localidad"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Localidad</FormLabel>
-                <FormControl>
-                  <Input placeholder="Opcional" {...field} />
-                </FormControl>
+                <LocalidadSearch
+                  provinciaId={provinciaId}
+                  value={field.value}
+                  onClick={() => {
+                    setBusqueda(loc.nombre)
+                    onChange(loc.nombre)
+                    setAbierto(false)
+                    setTimeout(() => handleChange(), 0)
+                  }}
+                  onChange={(v) => {
+                    field.onChange(v)
+                    handleChange()
+                  }}
+                />
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
+
         <FormField
           control={form.control}
           name="maxIntegrantes"
@@ -358,7 +483,10 @@ export default function StepGrupo({ evento, wizard, codigoGrupoInicial }) {
         )}
 
         {rolElegido === 'crear' && (
-          <FormCrearGrupo onDatosChange={setDatosGrupoNuevo} />
+          <FormCrearGrupo
+            onDatosChange={setDatosGrupoNuevo}
+            defaultValues={datosWizard.datosGrupoNuevo}
+          />
         )}
 
         {rolElegido === 'individual' && (

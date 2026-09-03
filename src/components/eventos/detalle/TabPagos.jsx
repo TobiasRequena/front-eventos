@@ -31,7 +31,7 @@ import {
 import { getApiErrorMessage } from '@/api/httpClient'
 import { io } from 'socket.io-client'
 
-function EstadoPagoCard({ pagoPlatforma, eventoId }) {
+function EstadoPagoCard({ pagoPlataforma, eventoId }) {
   const [reenviando, setReenviando] = useState(false)
 
   async function handleReenviar() {
@@ -48,7 +48,7 @@ function EstadoPagoCard({ pagoPlatforma, eventoId }) {
     }
   }
 
-  if (!pagoPlatforma) {
+  if (!pagoPlataforma) {
     return (
       <Card>
         <CardContent className="flex items-center gap-3 p-5">
@@ -80,7 +80,7 @@ function EstadoPagoCard({ pagoPlatforma, eventoId }) {
             </p>
           </div>
           <Badge variant="destructive">
-            ${parseFloat(pagoPlatforma.monto).toLocaleString('es-AR')}
+            ${parseFloat(pagoPlataforma.monto).toLocaleString('es-AR')}
           </Badge>
         </div>
         <Button
@@ -356,7 +356,7 @@ export function TabPagos({ evento, onPagoConfirmado }) {
   return (
     <div className="space-y-4">
       <EstadoPagoCard
-        pagoPlatforma={evento?.pagoPlatforma}
+        pagoPlataforma={evento?.pagoPlataforma}
         eventoId={evento?.id}
       />
 
