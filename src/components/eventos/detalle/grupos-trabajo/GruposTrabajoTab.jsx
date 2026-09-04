@@ -92,9 +92,11 @@ export function GruposTrabajoTab({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-sm font-medium text-foreground">Grupos de trabajo</h3>
+          <h3 className="text-sm font-medium text-foreground">
+            Grupos de trabajo
+          </h3>
           <p className="text-xs text-muted-foreground">
             Organizá los participantes en grupos según criterios personalizados.
           </p>
@@ -110,7 +112,9 @@ export function GruposTrabajoTab({
                   onClick={onRefresh}
                   disabled={refreshing}
                 >
-                  <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
+                  <RefreshCw
+                    className={cn('h-4 w-4', refreshing && 'animate-spin')}
+                  />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Refrescar</TooltipContent>
@@ -119,7 +123,7 @@ export function GruposTrabajoTab({
 
           <Button
             onClick={() => setAgrupacionActiva('nueva')}
-            className="gap-2"
+            className="flex-1 gap-2 sm:flex-none"
             size="sm"
           >
             <Plus className="h-4 w-4" />

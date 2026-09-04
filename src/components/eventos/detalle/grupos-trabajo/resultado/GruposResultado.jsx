@@ -352,7 +352,7 @@ function TabGrupos({ grupos, isLoading, onVerDetalle, onQuitar, quitandoId, even
           No se encontraron grupos.
         </p>
       ) : (
-        <div className="columns-2 gap-2 space-y-2">
+        <div className="columns-1 gap-2 space-y-2 sm:columns-2">
           {gruposFiltrados.map((grupo) => (
             <GrupoCard
               key={grupo.id}
@@ -615,8 +615,9 @@ export function GruposResultado({ evento, esquema, onVolver, onVolverConfiguraci
 
   return (
     <div className="space-y-5">
-      <div className="flex items-end justify-between">
-        <div className="space-y-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        {/* Volver + nombre */}
+        <div className="flex w-full items-center justify-between sm:w-auto sm:justify-start">
           <Button
             variant="ghost"
             size="sm"
@@ -627,22 +628,33 @@ export function GruposResultado({ evento, esquema, onVolver, onVolverConfiguraci
             Volver
           </Button>
 
-          <div>
-            <p className="text-xs text-muted-foreground">Resultado</p>
-            <h3 className="text-lg font-semibold text-foreground">
-              {esquema.nombre}
-            </h3>
+          <div className="flex items-center gap-3 sm:ml-3">
+            <div className="hidden h-5 w-px bg-border sm:block" />
+
+            <div className="text-right sm:text-left">
+              <h3 className="text-lg font-semibold text-foreground">
+                {esquema.nombre}
+              </h3>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Acciones */}
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" onClick={handleNotificar} disabled={notificando}>
-                  {notificando
-                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                    : <Send className="h-4 w-4" />
-                  }
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleNotificar}
+                  disabled={notificando}
+                >
+                  {notificando ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Notificar a todos por mail</TooltipContent>
@@ -652,11 +664,17 @@ export function GruposResultado({ evento, esquema, onVolver, onVolverConfiguraci
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" onClick={handleDescargar} disabled={descargando}>
-                  {descargando
-                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                    : <Download className="h-4 w-4" />
-                  }
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleDescargar}
+                  disabled={descargando}
+                >
+                  {descargando ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Descargar Excel completo</TooltipContent>
@@ -666,7 +684,11 @@ export function GruposResultado({ evento, esquema, onVolver, onVolverConfiguraci
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" onClick={onVolverConfiguracion} >
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={onVolverConfiguracion}
+                >
                   <Settings className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -678,7 +700,7 @@ export function GruposResultado({ evento, esquema, onVolver, onVolverConfiguraci
             variant="outline"
             size="sm"
             onClick={onRegenerar}
-            className="h-9 gap-1.5"
+            className="h-9 flex-1 gap-1.5 sm:flex-none"
           >
             <RefreshCw className="h-4 w-4" />
             Regenerar

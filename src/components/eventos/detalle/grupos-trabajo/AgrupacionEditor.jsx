@@ -100,8 +100,9 @@ export function AgrupacionEditor({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        {/* Primera fila */}
+        <div className="flex w-full items-center justify-between md:w-auto md:justify-start">
           <Button
             variant="ghost"
             size="sm"
@@ -112,17 +113,18 @@ export function AgrupacionEditor({
             Volver
           </Button>
 
-          <div className="h-5 w-px bg-border" />
+          <div className="flex items-center gap-3">
+            <div className="h-5 w-px bg-border" />
 
-          <div>
             <h3 className="text-base font-semibold text-foreground">
               {agrupacion ? agrupacion.nombre : 'Nueva agrupación'}
             </h3>
           </div>
         </div>
 
+        {/* Segunda fila */}
         {agrupacion && (
-          <div className="flex items-center gap-3">
+          <div className="flex w-full items-center justify-between md:w-auto md:justify-end md:gap-3">
             <Badge
               variant={agrupacion.estado === 'generado' ? 'default' : 'outline'}
             >
