@@ -12,6 +12,7 @@ import { buildAcreditacionColumns } from '@/components/eventos/detalle/acreditac
 import { useParticipantes } from '@/hooks/useParticipantes'
 import { toast } from 'sonner'
 import { Loader2, RefreshCw } from 'lucide-react'
+import { getAcreditadores } from '@/api/acreditacion.api'
 
 function ProgressCard({ acreditados, total }) {
   const porcentaje = total > 0 ? Math.round((acreditados / total) * 100) : 0
@@ -217,6 +218,7 @@ export function TabAcreditacion({ evento }) {
   const DOS_HORAS_MS = 2 * 60 * 60 * 1000
   const [participanteSeleccionado, setParticipanteSeleccionado] = useState(null)
   const [drawerAbierto, setDrawerAbierto] = useState(false)
+  const [acreditadores, setAcreditadores] = useState([])
   const [eventoActivo, setEventoActivo] = useState(() => {
     return new Date() >= new Date(new Date(evento.fecha_inicio).getTime() - DOS_HORAS_MS)
   })
@@ -268,6 +270,19 @@ export function TabAcreditacion({ evento }) {
       }
     }
   }, [eventoActivo, evento?.id])
+
+  console.log('render TabAcreditacion', { eventoActivo, eventoId: evento?.id })
+
+  useEffect(() => {
+    console.log('effect acreditadores', { eventoActivo, eventoId: evento.id })
+    if (!eventoActivo || !evento?.id) return
+    getAcreditadores(evento.id)
+      .then((data) => {
+        console.log('acreditadores recibidos:', data)
+        setAcreditadores(data)
+      })
+      .catch((err) => console.error('acreditadores error:', err?.response?.status, err?.response?.data))
+  }, [eventoActivo, evento.id])
 
   if (!eventoActivo) return <EstadoInformativo evento={evento} />
 
@@ -349,6 +364,7 @@ export function TabAcreditacion({ evento }) {
             evento={evento}
             camposForm={camposForm}
             mostrarFiltrosCompletos
+            acreditadores={acreditadores}
             onVerDetalle={(participante) => {
               setParticipanteSeleccionado(participante)
               setDrawerAbierto(true)
@@ -365,6 +381,7 @@ export function TabAcreditacion({ evento }) {
             evento={evento}
             camposForm={camposForm}
             mostrarFiltrosCompletos={false}
+            acreditadores={acreditadores}
             onVerDetalle={(participante) => {
               setParticipanteSeleccionado(participante)
               setDrawerAbierto(true)
@@ -381,7 +398,8 @@ export function TabAcreditacion({ evento }) {
             evento={evento}
             camposForm={camposForm}
             mostrarFiltrosCompletos={false}
-            initialColumnVisibility={{ acreditado: false }}
+            acreditadores={acreditadores}
+            initialColumnVisibility={{ acreditado: false, acreditador: false }}
             onVerDetalle={(participante) => {
               setParticipanteSeleccionado(participante)
               setDrawerAbierto(true)

@@ -325,6 +325,44 @@ export function ParticipanteDrawer({ participante, camposForm = [], evento, open
                 </>
               )}
 
+              <Separator />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Acreditación
+                  </p>
+
+                  {participante.acreditado ? (
+                    <Badge variant="default">Acreditado</Badge>
+                  ) : (
+                    <Badge variant="outline">Sin acreditar</Badge>
+                  )}
+                </div>
+
+                {participante.acreditado && (
+                  <>
+                    {participante.acreditado_en && (
+                      <InfoRow
+                        icon={Calendar}
+                        label="Fecha de acreditación"
+                        value={formatFechaSafely(
+                          participante.acreditado_en,
+                          "d 'de' MMMM, yyyy HH:mm"
+                        )}
+                      />
+                    )}
+
+                    {participante.acreditador && (
+                      <InfoRow
+                        icon={Users}
+                        label="Acreditado por"
+                        value={`${participante.acreditador.nombre} ${participante.acreditador.apellido}`}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+
               <FichaMedicaDrawer
                 participanteId={participante?.id}
                 open={fichaMedicaAbierta}

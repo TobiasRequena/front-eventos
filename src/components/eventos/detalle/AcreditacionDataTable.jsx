@@ -51,16 +51,11 @@ const OPCIONES_EDAD = [
 const PAGE_SIZE = 10
 
 export function AcreditacionDataTable({
-  columns,
-  data,
-  evento,
-  camposForm = [],
-  mostrarFiltrosCompletos = false,
-  initialColumnVisibility = {},
-  onVerDetalle,
-  onRefresh,
-  refreshing = false,
+  columns, data, evento, camposForm = [], mostrarFiltrosCompletos = false,
+  initialColumnVisibility = {}, onVerDetalle, onRefresh, refreshing = false,
+  acreditadores = [],
 }) {
+  const [filtroAcreditador, setFiltroAcreditador] = useState('todos')
   const tieneCosto = parseFloat(evento?.costo ?? 0) > 0
   const tieneGrupos = evento?.tiene_grupos ?? false
 
@@ -94,6 +89,10 @@ export function AcreditacionDataTable({
         if (!coincide) return false
       }
       if (mostrarFiltrosCompletos) {
+        if (filtroAcreditador !== 'todos') {
+          const nombreAcreditador = normalizar(`${p.acreditador?.nombre ?? ''} ${p.acreditador?.apellido ?? ''}`)
+          if (nombreAcreditador !== filtroAcreditador) return false
+        }
         if (filtroPago !== 'todos' && p.estado_pago !== filtroPago) return false
         if (filtroEdad === 'mayores' && !p.es_mayor) return false
         if (filtroEdad === 'menores' && p.es_mayor) return false
@@ -114,6 +113,24 @@ export function AcreditacionDataTable({
   })
 
   const columnasOcultables = table.getAllColumns().filter((col) => col.getCanHide())
+
+  function normalizar(str) {
+    return str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+  }
+
+  const acreditadoresUnicos = useMemo(() => {
+    const vistos = new Set()
+    return acreditadores.filter((a) => {
+      const key = normalizar(`${a.nombre} ${a.apellido}`)
+      if (vistos.has(key)) return false
+      vistos.add(key)
+      return true
+    })
+  }, [acreditadores])
 
   return (
     <div className="space-y-4">
@@ -174,6 +191,25 @@ export function AcreditacionDataTable({
                     <SelectItem value="todos">Todos los grupos</SelectItem>
                     {grupos.map((grupo) => (
                       <SelectItem key={grupo} value={grupo}>{grupo}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {acreditadores.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs text-muted-foreground">Acreditador</Label>
+                <Select value={filtroAcreditador} onValueChange={setFiltroAcreditador}>
+                  <SelectTrigger className="w-44">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    {acreditadoresUnicos.map((a) => (
+                      <SelectItem key={a.id} value={normalizar(`${a.nombre} ${a.apellido}`)}>
+                        {a.nombre} {a.apellido}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

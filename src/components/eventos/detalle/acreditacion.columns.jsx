@@ -105,6 +105,15 @@ export function buildAcreditacionColumns({ camposForm, tieneCosto, tieneGrupos, 
       }]
       : []),
     {
+      id: 'acreditador',
+      header: 'Acreditador',
+      enableHiding: true,
+      accessorFn: (row) => row.acreditador ? `${row.acreditador.nombre} ${row.acreditador.apellido}` : '—',
+      cell: ({ getValue }) => (
+        <span className="text-sm text-muted-foreground">{getValue()}</span>
+      ),
+    },
+    {
       id: 'acciones',
       header: 'Acciones',
       enableHiding: false,

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { httpClient } from '@/api/httpClient'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1'
 const publicClient = axios.create({ baseURL: BASE_URL })
@@ -37,4 +38,9 @@ export async function acreditarGrupal({ participanteIds, acreditadorId, eventoId
     puntoAccesoId: null,
   })
   return data
+}
+
+export async function getAcreditadores(eventoId) {
+  const { data } = await httpClient.get(`/acreditacion/acreditadores?eventoId=${eventoId}`)
+  return data.acreditadores
 }
