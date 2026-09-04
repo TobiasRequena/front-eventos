@@ -271,14 +271,10 @@ export function TabAcreditacion({ evento }) {
     }
   }, [eventoActivo, evento?.id])
 
-  console.log('render TabAcreditacion', { eventoActivo, eventoId: evento?.id })
-
   useEffect(() => {
-    console.log('effect acreditadores', { eventoActivo, eventoId: evento.id })
     if (!eventoActivo || !evento?.id) return
     getAcreditadores(evento.id)
       .then((data) => {
-        console.log('acreditadores recibidos:', data)
         setAcreditadores(data)
       })
       .catch((err) => console.error('acreditadores error:', err?.response?.status, err?.response?.data))
