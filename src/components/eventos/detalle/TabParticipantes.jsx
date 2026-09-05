@@ -18,7 +18,6 @@ import {
 import { ParticipantesDataTable } from '@/components/eventos/detalle/ParticipantesDataTable'
 import { ParticipanteDrawer } from '@/components/eventos/detalle/ParticipanteDrawer'
 import { buildColumns } from '@/components/eventos/detalle/participantes.columns'
-import { useParticipantes } from '@/hooks/useParticipantes'
 import { eliminarParticipante, getParticipantesEliminados } from '@/api/participantes.api'
 import { getApiErrorMessage } from '@/api/httpClient'
 import { Download, Loader2, Trash2 } from 'lucide-react'
@@ -29,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { GruposTrabajoTab } from '@/components/eventos/detalle/grupos-trabajo/GruposTrabajoTab'
 import { getAgrupaciones } from '@/api/gruposTrabajo.api'
 import { ComunicacionesTab } from '@/components/eventos/detalle/ComunicacionesTab'
+import { useTabsPersistentes } from '@/hooks/useTabsPersistentes'
 
 function TablaSkeletonRows() {
   return (
@@ -41,8 +41,8 @@ function TablaSkeletonRows() {
   )
 }
 
-export function TabParticipantes({ evento, onActualizarInscriptos }) {
-  const { participantes, setParticipantes, isLoading, isRefreshing, isError, reintentar } = useParticipantes(evento.id)
+export function TabParticipantes({ evento, participantesState }) {
+  const { participantes, setParticipantes, isLoading, isRefreshing, isError, reintentar } = participantesState
   const [participanteSeleccionado, setParticipanteSeleccionado] = useState(null)
   const [drawerAbierto, setDrawerAbierto] = useState(false)
   const [participanteAEliminar, setParticipanteAEliminar] = useState(null)
@@ -55,16 +55,12 @@ export function TabParticipantes({ evento, onActualizarInscriptos }) {
   const [esquemasCargados, setEsquemasCargados] = useState(false)
   const [esquemasCargando, setEsquemasCargando] = useState(false)
   const [gruposCache, setGruposCache] = useState({})
+  const [subTab, setSubTab] = useState('listado')
+  const fueVisitada = useTabsPersistentes(subTab)
 
   const tieneFicha = evento?.config_ficha_medica !== 'no'
   const tieneAutorizacion = evento?.requiere_autorizacion_menores ?? false
   const tieneCertificado = evento?.config_certificado !== 'no'
-
-  useEffect(() => {
-    if (participantes.length > 0) {
-      onActualizarInscriptos?.(participantes.length)
-    }
-  }, [participantes.length])
 
   async function cargarEsquemas() {
     setEsquemasCargando(true)
@@ -191,14 +187,14 @@ export function TabParticipantes({ evento, onActualizarInscriptos }) {
 
   return (
     <>
-      <Tabs defaultValue="listado">
+      <Tabs value={subTab} onValueChange={setSubTab}>
         <TabsList>
           <TabsTrigger value="listado">Listado</TabsTrigger>
           <TabsTrigger value="comunicaciones">Comunicaciones</TabsTrigger>
           <TabsTrigger value="grupos_trabajo">Agrupar</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="listado" className="mt-2">
+        <TabsContent value="listado" className="mt-2" forceMount>
           <ParticipantesDataTable
             columns={mostrarEliminados ? columnasEliminados : columns}
             data={mostrarEliminados ? eliminados : participantes}
@@ -271,11 +267,11 @@ export function TabParticipantes({ evento, onActualizarInscriptos }) {
             </AlertDialogContent>
           </AlertDialog>
         </TabsContent>
-        <TabsContent value="comunicaciones" className="mt-2">
-          <ComunicacionesTab evento={evento} />
+        <TabsContent value="comunicaciones" className="mt-2" forceMount>
+          {fueVisitada('comunicaciones') && <ComunicacionesTab evento={evento} />}
         </TabsContent>
-        <TabsContent value="grupos_trabajo" className="mt-2">
-          <GruposTrabajoTab
+        <TabsContent value="grupos_trabajo" className="mt-2" forceMount>
+          {fueVisitada('grupos_trabajo') && <GruposTrabajoTab
             evento={evento}
             participantes={participantes}
             participantesCargando={isLoading}
@@ -287,7 +283,7 @@ export function TabParticipantes({ evento, onActualizarInscriptos }) {
             setGruposCache={setGruposCache}
             onRefresh={cargarEsquemas}
             refreshing={esquemasCargando}
-          />
+          />}
         </TabsContent>
       </Tabs>
 

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { useBreadcrumb } from '@/hooks/useBreadcrumb'
 import { useEvento } from '@/hooks/useEvento'
+import { useParticipantes } from '@/hooks/useParticipantes'
+import { useTabsPersistentes } from '@/hooks/useTabsPersistentes'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -207,6 +209,8 @@ export default function EventoDetallePage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tabActivo = searchParams.get('tab') ?? 'resumen'
   const { evento, setEvento, isLoading, isError, reintentar } = useEvento(id)
+  const participantesState = useParticipantes(evento?.id)
+  const fueVisitada = useTabsPersistentes(tabActivo)
   const [modoEdicion, setModoEdicion] = useState(false)
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
   const [eliminando, setEliminando] = useState(false)
@@ -214,9 +218,6 @@ export default function EventoDetallePage() {
 
   const bloqueoPago = evento?.pagoPlataforma ?? null
 
-  function handleActualizarInscriptos(cantidad) {
-    setEvento((prev) => ({ ...prev, cantidadInscriptos: cantidad }))
-  }
 
   useBreadcrumb([
     { label: 'Eventos', to: '/eventos' },
@@ -304,25 +305,25 @@ export default function EventoDetallePage() {
           ))}
         </TabsList>
 
-        <TabsContent value="resumen" className="mt-3">
-          {evento && (
+        <TabsContent value="resumen" className="mt-3" forceMount>
+          {evento && fueVisitada('resumen') && (
             bloqueoPago
               ? <PantallaBloqueoPago monto={bloqueoPago.monto} onIrAFacturacion={() => navigate('/facturacion')} />
               : <TabResumen evento={evento} />
           )}
         </TabsContent>
-        <TabsContent value="participantes" className="mt-1">
-          {evento && (
+        <TabsContent value="participantes" className="mt-1" forceMount>
+          {evento && fueVisitada('participantes') && (
             bloqueoPago
               ? <PantallaBloqueoPago monto={bloqueoPago.monto} onIrAFacturacion={() => navigate('/facturacion')} />
-              : <TabParticipantes evento={evento} onActualizarInscriptos={handleActualizarInscriptos} />
+              : <TabParticipantes evento={evento} participantesState={participantesState} />
           )}
         </TabsContent>
-        <TabsContent value="acreditacion" className="mt-3">
-          {evento && (
+        <TabsContent value="acreditacion" className="mt-3" forceMount>
+          {evento && fueVisitada('acreditacion') && (
             bloqueoPago
               ? <PantallaBloqueoPago monto={bloqueoPago.monto} onIrAFacturacion={() => navigate('/facturacion')} />
-              : <TabAcreditacion evento={evento} />
+              : <TabAcreditacion evento={evento} participantesState={participantesState} />
           )}
         </TabsContent>
 

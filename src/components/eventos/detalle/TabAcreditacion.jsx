@@ -9,7 +9,7 @@ import { CalendarRange, Copy, Check, ExternalLink } from 'lucide-react'
 import { AcreditacionDataTable } from '@/components/eventos/detalle/AcreditacionDataTable'
 import { ParticipanteDrawer } from '@/components/eventos/detalle/ParticipanteDrawer'
 import { buildAcreditacionColumns } from '@/components/eventos/detalle/acreditacion.columns'
-import { useParticipantes } from '@/hooks/useParticipantes'
+import { useTabsPersistentes } from '@/hooks/useTabsPersistentes'
 import { toast } from 'sonner'
 import { Loader2, RefreshCw } from 'lucide-react'
 import { getAcreditadores } from '@/api/acreditacion.api'
@@ -214,7 +214,7 @@ function EstadoInformativo({ evento }) {
   )
 }
 
-export function TabAcreditacion({ evento }) {
+export function TabAcreditacion({ evento, participantesState }) {
   const DOS_HORAS_MS = 2 * 60 * 60 * 1000
   const [participanteSeleccionado, setParticipanteSeleccionado] = useState(null)
   const [drawerAbierto, setDrawerAbierto] = useState(false)
@@ -222,8 +222,10 @@ export function TabAcreditacion({ evento }) {
   const [eventoActivo, setEventoActivo] = useState(() => {
     return new Date() >= new Date(new Date(evento.fecha_inicio).getTime() - DOS_HORAS_MS)
   })
+  const [subTab, setSubTab] = useState('acreditados')
+  const fueVisitada = useTabsPersistentes(subTab)
 
-  const { participantes, setParticipantes, isLoading, isRefreshing, reintentar } = useParticipantes(eventoActivo ? evento.id : null)
+  const { participantes, setParticipantes, isLoading, isRefreshing, reintentar } = participantesState
   const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') ?? 'http://localhost:3000'
 
   const socketRef = useRef(null)
@@ -340,7 +342,7 @@ export function TabAcreditacion({ evento }) {
         Abrir interfaz de acreditación
       </Button>
 
-      <Tabs defaultValue="acreditados">
+      <Tabs value={subTab} onValueChange={setSubTab}>
         <TabsList>
           <TabsTrigger value="acreditados">
             Acreditados ({acreditados.length})
@@ -353,7 +355,7 @@ export function TabAcreditacion({ evento }) {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="acreditados" className="mt-4">
+        <TabsContent value="acreditados" className="mt-4" forceMount>
           <AcreditacionDataTable
             columns={columnasAcreditados}
             data={acreditados}
@@ -370,8 +372,8 @@ export function TabAcreditacion({ evento }) {
           />
         </TabsContent>
 
-        <TabsContent value="sin_acreditar" className="mt-4">
-          <AcreditacionDataTable
+        <TabsContent value="sin_acreditar" className="mt-4" forceMount>
+          {fueVisitada('sin_acreditar') && <AcreditacionDataTable
             columns={columnasSinAcreditar}
             data={sinAcreditar}
             evento={evento}
@@ -384,11 +386,11 @@ export function TabAcreditacion({ evento }) {
             }}
             onRefresh={reintentar}
             refreshing={isRefreshing}
-          />
+          />}
         </TabsContent>
 
-        <TabsContent value="todos" className="mt-4">
-          <AcreditacionDataTable
+        <TabsContent value="todos" className="mt-4" forceMount>
+          {fueVisitada('todos') && <AcreditacionDataTable
             columns={columnasTodos}
             data={participantes}
             evento={evento}
@@ -402,7 +404,7 @@ export function TabAcreditacion({ evento }) {
             }}
             onRefresh={reintentar}
             refreshing={isRefreshing}
-          />
+          />}
         </TabsContent>
       </Tabs>
 
