@@ -5,9 +5,9 @@ import {
   getPaginationRowModel,
   flexRender,
 } from '@tanstack/react-table'
-import { ArrowLeft, Search, CheckCircle2, XCircle, Settings2 } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, XCircle, Settings2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
 import { Label } from '@/components/ui/label'
 import {
   Table,
@@ -33,12 +33,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useParticipanteDrawer } from '@/hooks/useParticipanteDrawer'
 import { ParticipanteDrawer } from '@/components/eventos/detalle/ParticipanteDrawer'
 import { Eye } from 'lucide-react'
+import { useSearchParamState } from '@/hooks/useSearchParamState'
 
 const PAGE_SIZE = 10
 
 export function TallerParticipantesPanel({ bloque, taller, evento, onVolver }) {
   const { participante: participanteSeleccionado, drawerAbierto, cargando, abrirDrawer, cerrarDrawer } = useParticipanteDrawer()
-  const [busqueda, setBusqueda] = useState('')
+  const [busqueda, setBusqueda] = useSearchParamState('taller')
   const [columnVisibility, setColumnVisibility] = useState({
     dni: false,
     acreditado: false,
@@ -183,15 +184,12 @@ export function TallerParticipantesPanel({ bloque, taller, evento, onVolver }) {
 
       <div className="flex flex-wrap items-center gap-3">
         {/* Búsqueda */}
-        <div className="relative min-w-48 flex-1">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nombre..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            className="pl-8"
-          />
-        </div>
+        <SearchInput
+          placeholder="Buscar por nombre..."
+          value={busqueda}
+          onChange={setBusqueda}
+          className="min-w-48 flex-1"
+        />
 
         {/* Columnas */}
         <DropdownMenu>

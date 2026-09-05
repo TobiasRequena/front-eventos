@@ -5,10 +5,11 @@ import {
   getPaginationRowModel,
   flexRender,
 } from '@tanstack/react-table'
-import { Search, ChevronLeft, ChevronRight, Settings2, RefreshCw, Loader2 } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { ChevronLeft, ChevronRight, Settings2, RefreshCw, Loader2 } from 'lucide-react'
+import { SearchInput } from '@/components/ui/search-input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { useSearchParamState } from '@/hooks/useSearchParamState'
 import {
   Table,
   TableBody,
@@ -59,7 +60,7 @@ export function AcreditacionDataTable({
   const tieneCosto = parseFloat(evento?.costo ?? 0) > 0
   const tieneGrupos = evento?.tiene_grupos ?? false
 
-  const [busqueda, setBusqueda] = useState('')
+  const [busqueda, setBusqueda] = useSearchParamState('acreditado')
   const [filtroPago, setFiltroPago] = useState('todos')
   const [filtroEdad, setFiltroEdad] = useState('todos')
   const [filtroGrupo, setFiltroGrupo] = useState('todos')
@@ -137,15 +138,11 @@ export function AcreditacionDataTable({
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1.5 flex-1 min-w-48">
           <Label className="text-xs text-muted-foreground">Buscar</Label>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Nombre, apellido, DNI o grupo..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="pl-8"
-            />
-          </div>
+          <SearchInput
+            placeholder="Nombre, apellido, DNI o grupo..."
+            value={busqueda}
+            onChange={setBusqueda}
+          />
         </div>
 
         {mostrarFiltrosCompletos && (

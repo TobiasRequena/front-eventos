@@ -1,8 +1,9 @@
 import { useEffect, useState, useMemo } from 'react'
-import { ArrowLeft, Search, ChevronDown, ChevronUp, RefreshCw, Users, UserX, Eye, UserPlus, UserMinus, Loader2, Download, Send, Settings } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronUp, RefreshCw, Users, UserX, Eye, UserPlus, UserMinus, Loader2, Download, Send, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
+import { useSearchParamState } from '@/hooks/useSearchParamState'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -308,7 +309,7 @@ function GrupoCard({ grupo, busquedaIntegrantes, onVerDetalle, onQuitar, quitand
 }
 
 function TabGrupos({ grupos, isLoading, onVerDetalle, onQuitar, quitandoId, eventoId, esquemaId }) {
-  const [busqueda, setBusqueda] = useState('')
+  const [busqueda, setBusqueda] = useSearchParamState('grupo')
 
   const gruposFiltrados = useMemo(() => {
     if (!busqueda) return grupos
@@ -337,15 +338,11 @@ function TabGrupos({ grupos, isLoading, onVerDetalle, onQuitar, quitandoId, even
 
   return (
     <div className="space-y-3">
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Buscar grupo o participante..."
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-          className="pl-8"
-        />
-      </div>
+      <SearchInput
+        placeholder="Buscar grupo o participante..."
+        value={busqueda}
+        onChange={setBusqueda}
+      />
 
       {gruposFiltrados.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">

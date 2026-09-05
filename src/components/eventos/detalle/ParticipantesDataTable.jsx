@@ -6,11 +6,12 @@ import {
   getPaginationRowModel,
   flexRender,
 } from '@tanstack/react-table'
-import { Search, ChevronLeft, ChevronRight, Settings2, Download, Loader2, RefreshCw } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Settings2, Download, Loader2, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { useSearchParamState } from '@/hooks/useSearchParamState'
 import {
   Table,
   TableBody,
@@ -64,7 +65,7 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
   const tieneAutorizacion = evento?.requiere_autorizacion_menores ?? false
   const tieneCertificado = evento?.config_certificado !== 'no'
 
-  const [busqueda, setBusqueda] = useState('')
+  const [busqueda, setBusqueda] = useSearchParamState('participante')
   const [filtroPago, setFiltroPago] = useState('todos')
   const [filtroEdad, setFiltroEdad] = useState('todos')
   const [filtroGrupo, setFiltroGrupo] = useState('todos')
@@ -130,15 +131,11 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1.5 flex-1 min-w-48">
           <Label className="text-xs text-muted-foreground">Buscar</Label>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Nombre, apellido, DNI o grupo..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="pl-8"
-            />
-          </div>
+          <SearchInput
+            placeholder="Nombre, apellido, DNI o grupo..."
+            value={busqueda}
+            onChange={setBusqueda}
+          />
         </div>
 
         {tieneCosto && (

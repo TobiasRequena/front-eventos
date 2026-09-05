@@ -14,8 +14,8 @@ import {
 } from '@/components/ui/tooltip'
 import { getParticipantePorId } from '../../../api/participantes.api'
 import { useParticipanteDrawer } from '@/hooks/useParticipanteDrawer'
-import { Search } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
+import { useSearchParamState } from '@/hooks/useSearchParamState'
 import { useMemo } from 'react'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -77,7 +77,7 @@ export function FichasMedicasPanel({ evento, categoria, onVolver }) {
   const { participante: participanteSeleccionado, drawerAbierto, cargando, abrirDrawer, cerrarDrawer } = useParticipanteDrawer()
   const [fichas, setFichas] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-  const [busqueda, setBusqueda] = useState('')
+  const [busqueda, setBusqueda] = useSearchParamState('ficha')
   const [subfiltro, setSubfiltro] = useState('todos')
 
   useEffect(() => {
@@ -115,15 +115,12 @@ export function FichasMedicasPanel({ evento, categoria, onVolver }) {
       </button>
 
       <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nombre..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            className="pl-8"
-          />
-        </div>
+        <SearchInput
+          placeholder="Buscar por nombre..."
+          value={busqueda}
+          onChange={setBusqueda}
+          className="flex-1 min-w-48"
+        />
         {config.subfiltros.length > 1 && (
           <Select value={subfiltro} onValueChange={setSubfiltro}>
             <SelectTrigger className="w-56">
