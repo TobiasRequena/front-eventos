@@ -28,7 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { GruposTrabajoTab } from '@/components/eventos/detalle/grupos-trabajo/GruposTrabajoTab'
 import { getAgrupaciones } from '@/api/gruposTrabajo.api'
 import { ComunicacionesTab } from '@/components/eventos/detalle/ComunicacionesTab'
-import { useTabsPersistentes } from '@/hooks/useTabsPersistentes'
+import { getComunicaciones } from '@/api/comunicaciones.api'
 
 function TablaSkeletonRows() {
   return (
@@ -55,8 +55,10 @@ export function TabParticipantes({ evento, participantesState }) {
   const [esquemasCargados, setEsquemasCargados] = useState(false)
   const [esquemasCargando, setEsquemasCargando] = useState(false)
   const [gruposCache, setGruposCache] = useState({})
+  const [agrupacionesCache, setAgrupacionesCache] = useState({})
+  const [comunicaciones, setComunicaciones] = useState([])
+  const [comunicacionesCargando, setComunicacionesCargando] = useState(true)
   const [subTab, setSubTab] = useState('listado')
-  const fueVisitada = useTabsPersistentes(subTab)
 
   const tieneFicha = evento?.config_ficha_medica !== 'no'
   const tieneAutorizacion = evento?.requiere_autorizacion_menores ?? false
@@ -78,6 +80,22 @@ export function TabParticipantes({ evento, participantesState }) {
   useEffect(() => {
     if (esquemasCargados) return
     cargarEsquemas()
+  }, [evento.id])
+
+  async function cargarComunicaciones() {
+    setComunicacionesCargando(true)
+    try {
+      const data = await getComunicaciones(evento.id)
+      setComunicaciones(data)
+    } catch {
+      toast.error('No pudimos cargar los mensajes.')
+    } finally {
+      setComunicacionesCargando(false)
+    }
+  }
+
+  useEffect(() => {
+    cargarComunicaciones()
   }, [evento.id])
 
   const camposForm = evento.camposForm ?? []
@@ -268,10 +286,15 @@ export function TabParticipantes({ evento, participantesState }) {
           </AlertDialog>
         </TabsContent>
         <TabsContent value="comunicaciones" className="mt-2" forceMount>
-          {fueVisitada('comunicaciones') && <ComunicacionesTab evento={evento} />}
+          <ComunicacionesTab
+            evento={evento}
+            comunicaciones={comunicaciones}
+            isLoading={comunicacionesCargando}
+            onRecargar={cargarComunicaciones}
+          />
         </TabsContent>
         <TabsContent value="grupos_trabajo" className="mt-2" forceMount>
-          {fueVisitada('grupos_trabajo') && <GruposTrabajoTab
+          <GruposTrabajoTab
             evento={evento}
             participantes={participantes}
             participantesCargando={isLoading}
@@ -281,9 +304,11 @@ export function TabParticipantes({ evento, participantesState }) {
             onRecargarEsquemas={cargarEsquemas}
             gruposCache={gruposCache}
             setGruposCache={setGruposCache}
+            agrupacionesCache={agrupacionesCache}
+            setAgrupacionesCache={setAgrupacionesCache}
             onRefresh={cargarEsquemas}
             refreshing={esquemasCargando}
-          />}
+          />
         </TabsContent>
       </Tabs>
 

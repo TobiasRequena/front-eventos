@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Search, UserX, X, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -7,36 +7,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Checkbox } from '@/components/ui/checkbox'
-import { getParticipantes } from '@/api/participantes.api'
-import { agregarExcluido, quitarExcluido, getAgrupacion } from '@/api/gruposTrabajo.api'
+import { agregarExcluido, quitarExcluido } from '@/api/gruposTrabajo.api'
 import { getApiErrorMessage } from '@/api/httpClient'
 
-export function PasoExcluidos({ evento, esquema, participantes, participantesCargando, onSiguiente, onAnterior }) {
-  // const [participantes, setParticipantes] = useState([])
-  const [excluidosOriginales, setExcluidosOriginales] = useState(new Set())
-  const [excluidosLocales, setExcluidosLocales] = useState(new Set())
-  const [isLoading, setIsLoading] = useState(true)
+function idsExcluidos(esquema) {
+  return new Set((esquema.excluidos ?? []).map((e) => e.participante_id))
+}
+
+export function PasoExcluidos({ evento, esquema, participantes, participantesCargando, onSiguiente, onAnterior, onExcluidosGuardados }) {
+  // El detalle de la agrupación (incluidos los excluidos) ya lo tiene el editor padre.
+  const [excluidosOriginales, setExcluidosOriginales] = useState(() => idsExcluidos(esquema))
+  const [excluidosLocales, setExcluidosLocales] = useState(() => idsExcluidos(esquema))
   const [guardando, setGuardando] = useState(false)
   const [busqueda, setBusqueda] = useState('')
 
   const esBorrador = esquema.estado === 'borrador'
-
-  useEffect(() => {
-    async function cargarExcluidos() {
-      setIsLoading(true)
-      try {
-        const esquemaDetalle = await getAgrupacion(evento.id, esquema.id)
-        const ids = new Set((esquemaDetalle.excluidos ?? []).map((e) => e.participante_id))
-        setExcluidosOriginales(ids)
-        setExcluidosLocales(new Set(ids))
-      } catch {
-        toast.error('No pudimos cargar los excluidos.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    cargarExcluidos()
-  }, [evento.id, esquema.id])
 
   const participantesFiltrados = useMemo(() => {
     if (!busqueda) return participantes
@@ -81,6 +66,7 @@ export function PasoExcluidos({ evento, esquema, participantes, participantesCar
         ...quitar.map((id) => quitarExcluido(evento.id, esquema.id, id)),
       ])
       setExcluidosOriginales(new Set(excluidosLocales))
+      onExcluidosGuardados?.(excluidosLocales)
       toast.success('Exclusiones guardadas.')
       onSiguiente()
     } catch (err) {
@@ -125,7 +111,7 @@ export function PasoExcluidos({ evento, esquema, participantes, participantesCar
             />
           </div>
 
-          {(isLoading || participantesCargando) ? (
+          {participantesCargando ? (
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-10 w-full" />

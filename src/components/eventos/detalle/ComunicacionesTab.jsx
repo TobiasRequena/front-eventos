@@ -1,11 +1,9 @@
-import { useState, useEffect } from 'react'
-import { toast } from 'sonner'
+import { useState } from 'react'
 import { Plus, Paperclip, Users, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getComunicaciones } from '@/api/comunicaciones.api'
 import { NuevaComunicacionDrawer } from '@/components/eventos/detalle/NuevaComunicacionDrawer'
 import { RefreshCw, Loader2 } from 'lucide-react'
 
@@ -68,26 +66,8 @@ function ComunicacionCard({ comunicacion }) {
   )
 }
 
-export function ComunicacionesTab({ evento }) {
-  const [comunicaciones, setComunicaciones] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+export function ComunicacionesTab({ evento, comunicaciones, isLoading, onRecargar }) {
   const [drawerAbierto, setDrawerAbierto] = useState(false)
-
-  async function cargar() {
-    setIsLoading(true)
-    try {
-      const data = await getComunicaciones(evento.id)
-      setComunicaciones(data)
-    } catch {
-      toast.error('No pudimos cargar los mensajes.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    cargar()
-  }, [evento.id])
 
   return (
     <div className="space-y-2">
@@ -100,7 +80,7 @@ export function ComunicacionesTab({ evento }) {
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            onClick={cargar}
+            onClick={onRecargar}
             disabled={isLoading}
           >
             {isLoading ? (
@@ -146,7 +126,7 @@ export function ComunicacionesTab({ evento }) {
         open={drawerAbierto}
         onClose={() => setDrawerAbierto(false)}
         evento={evento}
-        onEnviado={cargar}
+        onEnviado={onRecargar}
       />
     </div>
   )

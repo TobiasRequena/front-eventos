@@ -24,19 +24,23 @@ export function AgrupacionEditor({
   onVolver,
   gruposCache = {},
   setGruposCache = () => { },
+  agrupacionesCache = {},
+  setAgrupacionesCache = () => { },
 }) {
-  const [agrupacion, setAgrupacion] = useState(null)
-  const [isLoading, setIsLoading] = useState(!!agrupacionId)
+  const cacheada = agrupacionId ? agrupacionesCache[agrupacionId] : null
+  const [agrupacion, setAgrupacion] = useState(cacheada ?? null)
+  const [isLoading, setIsLoading] = useState(!!agrupacionId && !cacheada)
   const [pasoActivo, setPasoActivo] = useState('configuracion')
-  const [mostrarResultado, setMostrarResultado] = useState(false)
+  const [mostrarResultado, setMostrarResultado] = useState(cacheada?.estado === 'generado')
   const [huboCambios, setHuboCambios] = useState(false)
 
   useEffect(() => {
-    if (!agrupacionId) return
+    if (!agrupacionId || cacheada) return
     setIsLoading(true)
     getAgrupacion(evento.id, agrupacionId)
       .then((data) => {
         setAgrupacion(data)
+        setAgrupacionesCache((prev) => ({ ...prev, [data.id]: data }))
         if (data.estado === 'generado') setMostrarResultado(true)
       })
       .catch(() => toast.error('No pudimos cargar la agrupación.'))
@@ -45,11 +49,25 @@ export function AgrupacionEditor({
 
   function handleCreada(nueva) {
     setAgrupacion(nueva)
+    setAgrupacionesCache((prev) => ({ ...prev, [nueva.id]: nueva }))
     setHuboCambios(true)
   }
 
   function handleActualizada(actualizada) {
+    // patchAgrupacion no devuelve `excluidos`: se preserva el que ya teníamos cargado.
+    const fusionada = { ...agrupacion, ...actualizada, excluidos: actualizada.excluidos ?? agrupacion?.excluidos }
+    setAgrupacion(fusionada)
+    setAgrupacionesCache((prev) => ({ ...prev, [fusionada.id]: fusionada }))
+    setHuboCambios(true)
+  }
+
+  function handleExcluidosGuardados(idsExcluidos) {
+    const actualizada = {
+      ...agrupacion,
+      excluidos: [...idsExcluidos].map((id) => ({ participante_id: id })),
+    }
     setAgrupacion(actualizada)
+    setAgrupacionesCache((prev) => ({ ...prev, [actualizada.id]: actualizada }))
     setHuboCambios(true)
   }
 
@@ -62,6 +80,7 @@ export function AgrupacionEditor({
     })
     getAgrupacion(evento.id, agrupacion.id).then((data) => {
       setAgrupacion(data)
+      setAgrupacionesCache((prev) => ({ ...prev, [data.id]: data }))
       setMostrarResultado(true)
     })
   }
@@ -242,6 +261,7 @@ export function AgrupacionEditor({
             participantesCargando={participantesCargando}
             onSiguiente={() => setPasoActivo('preview')}
             onAnterior={() => setPasoActivo('configuracion')}
+            onExcluidosGuardados={handleExcluidosGuardados}
           />
         )}
 

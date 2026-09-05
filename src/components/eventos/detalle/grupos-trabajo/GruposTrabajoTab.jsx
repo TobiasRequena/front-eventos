@@ -46,6 +46,8 @@ export function GruposTrabajoTab({
   onRecargarEsquemas,
   gruposCache,
   setGruposCache,
+  agrupacionesCache,
+  setAgrupacionesCache,
   onRefresh,
   refreshing,
 }) {
@@ -60,6 +62,11 @@ export function GruposTrabajoTab({
       await eliminarAgrupacion(evento.id, agrupacionAEliminar.id)
       setEsquemas((prev) => prev.filter((e) => e.id !== agrupacionAEliminar.id))
       setGruposCache?.((prev) => {
+        const next = { ...prev }
+        delete next[agrupacionAEliminar.id]
+        return next
+      })
+      setAgrupacionesCache?.((prev) => {
         const next = { ...prev }
         delete next[agrupacionAEliminar.id]
         return next
@@ -82,6 +89,8 @@ export function GruposTrabajoTab({
         participantesCargando={participantesCargando}
         gruposCache={gruposCache}
         setGruposCache={setGruposCache}
+        agrupacionesCache={agrupacionesCache}
+        setAgrupacionesCache={setAgrupacionesCache}
         onVolver={(huboCambios) => {
           setAgrupacionActiva(null)
           if (huboCambios) onRecargarEsquemas()
