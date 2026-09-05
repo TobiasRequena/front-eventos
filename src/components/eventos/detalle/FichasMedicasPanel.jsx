@@ -14,9 +14,8 @@ import {
 } from '@/components/ui/tooltip'
 import { getParticipantePorId } from '../../../api/participantes.api'
 import { useParticipanteDrawer } from '@/hooks/useParticipanteDrawer'
-import { SearchInput } from '@/components/ui/search-input'
-import { SelectFiltro } from '@/components/ui/select-filtro'
-import { useSearchParamState } from '@/hooks/useSearchParamState'
+import { FiltrosBarConectado } from '@/components/ui/filtros-bar-conectado'
+import { useFiltrosBar } from '@/hooks/useFiltrosBar'
 import { useMemo } from 'react'
 
 const CONDICIONES = [
@@ -75,8 +74,6 @@ export function FichasMedicasPanel({ evento, categoria, onVolver }) {
   const { participante: participanteSeleccionado, drawerAbierto, cargando, abrirDrawer, cerrarDrawer } = useParticipanteDrawer()
   const [fichas, setFichas] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-  const [busqueda, setBusqueda] = useSearchParamState('ficha')
-  const [subfiltro, setSubfiltro] = useState('todos')
 
   useEffect(() => {
     getFichasMedicas(evento.id)
@@ -86,20 +83,29 @@ export function FichasMedicasPanel({ evento, categoria, onVolver }) {
 
   const config = CATEGORIAS[categoria]
 
-  // Resetear subfiltro cuando cambia categoría
-  useEffect(() => setSubfiltro('todos'), [categoria])
+  const filtrosSelect = useMemo(() => {
+    if (config.subfiltros.length <= 1) return []
+    return [{
+      key: 'subfiltro',
+      siempre: true,
+      opciones: config.subfiltros.map((s) => ({ value: s.value, label: s.label })),
+      predicate: (f, v) => (config.subfiltros.find((s) => s.value === v) ?? config.subfiltros[0]).filtro(f),
+    }]
+  }, [config])
 
-  const fichasFiltradas = useMemo(() => {
-    const subfiltroActivo = config.subfiltros.find(s => s.value === subfiltro)
-    let resultado = fichas.filter(subfiltroActivo?.filtro ?? config.filtro)
-    if (busqueda) {
-      const q = busqueda.toLowerCase()
-      resultado = resultado.filter(
-        (f) => f.nombre.toLowerCase().includes(q) || f.apellido.toLowerCase().includes(q)
-      )
-    }
-    return resultado
-  }, [fichas, subfiltro, busqueda])
+  const buscarFicha = useMemo(() => (f, q) =>
+    f.nombre.toLowerCase().includes(q) || f.apellido.toLowerCase().includes(q), [])
+
+  const filtrosState = useFiltrosBar({
+    data: fichas,
+    queryParamKey: 'ficha',
+    buscar: buscarFicha,
+    filtros: filtrosSelect,
+  })
+  const { datosFiltrados: fichasFiltradas, setValor } = filtrosState
+
+  // Resetear subfiltro cuando cambia categoría
+  useEffect(() => setValor('subfiltro', 'todos'), [categoria, setValor])
 
   return (
     <div className="space-y-4">
@@ -112,22 +118,11 @@ export function FichasMedicasPanel({ evento, categoria, onVolver }) {
         Volver al resumen
       </button>
 
-      <div className="flex flex-wrap gap-3">
-        <SearchInput
-          placeholder="Buscar por nombre..."
-          value={busqueda}
-          onChange={setBusqueda}
-          className="flex-1 min-w-48"
-        />
-        {config.subfiltros.length > 1 && (
-          <SelectFiltro
-            value={subfiltro}
-            onChange={setSubfiltro}
-            className="w-56"
-            opciones={config.subfiltros.map((s) => ({ value: s.value, label: s.label }))}
-          />
-        )}
-      </div>
+      <FiltrosBarConectado
+        filtrosState={filtrosState}
+        filtros={filtrosSelect}
+        busquedaPlaceholder="Buscar por nombre..."
+      />
 
       <Card>
         <CardHeader>

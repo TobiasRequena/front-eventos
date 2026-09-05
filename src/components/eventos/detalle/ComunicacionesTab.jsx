@@ -15,6 +15,12 @@ const ESTADO_CONFIG = {
   error: { label: 'Error', variant: 'destructive', icon: AlertCircle },
 }
 
+const DESTINATARIOS_LABEL = {
+  inscriptos: 'inscriptos',
+  acreditados: 'acreditados',
+  referentes: 'referentes',
+}
+
 function ComunicacionCard({ comunicacion }) {
   const estado = ESTADO_CONFIG[comunicacion.estado] ?? ESTADO_CONFIG.enviado
   const Icon = estado.icon
@@ -43,7 +49,7 @@ function ComunicacionCard({ comunicacion }) {
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Users className="h-3.5 w-3.5" />
-            {comunicacion.total_enviados.toLocaleString('es-AR')} {comunicacion.destinatarios === 'inscriptos' ? 'inscriptos' : 'acreditados'}
+            {comunicacion.total_enviados.toLocaleString('es-AR')} {DESTINATARIOS_LABEL[comunicacion.destinatarios] ?? 'acreditados'}
           </span>
           {comunicacion.adjuntos?.length > 0 && (
             <span className="flex items-center gap-1">

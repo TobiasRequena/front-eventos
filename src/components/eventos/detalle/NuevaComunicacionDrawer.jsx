@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { RemovableBadge } from '@/components/ui/removable-badge'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
@@ -18,7 +18,7 @@ import { enviarComunicacion } from '@/api/comunicaciones.api'
 const schema = z.object({
   asunto: z.string().min(1, 'El asunto es obligatorio.').max(200),
   mensaje: z.string().min(1, 'El mensaje es obligatorio.').max(5000),
-  destinatarios: z.enum(['inscriptos', 'acreditados']),
+  destinatarios: z.enum(['inscriptos', 'acreditados', 'referentes']),
 })
 
 export function NuevaComunicacionDrawer({ open, onClose, evento, onEnviado }) {
@@ -27,6 +27,7 @@ export function NuevaComunicacionDrawer({ open, onClose, evento, onEnviado }) {
   const [enviando, setEnviando] = useState(false)
 
   const camposForm = evento.camposForm ?? []
+  const tieneGrupos = evento?.tiene_grupos ?? false
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -144,12 +145,15 @@ export function NuevaComunicacionDrawer({ open, onClose, evento, onEnviado }) {
               name="destinatarios"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="inscriptos">Todos los inscriptos</SelectItem>
                     <SelectItem value="acreditados">Solo acreditados</SelectItem>
+                    {tieneGrupos && (
+                      <SelectItem value="referentes">Referentes de grupos</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               )}
@@ -272,17 +276,10 @@ export function NuevaComunicacionDrawer({ open, onClose, evento, onEnviado }) {
             {adjuntos.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {adjuntos.map((archivo, i) => (
-                  <Badge key={i} variant="secondary" className="gap-1.5 pr-1">
+                  <RemovableBadge key={i} onRemove={() => quitarAdjunto(i)}>
                     <Paperclip className="h-3 w-3" />
                     {archivo.name}
-                    <button
-                      type="button"
-                      onClick={() => quitarAdjunto(i)}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
+                  </RemovableBadge>
                 ))}
               </div>
             )}

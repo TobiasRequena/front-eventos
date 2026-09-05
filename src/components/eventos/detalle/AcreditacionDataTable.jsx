@@ -5,12 +5,7 @@ import {
   getPaginationRowModel,
   flexRender,
 } from '@tanstack/react-table'
-import { ChevronLeft, ChevronRight, Settings2, RefreshCw, Loader2 } from 'lucide-react'
-import { SearchInput } from '@/components/ui/search-input'
-import { SelectFiltro } from '@/components/ui/select-filtro'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { useSearchParamState } from '@/hooks/useSearchParamState'
+import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -19,15 +14,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Button } from '@/components/ui/button'
+import { FiltrosBarConectado } from '@/components/ui/filtros-bar-conectado'
+import { useFiltrosBar } from '@/hooks/useFiltrosBar'
 
 const OPCIONES_ESTADO_PAGO = [
   { value: 'todos', label: 'Todos' },
@@ -45,29 +34,27 @@ const OPCIONES_EDAD = [
 
 const PAGE_SIZE = 10
 
+function normalizar(str) {
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+}
+
 export function AcreditacionDataTable({
   columns, data, evento, camposForm = [], mostrarFiltrosCompletos = false,
   initialColumnVisibility = {}, onVerDetalle, onRefresh, refreshing = false,
   acreditadores = [],
 }) {
-  const [filtroAcreditador, setFiltroAcreditador] = useState('todos')
   const tieneCosto = parseFloat(evento?.costo ?? 0) > 0
   const tieneGrupos = evento?.tiene_grupos ?? false
-
-  const [busqueda, setBusqueda] = useSearchParamState('acreditado')
-  const [filtroPago, setFiltroPago] = useState('todos')
-  const [filtroEdad, setFiltroEdad] = useState('todos')
-  const [filtroGrupo, setFiltroGrupo] = useState('todos')
-  const [filtrosCampos, setFiltrosCampos] = useState({})
 
   const camposSeleccion = useMemo(
     () => camposForm.filter((campo) => campo.tipo === 'seleccion' && campo.opciones?.length > 0),
     [camposForm]
   )
 
-  function setFiltroCampo(campoId, valor) {
-    setFiltrosCampos((prev) => ({ ...prev, [campoId]: valor }))
-  }
   const [columnVisibility, setColumnVisibility] = useState(() => {
     const initial = { dni: false, ...initialColumnVisibility }
     camposForm.forEach((campo) => {
@@ -82,34 +69,88 @@ export function AcreditacionDataTable({
     return Array.from(set).sort()
   }, [data])
 
-  const datosFiltrados = useMemo(() => {
-    return data.filter((p) => {
-      if (busqueda) {
-        const q = busqueda.toLowerCase()
-        const coincide =
-          p.nombre.toLowerCase().includes(q) ||
-          p.apellido.toLowerCase().includes(q) ||
-          p.dni.includes(q) ||
-          (p.grupo?.nombre?.toLowerCase().includes(q) ?? false)
-        if (!coincide) return false
-      }
-      if (mostrarFiltrosCompletos) {
-        if (filtroAcreditador !== 'todos') {
-          const nombreAcreditador = normalizar(`${p.acreditador?.nombre ?? ''} ${p.acreditador?.apellido ?? ''}`)
-          if (nombreAcreditador !== filtroAcreditador) return false
-        }
-        if (filtroPago !== 'todos' && p.estado_pago !== filtroPago) return false
-        if (filtroEdad === 'mayores' && !p.es_mayor) return false
-        if (filtroEdad === 'menores' && p.es_mayor) return false
-        if (filtroGrupo !== 'todos' && p.grupo?.nombre !== filtroGrupo) return false
-        for (const campo of camposSeleccion) {
-          const valor = filtrosCampos[campo.id] ?? 'todos'
-          if (valor !== 'todos' && String(p.respuestas_form?.[campo.id] ?? '') !== valor) return false
-        }
-      }
+  const acreditadoresUnicos = useMemo(() => {
+    const vistos = new Set()
+    return acreditadores.filter((a) => {
+      const key = normalizar(`${a.nombre} ${a.apellido}`)
+      if (vistos.has(key)) return false
+      vistos.add(key)
       return true
     })
-  }, [data, busqueda, filtroPago, filtroEdad, filtroGrupo, mostrarFiltrosCompletos, camposSeleccion, filtrosCampos])
+  }, [acreditadores])
+
+  const filtrosSelect = useMemo(() => {
+    if (!mostrarFiltrosCompletos) return []
+    const base = [
+      {
+        key: 'edad',
+        label: 'Edad',
+        opciones: OPCIONES_EDAD,
+        predicate: (p, v) => v === 'mayores' ? p.es_mayor : !p.es_mayor,
+      },
+    ]
+    if (tieneCosto) {
+      base.push({
+        key: 'pago',
+        label: 'Estado de pago',
+        opciones: OPCIONES_ESTADO_PAGO,
+        predicate: (p, v) => p.estado_pago === v,
+      })
+    }
+    if (tieneGrupos && grupos.length > 0) {
+      base.push({
+        key: 'grupo',
+        label: 'Grupo',
+        placeholder: 'Todos los grupos',
+        opciones: [
+          { value: 'todos', label: 'Todos los grupos' },
+          ...grupos.map((grupo) => ({ value: grupo, label: grupo })),
+        ],
+        predicate: (p, v) => p.grupo?.nombre === v,
+      })
+    }
+    if (acreditadores.length > 0) {
+      base.push({
+        key: 'acreditador',
+        label: 'Acreditador',
+        placeholder: 'Todos',
+        opciones: [
+          { value: 'todos', label: 'Todos' },
+          ...acreditadoresUnicos.map((a) => ({
+            value: normalizar(`${a.nombre} ${a.apellido}`),
+            label: `${a.nombre} ${a.apellido}`,
+          })),
+        ],
+        predicate: (p, v) => normalizar(`${p.acreditador?.nombre ?? ''} ${p.acreditador?.apellido ?? ''}`) === v,
+      })
+    }
+    camposSeleccion.forEach((campo) => {
+      base.push({
+        key: `campo_${campo.id}`,
+        label: campo.etiqueta,
+        opciones: [
+          { value: 'todos', label: 'Todos' },
+          ...campo.opciones.map((op) => ({ value: op, label: op })),
+        ],
+        predicate: (p, v) => String(p.respuestas_form?.[campo.id] ?? '') === v,
+      })
+    })
+    return base
+  }, [mostrarFiltrosCompletos, tieneCosto, tieneGrupos, grupos, acreditadores, acreditadoresUnicos, camposSeleccion])
+
+  const buscarAcreditado = useMemo(() => (p, q) =>
+    p.nombre.toLowerCase().includes(q) ||
+    p.apellido.toLowerCase().includes(q) ||
+    p.dni.includes(q) ||
+    (p.grupo?.nombre?.toLowerCase().includes(q) ?? false), [])
+
+  const filtrosState = useFiltrosBar({
+    data,
+    queryParamKey: 'acreditado',
+    buscar: buscarAcreditado,
+    filtros: filtrosSelect,
+  })
+  const { datosFiltrados } = filtrosState
 
   const table = useReactTable({
     data: datosFiltrados,
@@ -123,151 +164,17 @@ export function AcreditacionDataTable({
 
   const columnasOcultables = table.getAllColumns().filter((col) => col.getCanHide())
 
-  function normalizar(str) {
-    return str
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim()
-  }
-
-  const acreditadoresUnicos = useMemo(() => {
-    const vistos = new Set()
-    return acreditadores.filter((a) => {
-      const key = normalizar(`${a.nombre} ${a.apellido}`)
-      if (vistos.has(key)) return false
-      vistos.add(key)
-      return true
-    })
-  }, [acreditadores])
-
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-col gap-1.5 flex-1 min-w-48">
-          <Label className="text-xs text-muted-foreground">Buscar</Label>
-          <SearchInput
-            placeholder="Nombre, apellido, DNI o grupo..."
-            value={busqueda}
-            onChange={setBusqueda}
-          />
-        </div>
-
-        {mostrarFiltrosCompletos && (
-          <>
-            <SelectFiltro
-              label="Edad"
-              value={filtroEdad}
-              onChange={setFiltroEdad}
-              opciones={OPCIONES_EDAD}
-              className="w-36"
-            />
-
-            {tieneCosto && (
-              <SelectFiltro
-                label="Estado de pago"
-                value={filtroPago}
-                onChange={setFiltroPago}
-                opciones={OPCIONES_ESTADO_PAGO}
-              />
-            )}
-
-            {tieneGrupos && grupos.length > 0 && (
-              <SelectFiltro
-                label="Grupo"
-                value={filtroGrupo}
-                onChange={setFiltroGrupo}
-                placeholder="Todos los grupos"
-                className="w-44"
-                opciones={[
-                  { value: 'todos', label: 'Todos los grupos' },
-                  ...grupos.map((grupo) => ({ value: grupo, label: grupo })),
-                ]}
-              />
-            )}
-
-            {acreditadores.length > 0 && (
-              <SelectFiltro
-                label="Acreditador"
-                value={filtroAcreditador}
-                onChange={setFiltroAcreditador}
-                placeholder="Todos"
-                className="w-44"
-                opciones={[
-                  { value: 'todos', label: 'Todos' },
-                  ...acreditadoresUnicos.map((a) => ({
-                    value: normalizar(`${a.nombre} ${a.apellido}`),
-                    label: `${a.nombre} ${a.apellido}`,
-                  })),
-                ]}
-              />
-            )}
-
-            {camposSeleccion.map((campo) => (
-              <SelectFiltro
-                key={campo.id}
-                label={campo.etiqueta}
-                value={filtrosCampos[campo.id] ?? 'todos'}
-                onChange={(valor) => setFiltroCampo(campo.id, valor)}
-                className="w-44"
-                opciones={[
-                  { value: 'todos', label: 'Todos' },
-                  ...campo.opciones.map((op) => ({ value: op, label: op })),
-                ]}
-              />
-            ))}
-          </>
-        )}
-
-        {columnasOcultables.length > 0 && (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-muted-foreground">Columnas</Label>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <Settings2 className="h-4 w-4" />
-                  Columnas
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>Mostrar columnas</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {columnasOcultables.map((column) => (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(value)}
-                  >
-                    {typeof column.columnDef.header === 'string'
-                      ? column.columnDef.header
-                      : column.id}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
-        {onRefresh && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={onRefresh}
-                  disabled={refreshing}
-                >
-                  {refreshing
-                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                    : <RefreshCw className="h-4 w-4" />
-                  }
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Refrescar</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-      </div>
+      <FiltrosBarConectado
+        filtrosState={filtrosState}
+        filtros={filtrosSelect}
+        busquedaPlaceholder="Nombre, apellido, DNI o grupo..."
+        columnas={{ items: columnasOcultables, onToggle: (column, value) => column.toggleVisibility(value) }}
+        acciones={onRefresh ? [
+          { key: 'refrescar', icon: RefreshCw, tooltip: 'Refrescar', onClick: onRefresh, disabled: refreshing, spinning: refreshing },
+        ] : []}
+      />
 
       <div className="rounded-md border border-border overflow-x-auto">
         <Table>

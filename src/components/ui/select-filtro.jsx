@@ -18,7 +18,7 @@ export function SelectFiltro({ label, value, onChange, opciones, placeholder, cl
     <div className="flex flex-col gap-1.5">
       {label && <Label className="text-xs text-muted-foreground">{label}</Label>}
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className={cn('w-40', className)}>
+        <SelectTrigger className={cn('w-full sm:w-40', className)}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>

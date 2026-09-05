@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Controller, useFormContext } from 'react-hook-form'
-import { GripVertical, ChevronDown, Trash2, Plus, X } from 'lucide-react'
+import { GripVertical, ChevronDown, Trash2, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { RemovableBadge } from '@/components/ui/removable-badge'
 import {
   Select,
   SelectContent,
@@ -34,15 +35,13 @@ function OpcionesEditor({ opciones, onChange }) {
       <p className="mb-2 text-xs font-medium text-muted-foreground">Opciones</p>
       <div className="mb-2 flex flex-wrap gap-1.5">
         {opciones.map((opcion, index) => (
-          <span
+          <RemovableBadge
             key={`${opcion}-${index}`}
-            className="flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-xs"
+            variant="outline"
+            onRemove={() => quitarOpcion(index)}
           >
             {opcion}
-            <button type="button" onClick={() => quitarOpcion(index)}>
-              <X className="h-3 w-3 text-muted-foreground" />
-            </button>
-          </span>
+          </RemovableBadge>
         ))}
         {opciones.length === 0 && (
           <span className="text-xs text-muted-foreground">Todavía no agregaste opciones.</span>

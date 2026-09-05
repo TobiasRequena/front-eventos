@@ -1,3 +1,4 @@
+import React from 'react'
 import { Link } from 'react-router-dom'
 import { useBreadcrumbContext } from '@/contexts/BreadcrumbContext'
 import {
@@ -21,16 +22,18 @@ export function AppBreadcrumb() {
           const esUltimo = index === items.length - 1
 
           return (
-            <BreadcrumbItem key={`${item.label}-${index}`}>
-              {esUltimo || !item.to ? (
-                <BreadcrumbPage>{item.label}</BreadcrumbPage>
-              ) : (
-                <BreadcrumbLink asChild>
-                  <Link to={item.to}>{item.label}</Link>
-                </BreadcrumbLink>
-              )}
+            <React.Fragment key={`${item.label}-${index}`}>
+              <BreadcrumbItem>
+                {esUltimo || !item.to ? (
+                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link to={item.to}>{item.label}</Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
               {!esUltimo && <BreadcrumbSeparator />}
-            </BreadcrumbItem>
+            </React.Fragment>
           )
         })}
       </BreadcrumbList>

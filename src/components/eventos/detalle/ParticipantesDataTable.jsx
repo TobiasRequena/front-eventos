@@ -6,13 +6,7 @@ import {
   getPaginationRowModel,
   flexRender,
 } from '@tanstack/react-table'
-import { ChevronLeft, ChevronRight, Settings2, Download, Loader2, RefreshCw } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { SearchInput } from '@/components/ui/search-input'
-import { SelectFiltro } from '@/components/ui/select-filtro'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { useSearchParamState } from '@/hooks/useSearchParamState'
+import { ChevronLeft, ChevronRight, Download, RefreshCw } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -21,20 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Button } from '@/components/ui/button'
+import { FiltrosBarConectado } from '@/components/ui/filtros-bar-conectado'
+import { useFiltrosBar } from '@/hooks/useFiltrosBar'
 
 const OPCIONES_ESTADO_PAGO = [
   { value: 'todos', label: 'Todos' },
@@ -59,20 +42,11 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
   const tieneAutorizacion = evento?.requiere_autorizacion_menores ?? false
   const tieneCertificado = evento?.config_certificado !== 'no'
 
-  const [busqueda, setBusqueda] = useSearchParamState('participante')
-  const [filtroPago, setFiltroPago] = useState('todos')
-  const [filtroEdad, setFiltroEdad] = useState('todos')
-  const [filtroGrupo, setFiltroGrupo] = useState('todos')
-  const [filtrosCampos, setFiltrosCampos] = useState({})
-
   const camposSeleccion = useMemo(
     () => camposForm.filter((campo) => campo.tipo === 'seleccion' && campo.opciones?.length > 0),
     [camposForm]
   )
 
-  function setFiltroCampo(campoId, valor) {
-    setFiltrosCampos((prev) => ({ ...prev, [campoId]: valor }))
-  }
   const [columnVisibility, setColumnVisibility] = useState(() => {
     const initial = { dni: false }
     if (tieneGrupos) initial.grupo = false
@@ -95,29 +69,62 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
     return Array.from(set).sort()
   }, [data])
 
-  const datosFiltrados = useMemo(() => {
-    return data.filter((p) => {
-      if (busqueda) {
-        const q = busqueda.toLowerCase()
-        const coincide =
-          p.nombre.toLowerCase().includes(q) ||
-          p.apellido.toLowerCase().includes(q) ||
-          p.dni.includes(q) ||
-          (p.grupo?.nombre?.toLowerCase().includes(q) ?? false)
-        if (!coincide) return false
-      }
-      if (filtroPago !== 'todos' && p.estado_pago !== filtroPago) return false
-      if (filtroEdad === 'mayores' && !p.es_mayor) return false
-      if (filtroEdad === 'menores' && p.es_mayor) return false
-      if (filtroGrupo === 'sin_grupo' && p.grupo?.nombre) return false
-      if (filtroGrupo !== 'todos' && filtroGrupo !== 'sin_grupo' && p.grupo?.nombre !== filtroGrupo) return false
-      for (const campo of camposSeleccion) {
-        const valor = filtrosCampos[campo.id] ?? 'todos'
-        if (valor !== 'todos' && String(p.respuestas_form?.[campo.id] ?? '') !== valor) return false
-      }
-      return true
+  const filtrosSelect = useMemo(() => {
+    const base = []
+    if (tieneCosto) {
+      base.push({
+        key: 'pago',
+        label: 'Estado de pago',
+        opciones: OPCIONES_ESTADO_PAGO,
+        predicate: (p, v) => p.estado_pago === v,
+      })
+    }
+    base.push({
+      key: 'edad',
+      label: 'Edad',
+      opciones: OPCIONES_EDAD,
+      predicate: (p, v) => v === 'mayores' ? p.es_mayor : !p.es_mayor,
     })
-  }, [data, busqueda, filtroPago, filtroEdad, filtroGrupo, camposSeleccion, filtrosCampos])
+    if (tieneGrupos && grupos.length > 0) {
+      base.push({
+        key: 'grupo',
+        label: 'Grupo',
+        placeholder: 'Todos los grupos',
+        opciones: [
+          { value: 'todos', label: 'Todos los grupos' },
+          { value: 'sin_grupo', label: 'Sin grupo' },
+          ...grupos.map((grupo) => ({ value: grupo, label: grupo })),
+        ],
+        predicate: (p, v) => v === 'sin_grupo' ? !p.grupo?.nombre : p.grupo?.nombre === v,
+      })
+    }
+    camposSeleccion.forEach((campo) => {
+      base.push({
+        key: `campo_${campo.id}`,
+        label: campo.etiqueta,
+        opciones: [
+          { value: 'todos', label: 'Todos' },
+          ...campo.opciones.map((op) => ({ value: op, label: op })),
+        ],
+        predicate: (p, v) => String(p.respuestas_form?.[campo.id] ?? '') === v,
+      })
+    })
+    return base
+  }, [tieneCosto, tieneGrupos, grupos, camposSeleccion])
+
+  const buscarParticipante = useMemo(() => (p, q) =>
+    p.nombre.toLowerCase().includes(q) ||
+    p.apellido.toLowerCase().includes(q) ||
+    p.dni.includes(q) ||
+    (p.grupo?.nombre?.toLowerCase().includes(q) ?? false), [])
+
+  const filtrosState = useFiltrosBar({
+    data,
+    queryParamKey: 'participante',
+    buscar: buscarParticipante,
+    filtros: filtrosSelect,
+  })
+  const { datosFiltrados } = filtrosState
 
   const table = useReactTable({
     data: datosFiltrados,
@@ -136,125 +143,16 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-col gap-1.5 flex-1 min-w-48">
-          <Label className="text-xs text-muted-foreground">Buscar</Label>
-          <SearchInput
-            placeholder="Nombre, apellido, DNI o grupo..."
-            value={busqueda}
-            onChange={setBusqueda}
-          />
-        </div>
-
-        {tieneCosto && (
-          <SelectFiltro
-            label="Estado de pago"
-            value={filtroPago}
-            onChange={setFiltroPago}
-            opciones={OPCIONES_ESTADO_PAGO}
-          />
-        )}
-
-        <SelectFiltro
-          label="Edad"
-          value={filtroEdad}
-          onChange={setFiltroEdad}
-          opciones={OPCIONES_EDAD}
-          className="w-36"
-        />
-
-        {tieneGrupos && grupos.length > 0 && (
-          <SelectFiltro
-            label="Grupo"
-            value={filtroGrupo}
-            onChange={setFiltroGrupo}
-            placeholder="Todos los grupos"
-            className="w-44"
-            opciones={[
-              { value: 'todos', label: 'Todos los grupos' },
-              { value: 'sin_grupo', label: 'Sin grupo' },
-              ...grupos.map((grupo) => ({ value: grupo, label: grupo })),
-            ]}
-          />
-        )}
-
-        {camposSeleccion.map((campo) => (
-          <SelectFiltro
-            key={campo.id}
-            label={campo.etiqueta}
-            value={filtrosCampos[campo.id] ?? 'todos'}
-            onChange={(valor) => setFiltroCampo(campo.id, valor)}
-            className="w-44"
-            opciones={[
-              { value: 'todos', label: 'Todos' },
-              ...campo.opciones.map((op) => ({ value: op, label: op })),
-            ]}
-          />
-        ))}
-
-        <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-muted-foreground">Columnas</Label>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Settings2 className="h-4 w-4" />
-                Columnas
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Mostrar columnas</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {columnasOcultables.map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.id}
-                  checked={column.getIsVisible()}
-                  onCheckedChange={(value) => column.toggleVisibility(value)}
-                >
-                  {typeof column.columnDef.header === 'string'
-                    ? column.columnDef.header
-                    : column.id}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={onRefresh}
-                disabled={refreshing}
-              >
-                <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Refrescar</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={onDescargar}
-                disabled={descargando}
-                className="border-primary/30 text-primary hover:bg-primary/5 hover:text-primary"
-              >
-                {descargando
-                  ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <Download className="h-4 w-4" />
-                }
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Descargar Excel</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
+      <FiltrosBarConectado
+        filtrosState={filtrosState}
+        filtros={filtrosSelect}
+        busquedaPlaceholder="Nombre, apellido, DNI o grupo..."
+        columnas={{ items: columnasOcultables, onToggle: (column, value) => column.toggleVisibility(value) }}
+        acciones={[
+          { key: 'refrescar', icon: RefreshCw, tooltip: 'Refrescar', onClick: onRefresh, disabled: refreshing, spinning: refreshing },
+          { key: 'descargar', icon: Download, tooltip: 'Descargar Excel', onClick: onDescargar, disabled: descargando, loading: descargando, className: 'border-primary/30 text-primary hover:bg-primary/5 hover:text-primary' },
+        ]}
+      />
 
       <div className="rounded-md border border-border overflow-x-auto">
         <Table>
