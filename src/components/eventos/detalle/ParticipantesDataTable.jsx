@@ -9,6 +9,7 @@ import {
 import { ChevronLeft, ChevronRight, Settings2, Download, Loader2, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SearchInput } from '@/components/ui/search-input'
+import { SelectFiltro } from '@/components/ui/select-filtro'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { useSearchParamState } from '@/hooks/useSearchParamState'
@@ -20,13 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -69,6 +63,16 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
   const [filtroPago, setFiltroPago] = useState('todos')
   const [filtroEdad, setFiltroEdad] = useState('todos')
   const [filtroGrupo, setFiltroGrupo] = useState('todos')
+  const [filtrosCampos, setFiltrosCampos] = useState({})
+
+  const camposSeleccion = useMemo(
+    () => camposForm.filter((campo) => campo.tipo === 'seleccion' && campo.opciones?.length > 0),
+    [camposForm]
+  )
+
+  function setFiltroCampo(campoId, valor) {
+    setFiltrosCampos((prev) => ({ ...prev, [campoId]: valor }))
+  }
   const [columnVisibility, setColumnVisibility] = useState(() => {
     const initial = { dni: false }
     if (tieneGrupos) initial.grupo = false
@@ -107,9 +111,13 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
       if (filtroEdad === 'menores' && p.es_mayor) return false
       if (filtroGrupo === 'sin_grupo' && p.grupo?.nombre) return false
       if (filtroGrupo !== 'todos' && filtroGrupo !== 'sin_grupo' && p.grupo?.nombre !== filtroGrupo) return false
+      for (const campo of camposSeleccion) {
+        const valor = filtrosCampos[campo.id] ?? 'todos'
+        if (valor !== 'todos' && String(p.respuestas_form?.[campo.id] ?? '') !== valor) return false
+      }
       return true
     })
-  }, [data, busqueda, filtroPago, filtroEdad, filtroGrupo])
+  }, [data, busqueda, filtroPago, filtroEdad, filtroGrupo, camposSeleccion, filtrosCampos])
 
   const table = useReactTable({
     data: datosFiltrados,
@@ -139,52 +147,50 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
         </div>
 
         {tieneCosto && (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-muted-foreground">Estado de pago</Label>
-            <Select value={filtroPago} onValueChange={setFiltroPago}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {OPCIONES_ESTADO_PAGO.map((op) => (
-                  <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <SelectFiltro
+            label="Estado de pago"
+            value={filtroPago}
+            onChange={setFiltroPago}
+            opciones={OPCIONES_ESTADO_PAGO}
+          />
         )}
 
-        <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-muted-foreground">Edad</Label>
-          <Select value={filtroEdad} onValueChange={setFiltroEdad}>
-            <SelectTrigger className="w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {OPCIONES_EDAD.map((op) => (
-                <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <SelectFiltro
+          label="Edad"
+          value={filtroEdad}
+          onChange={setFiltroEdad}
+          opciones={OPCIONES_EDAD}
+          className="w-36"
+        />
 
         {tieneGrupos && grupos.length > 0 && (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-muted-foreground">Grupo</Label>
-            <Select value={filtroGrupo} onValueChange={setFiltroGrupo}>
-              <SelectTrigger className="w-44">
-                <SelectValue placeholder="Todos los grupos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos los grupos</SelectItem>
-                <SelectItem value="sin_grupo">Sin grupo</SelectItem>
-                {grupos.map((grupo) => (
-                  <SelectItem key={grupo} value={grupo}>{grupo}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <SelectFiltro
+            label="Grupo"
+            value={filtroGrupo}
+            onChange={setFiltroGrupo}
+            placeholder="Todos los grupos"
+            className="w-44"
+            opciones={[
+              { value: 'todos', label: 'Todos los grupos' },
+              { value: 'sin_grupo', label: 'Sin grupo' },
+              ...grupos.map((grupo) => ({ value: grupo, label: grupo })),
+            ]}
+          />
         )}
+
+        {camposSeleccion.map((campo) => (
+          <SelectFiltro
+            key={campo.id}
+            label={campo.etiqueta}
+            value={filtrosCampos[campo.id] ?? 'todos'}
+            onChange={(valor) => setFiltroCampo(campo.id, valor)}
+            className="w-44"
+            opciones={[
+              { value: 'todos', label: 'Todos' },
+              ...campo.opciones.map((op) => ({ value: op, label: op })),
+            ]}
+          />
+        ))}
 
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs text-muted-foreground">Columnas</Label>

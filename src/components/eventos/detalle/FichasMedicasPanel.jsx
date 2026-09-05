@@ -15,11 +15,9 @@ import {
 import { getParticipantePorId } from '../../../api/participantes.api'
 import { useParticipanteDrawer } from '@/hooks/useParticipanteDrawer'
 import { SearchInput } from '@/components/ui/search-input'
+import { SelectFiltro } from '@/components/ui/select-filtro'
 import { useSearchParamState } from '@/hooks/useSearchParamState'
 import { useMemo } from 'react'
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
 
 const CONDICIONES = [
   { campo: 'tiene_diabetes', label: 'Diabetes' },
@@ -122,16 +120,12 @@ export function FichasMedicasPanel({ evento, categoria, onVolver }) {
           className="flex-1 min-w-48"
         />
         {config.subfiltros.length > 1 && (
-          <Select value={subfiltro} onValueChange={setSubfiltro}>
-            <SelectTrigger className="w-56">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {config.subfiltros.map((s) => (
-                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SelectFiltro
+            value={subfiltro}
+            onChange={setSubfiltro}
+            className="w-56"
+            opciones={config.subfiltros.map((s) => ({ value: s.value, label: s.label }))}
+          />
         )}
       </div>
 
