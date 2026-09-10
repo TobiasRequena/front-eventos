@@ -23,3 +23,11 @@ export const registerStep1Schema = z.object({
 export const registerStep2Schema = z.object({
     nombreOrganizacion: z.string().max(150).optional().or(z.literal('')),
 })
+
+export const verificarEmailSchemaEmail = z.object({
+    email: z.string().min(1, 'Ingresá tu email.').email('Email inválido.'),
+})
+
+export const verificarEmailSchemaCodigo = z.object({
+    codigo: z.string().length(6, 'El código tiene 6 dígitos.').regex(/^\d+$/, 'Solo números.'),
+})

@@ -41,6 +41,10 @@ export default function LoginPage() {
       const destino = location.state?.from?.pathname ?? '/dashboard'
       navigate(destino, { replace: true })
     } catch (error) {
+      if (error?.response?.status === 403) {
+        navigate('/verificar-email', { state: { email: values.email, contrasena: values.contrasena } })
+        return
+      }
       toast.error(getApiErrorMessage(error, 'No pudimos iniciar sesión.'))
     } finally {
       setIsSubmitting(false)

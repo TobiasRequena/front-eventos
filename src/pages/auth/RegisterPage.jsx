@@ -193,7 +193,7 @@ const STEP_CONTENT = {
 }
 
 export default function RegisterPage() {
-  const { register } = useAuth()
+  const { register, completarSesion } = useAuth()
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
   const [datosPaso1, setDatosPaso1] = useState({
@@ -213,13 +213,18 @@ export default function RegisterPage() {
     setIsSubmitting(true)
     try {
       const nombreOrg = nombreOrganizacion?.trim()
-      await register({
+      const data = await register({
         ...datosPaso1,
         // Si no completó el nombre, no mandamos el campo: el back
         // crea una organización implícita automáticamente.
         ...(nombreOrg ? { organizacion: { nombre: nombreOrg } } : {}),
       })
-      navigate('/dashboard', { replace: true })
+      if (data?.usuario?.email_verificado === false) {
+        navigate('/verificar-email', { replace: true, state: { email: datosPaso1.email } })
+      } else {
+        await completarSesion()
+        navigate('/dashboard', { replace: true })
+      }
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'No pudimos crear tu cuenta.'))
       setIsSubmitting(false)

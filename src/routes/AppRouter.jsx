@@ -17,6 +17,7 @@ import MiembrosPage from '@/pages/organizacion/MiembrosPage'
 import SoportePage from '@/pages/soporte/SoportePage'
 import AdminPage from '@/pages/admin/AdminPage'
 import RecuperarContrasenaPage from '@/pages/auth/RecuperarContrasenaPage'
+import VerificarEmailPage from '@/pages/auth/VerificarEmailPage'
 import ComprobantePagoPage from '@/pages/ComprobantePagoPage'
 import FacturacionPage from '@/pages/facturacion/FacturacionPage'
 
@@ -35,6 +36,8 @@ export function AppRouter() {
           <AuthProvider>
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+              <Route path="/verificar-email" element={<VerificarEmailPage />} />
 
               <Route element={<GuestRoute />}>
                 <Route path="/login" element={<LoginPage />} />

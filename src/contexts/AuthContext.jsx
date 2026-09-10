@@ -78,8 +78,19 @@ export function AuthProvider({ children }) {
         async (payload) => {
             const data = await authApi.register(payload)
             localStorage.setItem(TOKEN_KEY, data.token)
-            await cargarSesionDesdeToken()
+            // No cargamos la sesión automáticamente acá: si el usuario todavía
+            // no verificó su email, RegisterPage lo manda a /verificar-email
+            // sin marcar isAuthenticated, para que GuestRoute no lo redirija
+            // a /dashboard en el medio (race entre navigate() y <GuestRoute>).
+            // Cuando corresponda entrar directo, el caller llama a
+            // completarSesion().
+            return data
         },
+        []
+    )
+
+    const completarSesion = useCallback(
+        () => cargarSesionDesdeToken(),
         [cargarSesionDesdeToken]
     )
 
@@ -107,10 +118,11 @@ export function AuthProvider({ children }) {
             isLoading: status === 'loading',
             login,
             register,
+            completarSesion,
             logout,
             cambiarOrgActiva,
         }),
-        [usuario, organizaciones, orgActiva, status, login, register, logout, cambiarOrgActiva]
+        [usuario, organizaciones, orgActiva, status, login, register, completarSesion, logout, cambiarOrgActiva]
     )
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

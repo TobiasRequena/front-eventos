@@ -40,3 +40,13 @@ export async function resetContrasena({ email, codigo, nuevaContrasena }) {
     })
     return data
 }
+
+export async function verificarEmail({ email, codigo }) {
+    const { data } = await publicClient.post('/auth/verificar-email', { email, codigo })
+    return data
+}
+
+export async function reenviarVerificacion(email) {
+    const { data } = await publicClient.post('/auth/reenviar-verificacion', { email })
+    return data
+}
