@@ -11,3 +11,11 @@ export async function enviarComunicacion(eventoId, formData) {
   })
   return data
 }
+
+export async function enviarMailAusentes(eventoId, { participanteIds, mensaje }) {
+  const { data } = await httpClient.post(`/eventos/${eventoId}/comunicaciones/ausentes`, {
+    participanteIds,
+    mensaje,
+  })
+  return data
+}

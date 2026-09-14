@@ -6,11 +6,14 @@ import {
   getPaginationRowModel,
   flexRender,
 } from '@tanstack/react-table'
-import { CheckCircle2, ChevronLeft, ChevronRight, Eye, Mail, RotateCcw, Undo2, XCircle } from 'lucide-react'
+import { toast } from 'sonner'
+import { CheckCircle2, ChevronLeft, ChevronRight, Eye, Loader2, Mail, RotateCcw, Undo2, XCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -41,7 +44,11 @@ import { ParticipanteDrawer } from '@/components/eventos/detalle/ParticipanteDra
 import { useFiltrosBar } from '@/hooks/useFiltrosBar'
 import { OPCIONES_ESTADO_PAGO, OPCIONES_EDAD } from '@/components/eventos/detalle/ParticipantesDataTable'
 import { ESTADO_PAGO_CONFIG } from '@/components/eventos/detalle/participantes.columns'
+import { enviarMailAusentes } from '@/api/comunicaciones.api'
+import { getApiErrorMessage } from '@/api/httpClient'
 import { cn } from '@/lib/utils'
+
+const MENSAJE_MAX_LENGTH = 2000
 
 const OPCIONES_ESTADO_ASISTENCIA = [
   { value: 'todos', label: 'Todos' },
@@ -147,6 +154,70 @@ function PasarListaDialog({ open, onOpenChange, pendientes, total, contados, onM
   )
 }
 
+function EnviarMailAusentesDialog({ open, onOpenChange, ausentes, eventoId, onEnviado }) {
+  const [mensaje, setMensaje] = useState('')
+  const [enviando, setEnviando] = useState(false)
+
+  const mensajeValido = mensaje.trim().length > 0 && mensaje.length <= MENSAJE_MAX_LENGTH
+
+  async function handleEnviar() {
+    setEnviando(true)
+    try {
+      const { enviados, total } = await enviarMailAusentes(eventoId, {
+        participanteIds: ausentes.map((p) => p.id),
+        mensaje: mensaje.trim(),
+      })
+      toast.success(`Se enviaron ${enviados} de ${total} mails.`)
+      setMensaje('')
+      onOpenChange(false)
+      onEnviado?.()
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'No pudimos enviar los mails.'))
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !enviando && onOpenChange(v)}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Enviar mail a ausentes</DialogTitle>
+        </DialogHeader>
+
+        <p className="text-sm text-muted-foreground">
+          Se va a enviar a {ausentes.length} participante{ausentes.length !== 1 ? 's' : ''} marcado{ausentes.length !== 1 ? 's' : ''} como ausente.
+        </p>
+
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs text-muted-foreground">Mensaje</Label>
+          <Textarea
+            value={mensaje}
+            onChange={(e) => setMensaje(e.target.value)}
+            placeholder="Escribí el mensaje que va a recibir cada ausente..."
+            maxLength={MENSAJE_MAX_LENGTH}
+            rows={5}
+            disabled={enviando}
+          />
+          <p className="text-right text-xs text-muted-foreground">
+            {mensaje.length}/{MENSAJE_MAX_LENGTH}
+          </p>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={enviando}>
+            Cancelar
+          </Button>
+          <Button onClick={handleEnviar} disabled={!mensajeValido || enviando}>
+            {enviando && <Loader2 className="h-4 w-4 animate-spin" />}
+            Enviar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export function PasarListaTab({ evento, participantes, camposForm = [], participantesCargando }) {
   const [asistencia, setAsistencia] = useState({})
   const [orden, setOrden] = useState([])
@@ -155,6 +226,7 @@ export function PasarListaTab({ evento, participantes, camposForm = [], particip
   const [columnVisibility, setColumnVisibility] = useState({})
   const [participanteSeleccionado, setParticipanteSeleccionado] = useState(null)
   const [drawerAbierto, setDrawerAbierto] = useState(false)
+  const [envioAbierto, setEnvioAbierto] = useState(false)
 
   const tieneCosto = parseFloat(evento?.costo ?? 0) > 0
   const tieneGrupos = evento?.tiene_grupos ?? false
@@ -242,6 +314,10 @@ export function PasarListaTab({ evento, participantes, camposForm = [], particip
   const totalFiltrados = filtrados.length
   const yaComenzo = Object.keys(asistencia).length > 0
   const listaCompleta = participantes.length > 0 && participantes.every((p) => !!asistencia[p.id])
+  const ausentesGlobal = useMemo(
+    () => participantes.filter((p) => asistencia[p.id] === 'ausente'),
+    [participantes, asistencia]
+  )
 
   function marcarDesdeDialog(id, estado) {
     setAsistencia((prev) => ({ ...prev, [id]: estado }))
@@ -480,19 +556,16 @@ export function PasarListaTab({ evento, participantes, camposForm = [], particip
               </Button>
             )}
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <Button variant="outline" size="sm" className="gap-1.5" disabled>
-                      <Mail className="h-3.5 w-3.5" />
-                      Enviar mail a ausentes
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>Próximamente</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              disabled={ausentesGlobal.length === 0}
+              onClick={() => setEnvioAbierto(true)}
+            >
+              <Mail className="h-3.5 w-3.5" />
+              Enviar mail a ausentes
+            </Button>
           </div>
 
           <div className="rounded-md border border-border overflow-x-auto">
@@ -559,6 +632,13 @@ export function PasarListaTab({ evento, participantes, camposForm = [], particip
           setDrawerAbierto(false)
           setParticipanteSeleccionado(null)
         }}
+      />
+
+      <EnviarMailAusentesDialog
+        open={envioAbierto}
+        onOpenChange={setEnvioAbierto}
+        ausentes={ausentesGlobal}
+        eventoId={evento?.id}
       />
 
       <PasarListaDialog
