@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
@@ -222,7 +223,15 @@ export function TabAcreditacion({ evento, participantesState }) {
   const [eventoActivo, setEventoActivo] = useState(() => {
     return new Date() >= new Date(new Date(evento.fecha_inicio).getTime() - DOS_HORAS_MS)
   })
-  const [subTab, setSubTab] = useState('acreditados')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const subTab = searchParams.get('asubtab') ?? 'acreditados'
+  function setSubTab(valor) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.set('asubtab', valor)
+      return next
+    })
+  }
   const fueVisitada = useTabsPersistentes(subTab)
 
   const { participantes, setParticipantes, isLoading, isRefreshing, reintentar } = participantesState

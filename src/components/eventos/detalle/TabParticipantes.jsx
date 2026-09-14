@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -59,7 +60,15 @@ export function TabParticipantes({ evento, participantesState }) {
   const [agrupacionesCache, setAgrupacionesCache] = useState({})
   const [comunicaciones, setComunicaciones] = useState([])
   const [comunicacionesCargando, setComunicacionesCargando] = useState(true)
-  const [subTab, setSubTab] = useState('listado')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const subTab = searchParams.get('subtab') ?? 'listado'
+  function setSubTab(valor) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.set('subtab', valor)
+      return next
+    })
+  }
 
   const tieneFicha = evento?.config_ficha_medica !== 'no'
   const tieneAutorizacion = evento?.requiere_autorizacion_menores ?? false
