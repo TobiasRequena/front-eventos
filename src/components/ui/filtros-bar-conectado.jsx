@@ -7,7 +7,7 @@ import { FiltrosBar } from '@/components/ui/filtros-bar'
  * FiltrosBar. Es un componente real (no una función devuelta por el hook),
  * así React lo trata como una unidad estable en el árbol de renderizado.
  */
-export function FiltrosBarConectado({ filtrosState, filtros, busquedaPlaceholder, columnas, acciones }) {
+export function FiltrosBarConectado({ filtrosState, filtros, busquedaPlaceholder, busquedaDisabled, columnas, acciones }) {
   const { busqueda, setBusqueda, valores, setValor, filtrosActivos, limpiarTodo } = filtrosState
 
   const selects = filtros.map((filtro) => (
@@ -26,6 +26,7 @@ export function FiltrosBarConectado({ filtrosState, filtros, busquedaPlaceholder
       busqueda={busqueda}
       onBusquedaChange={setBusqueda}
       busquedaPlaceholder={busquedaPlaceholder}
+      busquedaDisabled={busquedaDisabled}
       selects={selects}
       filtrosActivos={filtrosActivos}
       onLimpiarTodo={limpiarTodo}

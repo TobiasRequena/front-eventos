@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
-const ESTADO_PAGO_CONFIG = {
+export const ESTADO_PAGO_CONFIG = {
   no_aplica: { label: 'Sin costo', variant: 'secondary' },
   pendiente: { label: 'Pendiente de pago', variant: 'outline' },
   pendiente_aprobacion: { label: 'Comprobante cargado', variant: 'outline' },

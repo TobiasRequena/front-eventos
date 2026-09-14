@@ -38,6 +38,7 @@ export function FiltrosBar({
   busqueda,
   onBusquedaChange,
   busquedaPlaceholder = 'Buscar...',
+  busquedaDisabled = false,
   selects = [],
   filtrosActivos = [],
   onLimpiarTodo,
@@ -56,6 +57,7 @@ export function FiltrosBar({
               placeholder={busquedaPlaceholder}
               value={busqueda}
               onChange={onBusquedaChange}
+              disabled={busquedaDisabled}
             />
           </div>
 

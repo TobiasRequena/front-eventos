@@ -29,6 +29,7 @@ import { GruposTrabajoTab } from '@/components/eventos/detalle/grupos-trabajo/Gr
 import { getAgrupaciones } from '@/api/gruposTrabajo.api'
 import { ComunicacionesTab } from '@/components/eventos/detalle/ComunicacionesTab'
 import { getComunicaciones } from '@/api/comunicaciones.api'
+import { PasarListaTab } from '@/components/eventos/detalle/PasarListaTab'
 
 function TablaSkeletonRows() {
   return (
@@ -210,6 +211,7 @@ export function TabParticipantes({ evento, participantesState }) {
           <TabsTrigger value="listado">Listado</TabsTrigger>
           <TabsTrigger value="comunicaciones">Comunicaciones</TabsTrigger>
           <TabsTrigger value="grupos_trabajo">Agrupar</TabsTrigger>
+          <TabsTrigger value="pasar_lista">Pasar lista</TabsTrigger>
         </TabsList>
 
         <TabsContent value="listado" className="mt-2" forceMount>
@@ -308,6 +310,14 @@ export function TabParticipantes({ evento, participantesState }) {
             setAgrupacionesCache={setAgrupacionesCache}
             onRefresh={cargarEsquemas}
             refreshing={esquemasCargando}
+          />
+        </TabsContent>
+        <TabsContent value="pasar_lista" className="mt-2" forceMount>
+          <PasarListaTab
+            evento={evento}
+            participantes={participantes}
+            camposForm={camposForm}
+            participantesCargando={isLoading}
           />
         </TabsContent>
       </Tabs>

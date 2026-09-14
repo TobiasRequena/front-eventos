@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button'
 import { FiltrosBarConectado } from '@/components/ui/filtros-bar-conectado'
 import { useFiltrosBar } from '@/hooks/useFiltrosBar'
 
-const OPCIONES_ESTADO_PAGO = [
+export const OPCIONES_ESTADO_PAGO = [
   { value: 'todos', label: 'Todos' },
   { value: 'no_aplica', label: 'Sin costo' },
   { value: 'pendiente', label: 'Pendiente' },
@@ -27,7 +27,7 @@ const OPCIONES_ESTADO_PAGO = [
   { value: 'rechazado', label: 'Rechazado' },
 ]
 
-const OPCIONES_EDAD = [
+export const OPCIONES_EDAD = [
   { value: 'todos', label: 'Todos' },
   { value: 'mayores', label: 'Solo mayores' },
   { value: 'menores', label: 'Solo menores' },
