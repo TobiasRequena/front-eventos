@@ -1,5 +1,6 @@
-import { Users, Heart, AlertTriangle, Accessibility, Pill, UserCheck } from 'lucide-react'
+import { Users, Heart, AlertTriangle, Accessibility, Pill, UserCheck, CheckCircle2 } from 'lucide-react'
 import { KpiCard } from '@/components/dashboard/KpiCard'
+import { Card, CardContent } from '@/components/ui/card'
 
 export function ResumenKpis({ stats, onVerPagos, onVerFichas }) {
   const kpis = stats.kpisFichaMedica
@@ -45,40 +46,56 @@ export function ResumenKpis({ stats, onVerPagos, onVerFichas }) {
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Fichas médicas
           </p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {totalCondiciones > 0 && (
-              <KpiCard
-                icon={Heart}
-                label="Condiciones de salud"
-                value={totalCondiciones}
-                onClick={() => onVerFichas('condiciones')}
-              />
-            )}
-            {totalAlergias > 0 && (
-              <KpiCard
-                icon={AlertTriangle}
-                label="Alergias y restricciones"
-                value={totalAlergias}
-                onClick={() => onVerFichas('alergias')}
-              />
-            )}
-            {totalAdaptaciones > 0 && (
-              <KpiCard
-                icon={Accessibility}
-                label="Adaptaciones"
-                value={totalAdaptaciones}
-                onClick={() => onVerFichas('adaptaciones')}
-              />
-            )}
-            {kpis.conMedicacionMenores > 0 && (
-              <KpiCard
-                icon={Pill}
-                label="Medicación (menores)"
-                value={kpis.conMedicacionMenores}
-                onClick={() => onVerFichas('medicacion')}
-              />
-            )}
-          </div>
+          {totalCondiciones === 0 && totalAlergias === 0 && totalAdaptaciones === 0 && kpis.conMedicacionMenores === 0 ? (
+            <Card>
+              <CardContent className="flex items-center gap-4 p-6">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-muted">
+                  <CheckCircle2 className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-foreground">Sin novedades médicas</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Ningún participante reportó condiciones, alergias, adaptaciones ni medicación.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {totalCondiciones > 0 && (
+                <KpiCard
+                  icon={Heart}
+                  label="Condiciones de salud"
+                  value={totalCondiciones}
+                  onClick={() => onVerFichas('condiciones')}
+                />
+              )}
+              {totalAlergias > 0 && (
+                <KpiCard
+                  icon={AlertTriangle}
+                  label="Alergias y restricciones"
+                  value={totalAlergias}
+                  onClick={() => onVerFichas('alergias')}
+                />
+              )}
+              {totalAdaptaciones > 0 && (
+                <KpiCard
+                  icon={Accessibility}
+                  label="Adaptaciones"
+                  value={totalAdaptaciones}
+                  onClick={() => onVerFichas('adaptaciones')}
+                />
+              )}
+              {kpis.conMedicacionMenores > 0 && (
+                <KpiCard
+                  icon={Pill}
+                  label="Medicación (menores)"
+                  value={kpis.conMedicacionMenores}
+                  onClick={() => onVerFichas('medicacion')}
+                />
+              )}
+            </div>
+          )}
         </>
       )}
     </div>

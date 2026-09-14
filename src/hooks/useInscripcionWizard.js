@@ -145,6 +145,17 @@ export function useInscripcionWizard(evento, codigoGrupoInicial = null) {
     } catch { }
   }
 
+  // Volver al estado inicial para hacer otra inscripción, sin recargar la página
+  function reiniciar() {
+    limpiarStorage()
+    setDatosWizard({
+      ...ESTADO_INICIAL,
+      grupoId: codigoGrupoInicial ? 'pendiente' : null,
+      rolGrupo: codigoGrupoInicial ? 'integrante' : 'ninguno',
+    })
+    setPasoActualIndex(0)
+  }
+
   const pasos = useMemo(
     () => calcularPasos(evento, datosWizard),
     [
@@ -193,5 +204,6 @@ export function useInscripcionWizard(evento, codigoGrupoInicial = null) {
     retroceder,
     actualizarDatos,
     limpiarStorage,
+    reiniciar,
   }
 }

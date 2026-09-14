@@ -103,7 +103,7 @@ export function TabResumen({ evento }) {
     <div className="space-y-4">
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          <div className="flex items-center justify-between mb-0">
+          <div className="flex items-center justify-between mb-2">
             <h2 className="text-base font-medium text-foreground">Resumen del evento</h2>
             <TooltipProvider>
               <Tooltip>
@@ -122,12 +122,10 @@ export function TabResumen({ evento }) {
             </TooltipProvider>
           </div>
 
-          <div className='flex gap-4'>
-            <CupoProgressCard
-              totalInscriptos={stats.totalInscriptos}
-              cupoMaximo={stats.cupoMaximo}
-            />
-          </div>
+          <CupoProgressCard
+            totalInscriptos={stats.totalInscriptos}
+            cupoMaximo={stats.cupoMaximo}
+          />
           <ResumenKpis
             stats={stats}
             onVerPagos={() => setVistaPagos(true)}

@@ -164,7 +164,7 @@ function ResumenInscripcion({ datosWizard, evento, grupoCreado }) {
 }
 
 export default function StepConfirmacion({ evento, wizard }) {
-  const { datosWizard, actualizarDatos, esUltimoPasoVisible, limpiarStorage } = wizard
+  const { datosWizard, actualizarDatos, esUltimoPasoVisible, limpiarStorage, reiniciar } = wizard
   const [status, setStatus] = useState('idle')
   const [errorMensaje, setErrorMensaje] = useState(null)
   const [participante, setParticipante] = useState(datosWizard.participanteCreado ?? null)
@@ -306,7 +306,7 @@ export default function StepConfirmacion({ evento, wizard }) {
             type="button"
             variant="secondary"
             className="w-full text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
-            onClick={() => window.location.reload()}
+            onClick={reiniciar}
           >
             Reiniciar desde el principio
           </button>
@@ -365,7 +365,7 @@ export default function StepConfirmacion({ evento, wizard }) {
       <Separator />
       <button
         type="button"
-        onClick={() => window.location.reload()}
+        onClick={reiniciar}
         className="w-full text-center text-sm text-primary underline underline-offset-4 cursor-pointer hover:opacity-70"
       >
         Realizar otra inscripción
