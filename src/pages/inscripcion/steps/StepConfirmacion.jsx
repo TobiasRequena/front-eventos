@@ -50,7 +50,8 @@ function armarPayload(evento, datosWizard) {
 
   tallerIds.push(...tallerIdsSueltos)
 
-  const tieneCosto = parseFloat(evento.costo ?? 0) > 0
+  const usaZonas = Boolean(evento.tiene_precio_por_zona)
+  const tieneCosto = usaZonas ? Boolean(datosWizard.zonaCostoId) : parseFloat(evento.costo ?? 0) > 0
   const subiendoComprobante = tieneCosto && datosWizard.comprobantePago && !datosWizard.pagoPostergado
 
   return {
@@ -65,6 +66,7 @@ function armarPayload(evento, datosWizard) {
     responsableId: null,
     respuestasForm: datosWizard.respuestasForm ?? {},
     ...(tallerIds.length > 0 ? { tallerIds } : {}),
+    ...(usaZonas ? { zonaCostoId: datosWizard.zonaCostoId } : {}),
     ...(tieneCosto ? { estadoPago: 'pendiente' } : {}),
     ...(datosWizard.fichaMedica ? { fichaMedica: datosWizard.fichaMedica } : {}),
   }
@@ -114,6 +116,14 @@ function ResumenInscripcion({ datosWizard, evento, grupoCreado }) {
         <span className="text-muted-foreground">Email</span>
         <span className="font-medium text-foreground">{datosWizard.email}</span>
       </div>
+      {evento.tiene_precio_por_zona && datosWizard.zonaCostoId && (
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Zona</span>
+          <span className="font-medium text-foreground">
+            {(evento.zonasCosto ?? []).find((z) => z.id === datosWizard.zonaCostoId)?.nombre ?? '—'}
+          </span>
+        </div>
+      )}
       {datosWizard.grupoSeleccionado && (
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Grupo</span>
@@ -326,7 +336,7 @@ export default function StepConfirmacion({ evento, wizard }) {
             ¡Inscripción completada!
           </h2>
           <p className="text-sm text-muted-foreground">
-            {parseFloat(evento.costo ?? 0) > 0
+            {(evento.tiene_precio_por_zona || parseFloat(evento.costo ?? 0) > 0)
               ? datosWizard.comprobantePago && !datosWizard.pagoPostergado
                 ? 'Comprobante enviado. El organizador lo revisará y recibirás tu credencial por mail.'
                 : <>

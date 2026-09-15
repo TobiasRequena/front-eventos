@@ -14,6 +14,7 @@ import { useTabsPersistentes } from '@/hooks/useTabsPersistentes'
 import { toast } from 'sonner'
 import { Loader2, RefreshCw } from 'lucide-react'
 import { getAcreditadores } from '@/api/acreditacion.api'
+import { eventoTieneCosto } from '@/lib/costoEvento'
 
 function ProgressCard({ acreditados, total }) {
   const porcentaje = total > 0 ? Math.round((acreditados / total) * 100) : 0
@@ -303,7 +304,7 @@ export function TabAcreditacion({ evento, participantesState }) {
   }
 
   const camposForm = evento.camposForm ?? []
-  const tieneCosto = parseFloat(evento?.costo ?? 0) > 0
+  const tieneCosto = eventoTieneCosto(evento)
   const tieneGrupos = evento?.tiene_grupos ?? false
 
   const acreditados = participantes.filter((p) => p.acreditado)

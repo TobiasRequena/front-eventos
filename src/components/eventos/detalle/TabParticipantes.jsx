@@ -31,6 +31,7 @@ import { getAgrupaciones } from '@/api/gruposTrabajo.api'
 import { ComunicacionesTab } from '@/components/eventos/detalle/ComunicacionesTab'
 import { getComunicaciones } from '@/api/comunicaciones.api'
 import { PasarListaTab } from '@/components/eventos/detalle/PasarListaTab'
+import { eventoTieneCosto } from '@/lib/costoEvento'
 
 function TablaSkeletonRows() {
   return (
@@ -186,8 +187,9 @@ export function TabParticipantes({ evento, participantesState }) {
     () =>
       buildColumns({
         camposForm,
-        tieneCosto: parseFloat(evento?.costo ?? 0) > 0,
+        tieneCosto: eventoTieneCosto(evento),
         tieneGrupos: evento?.tiene_grupos ?? false,
+        tieneZonas: evento?.tiene_precio_por_zona ?? false,
         tieneFicha,
         tieneAutorizacion,
         tieneCertificado,

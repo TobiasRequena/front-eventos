@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/table'
 import { getIntegrantes, getSolicitudes, responderSolicitud } from '@/api/panelGrupo.api'
 import { cn } from '@/lib/utils'
+import { eventoTieneCosto } from '@/lib/costoEvento'
 
 function formatearFecha(fechaIso) {
   if (!fechaIso) return '—'
@@ -340,7 +341,7 @@ export function PanelGrupoPanel({ sesion, onLogout }) {
                 <TablaParticipantes
                   participantes={integrantes}
                   loading={loadingIntegrantes}
-                  tieneCosto={parseFloat(evento?.costo ?? 0) > 0}
+                  tieneCosto={eventoTieneCosto(evento)}
                 />
               </CardContent>
             </Card>
@@ -352,7 +353,7 @@ export function PanelGrupoPanel({ sesion, onLogout }) {
                 <TablaParticipantes
                   participantes={solicitudes}
                   loading={loadingSolicitudes}
-                  tieneCosto={parseFloat(evento?.costo ?? 0) > 0}
+                  tieneCosto={eventoTieneCosto(evento)}
                   acciones={(solicitud) => (
                     <div className="flex gap-2">
                       <Button

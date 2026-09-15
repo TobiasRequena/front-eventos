@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { eventoTieneCosto } from '@/lib/costoEvento'
 import {
   Table,
   TableBody,
@@ -228,7 +229,7 @@ export function PasarListaTab({ evento, participantes, camposForm = [], particip
   const [drawerAbierto, setDrawerAbierto] = useState(false)
   const [envioAbierto, setEnvioAbierto] = useState(false)
 
-  const tieneCosto = parseFloat(evento?.costo ?? 0) > 0
+  const tieneCosto = eventoTieneCosto(evento)
   const tieneGrupos = evento?.tiene_grupos ?? false
 
   const camposSeleccion = useMemo(

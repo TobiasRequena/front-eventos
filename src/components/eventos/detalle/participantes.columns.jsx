@@ -26,7 +26,7 @@ function formatearFecha(fechaIso) {
   }).format(new Date(fechaIso))
 }
 
-export function buildColumns({ camposForm, tieneCosto, tieneGrupos, tieneFicha, tieneAutorizacion, tieneCertificado, onVerDetalle, onEliminar }) {
+export function buildColumns({ camposForm, tieneCosto, tieneGrupos, tieneZonas, tieneFicha, tieneAutorizacion, tieneCertificado, onVerDetalle, onEliminar }) {
   const columnasFijas = [
     {
       id: 'nombre',
@@ -92,6 +92,16 @@ export function buildColumns({ camposForm, tieneCosto, tieneGrupos, tieneFicha, 
           id: 'grupo',
           accessorFn: (row) => row.grupo?.nombre ?? '—',
           header: 'Grupo',
+          enableHiding: true,
+        },
+      ]
+      : []),
+    ...(tieneZonas
+      ? [
+        {
+          id: 'zona',
+          accessorFn: (row) => row.zona?.nombre ?? '—',
+          header: 'Zona',
           enableHiding: true,
         },
       ]

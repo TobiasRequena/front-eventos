@@ -18,6 +18,14 @@ export const campoFormSchema = z
     }
   )
 
+export const zonaCostoSchema = z.object({
+  nombre: z.string().min(1, 'El nombre de la zona es obligatorio.').max(100),
+  costo: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
+    z.number({ invalid_type_error: 'Ingresá un número válido.' }).positive('El costo debe ser mayor a 0.')
+  ),
+})
+
 export const tallerSchema = z
   .object({
     nombre: z.string().min(1, 'El nombre del taller es obligatorio.'),
@@ -86,6 +94,7 @@ export const eventoSchema = z
     politicaMenor: z.enum(['obligatorio', 'opcional', 'no_aplica']).default('no_aplica'),
     tieneGrupos: z.boolean().default(false),
     tieneTalleres: z.boolean().default(false),
+    tienePrecioPorZona: z.boolean().default(false),
     cbuCvu: z.string().max(50).optional().or(z.literal('')),
     cupoMaximo: z.number({ invalid_type_error: 'Ingresá un número.' }).int().positive().optional().nullable(),
     aliasCobro: z.string().max(50).optional().or(z.literal('')),
@@ -93,6 +102,7 @@ export const eventoSchema = z
       (val) => (val === '' || val === null || val === undefined ? 0 : Number(val)),
       z.number({ invalid_type_error: 'Ingresá un número válido.' }).min(0, 'El costo no puede ser negativo.')
     ),
+    zonasCosto: z.array(zonaCostoSchema).default([]),
     camposForm: z.array(campoFormSchema).default([]),
     // bloquesTaller: z.array(bloqueTallerSchema).default([]),
     configFichaMedica: z.enum([
@@ -116,6 +126,14 @@ export const eventoSchema = z
         code: z.ZodIssueCode.custom,
         message: 'La fecha de fin debe ser igual o posterior a la de inicio.',
         path: ['fechaFin'],
+      })
+    }
+
+    if (evento.tienePrecioPorZona && evento.zonasCosto.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Agregá al menos una zona de costo.',
+        path: ['zonasCosto'],
       })
     }
 
@@ -202,6 +220,7 @@ export const editarEventoSchema = z.object({
   inscripcionesCerradas: z.boolean().optional(),
   tieneGrupos: z.boolean().default(false),
   tieneTalleres: z.boolean().default(false),
+  tienePrecioPorZona: z.boolean().default(false),
   cbuCvu: z.string().max(50).optional().or(z.literal('')),
   aliasCobro: z.string().max(50).optional().or(z.literal('')),
   costo: z.preprocess(

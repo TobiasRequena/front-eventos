@@ -56,7 +56,8 @@ function calcularPasos(evento, datosWizard) {
     pasos.push('documentacion')
   }
 
-  if (parseFloat(evento.costo ?? 0) > 0) {
+  const usaZonasCosto = Boolean(evento.tiene_precio_por_zona || evento.tienePrecioPorZona)
+  if (usaZonasCosto || parseFloat(evento.costo ?? 0) > 0) {
     pasos.push('pago')
   }
 
@@ -87,6 +88,7 @@ const ESTADO_INICIAL = {
   respuestasForm: {},
 
   // Paso 5
+  zonaCostoId: null,
   comprobantePago: null,    // File | null
   pagoPostergado: false,
 

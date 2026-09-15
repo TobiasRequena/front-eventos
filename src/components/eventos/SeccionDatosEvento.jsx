@@ -38,6 +38,7 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
   const form = useFormContext()
   const [abierto, setAbierto] = useState(true)
   const politicaMenor = form.watch('politicaMenor')
+  const tienePrecioPorZona = form.watch('tienePrecioPorZona')
 
   useEffect(() => {
     if (politicaMenor !== 'no_aplica') {
@@ -46,6 +47,12 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
       form.setValue('tieneGrupos', false)
     }
   }, [politicaMenor])
+
+  // Si el costo pasa a ser por zona, el costo general no se usa — lo reseteamos
+  // para no mandar un valor viejo que el back va a ignorar de todos modos.
+  useEffect(() => {
+    if (tienePrecioPorZona) form.setValue('costo', 0)
+  }, [tienePrecioPorZona])
 
   return (
     <Card>
@@ -389,30 +396,64 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
               </div>
             </div>
 
+            <FormField
+              control={form.control}
+              name="tienePrecioPorZona"
+              render={({ field }) => (
+                <FormItem className="flex items-center justify-between rounded-lg border border-border p-3">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <FormLabel>Costo diferido por zona</FormLabel>
+                      <HelpTooltip>
+                        En vez de un costo único, cada participante elige su zona al
+                        inscribirse y paga el monto de esa zona. Configurá las zonas
+                        en la sección "Zonas de costo".
+                      </HelpTooltip>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {field.value ? 'El costo se define por zona.' : 'Costo único para todos los participantes.'}
+                    </p>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
             <div className="grid gap-4 sm:grid-cols-3">
-              <FormField
-                control={form.control}
-                name="costo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Costo de inscripción</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="0"
-                        {...field}
-                        value={field.value !== undefined && field.value !== '' ? field.value : ''}
-                        onChange={(e) => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                        onFocus={(e) => { if (Number(field.value) === 0) field.onChange('') }}
-                        onBlur={(e) => { if (e.target.value === '') field.onChange(0) }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {tienePrecioPorZona ? (
+                <FormItem>
+                  <FormLabel>Costo de inscripción</FormLabel>
+                  <div className="flex h-9 items-center truncate rounded-md border border-dashed border-border px-3 text-sm text-muted-foreground">
+                    Definido por zona
+                  </div>
+                </FormItem>
+              ) : (
+                <FormField
+                  control={form.control}
+                  name="costo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Costo de inscripción</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0"
+                          {...field}
+                          value={field.value !== undefined && field.value !== '' ? field.value : ''}
+                          onChange={(e) => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                          onFocus={(e) => { if (Number(field.value) === 0) field.onChange('') }}
+                          onBlur={(e) => { if (e.target.value === '') field.onChange(0) }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormField
                 control={form.control}
                 name="cbuCvu"

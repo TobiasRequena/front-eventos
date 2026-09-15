@@ -14,9 +14,17 @@ import { useState, useEffect } from 'react'
 import { getFichaMedica } from '@/api/participantes.api'
 import { ClipboardList } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { patchEstadoPago } from '@/api/participantes.api'
+import { patchEstadoPago, patchZonaCosto } from '@/api/participantes.api'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { eventoTieneCosto } from '@/lib/costoEvento'
 
 const ESTADO_PAGO_CONFIG = {
   no_aplica: { label: 'Sin costo', variant: 'secondary' },
@@ -147,8 +155,22 @@ function FichaMedicaDrawer({ participanteId, open, onClose }) {
 export function ParticipanteDrawer({ participante, camposForm = [], evento, open, onClose, cargando, onActualizar }) {
   const [fichaMedicaAbierta, setFichaMedicaAbierta] = useState(false)
   const [actualizandoPago, setActualizandoPago] = useState(false)
-  const tieneCosto = parseFloat(evento?.costo ?? 0) > 0
+  const [actualizandoZona, setActualizandoZona] = useState(false)
+  const [zonaOverride, setZonaOverride] = useState(null)
+  const [zonaPendiente, setZonaPendiente] = useState(null)
+  const tieneCosto = eventoTieneCosto(evento)
   const tieneGrupos = evento?.tiene_grupos ?? false
+  const tieneZonas = evento?.tiene_precio_por_zona ?? false
+  const zonasCosto = evento?.zonasCosto ?? []
+
+  // Al abrir un participante distinto, descartamos el override de la edición anterior
+  useEffect(() => {
+    setZonaOverride(null)
+    setZonaPendiente(null)
+  }, [participante?.id])
+
+  const zonaActualId = zonaOverride ?? participante?.zona_costo_id ?? ''
+  const zonaPendienteNombre = zonasCosto.find((z) => z.id === zonaPendiente)?.nombre
 
   const estadoPago = participante?.estado_pago
     ? (ESTADO_PAGO_CONFIG[participante.estado_pago] ?? ESTADO_PAGO_CONFIG.pendiente)
@@ -171,6 +193,22 @@ export function ParticipanteDrawer({ participante, camposForm = [], evento, open
       toast.error('No pudimos actualizar el estado de pago.')
     } finally {
       setActualizandoPago(false)
+    }
+  }
+
+  async function handleConfirmarCambioZona() {
+    const zonaCostoId = zonaPendiente
+    setActualizandoZona(true)
+    try {
+      await patchZonaCosto(participante.id, zonaCostoId)
+      setZonaOverride(zonaCostoId)
+      toast.success('Zona actualizada.')
+      onActualizar?.()
+    } catch {
+      toast.error('No pudimos actualizar la zona.')
+    } finally {
+      setActualizandoZona(false)
+      setZonaPendiente(null)
     }
   }
 
@@ -255,6 +293,57 @@ export function ParticipanteDrawer({ participante, camposForm = [], evento, open
 
                 {tieneGrupos && participante.grupo && (
                   <InfoRow icon={Users} label="Grupo" value={participante.grupo.nombre} />
+                )}
+
+                {tieneZonas && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs text-muted-foreground">Zona</p>
+                      <Select
+                        value={zonaActualId}
+                        onValueChange={(v) => { if (v !== zonaActualId) setZonaPendiente(v) }}
+                        disabled={actualizandoZona || zonaPendiente !== null}
+                      >
+                        <SelectTrigger className="h-8 w-auto text-sm">
+                          <SelectValue placeholder="Sin zona" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {zonasCosto.map((zona) => (
+                            <SelectItem key={zona.id} value={zona.id}>
+                              {zona.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {zonaPendiente !== null && (
+                      <div className="flex items-center justify-between gap-3 rounded-md bg-muted/50 p-3">
+                        <p className="text-xs text-muted-foreground">
+                          ¿Cambiar a <strong className="text-foreground">{zonaPendienteNombre}</strong>?
+                        </p>
+                        <div className="flex shrink-0 gap-1.5">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setZonaPendiente(null)}
+                            disabled={actualizandoZona}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleConfirmarCambioZona}
+                            disabled={actualizandoZona}
+                          >
+                            {actualizandoZona ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar'}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 <InfoRow

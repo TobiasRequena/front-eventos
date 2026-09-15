@@ -3,6 +3,13 @@ import { Upload, X, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
 import { toast } from 'sonner'
@@ -10,9 +17,15 @@ import { toast } from 'sonner'
 export default function StepPago({ evento, wizard }) {
   const { datosWizard, avanzar, retroceder, esUltimoPasoVisible } = wizard
 
+  const usaZonas = Boolean(evento.tiene_precio_por_zona)
+  const zonasCosto = evento.zonasCosto ?? []
+
+  const [zonaCostoId, setZonaCostoId] = useState(datosWizard.zonaCostoId ?? '')
   const [comprobante, setComprobante] = useState(datosWizard.comprobantePago ?? null)
   const [pagoPostergado, setPagoPostergado] = useState(datosWizard.pagoPostergado ?? false)
   const [preview, setPreview] = useState(null)
+
+  const zonaSeleccionada = zonasCosto.find((z) => z.id === zonaCostoId)
 
   function handleArchivoChange(e) {
     const file = e.target.files?.[0]
@@ -36,6 +49,10 @@ export default function StepPago({ evento, wizard }) {
   }
 
   function handleAvanzar() {
+    if (usaZonas && !zonaCostoId) {
+      toast.error('Seleccioná tu zona de costo.')
+      return
+    }
     if (!comprobante && !pagoPostergado) {
       toast.error('Subí el comprobante de pago o elegí pagar después.')
       return
@@ -43,23 +60,38 @@ export default function StepPago({ evento, wizard }) {
     avanzar({
       comprobantePago: comprobante,
       pagoPostergado,
+      ...(usaZonas ? { zonaCostoId } : {}),
     })
   }
 
   const puedeAvanzar = comprobante !== null || pagoPostergado
 
-  const costo = parseFloat(evento.costo ?? 0)
+  const costo = usaZonas ? parseFloat(zonaSeleccionada?.costo ?? 0) : parseFloat(evento.costo ?? 0)
 
   return (
     <InscripcionStepLayout evento={evento} titulo="Pago de inscripción">
       <div className="space-y-5">
-        <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Costo de inscripción
-          </p>
-          <p className="text-3xl font-semibold text-foreground">
-            ${costo.toLocaleString('es-AR')}
-          </p>
+        <div className="space-y-2">
+          {usaZonas && (
+            <Select value={zonaCostoId} onValueChange={setZonaCostoId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Elegí tu zona" />
+              </SelectTrigger>
+              <SelectContent>
+                {zonasCosto.map((zona) => (
+                  <SelectItem key={zona.id} value={zona.id}>
+                    {zona.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {(!usaZonas || zonaSeleccionada) && (
+            <p className="text-3xl font-semibold text-foreground">
+              ${costo.toLocaleString('es-AR')}
+            </p>
+          )}
         </div>
 
         {(evento.cbu_cvu || evento.alias_cobro) && (

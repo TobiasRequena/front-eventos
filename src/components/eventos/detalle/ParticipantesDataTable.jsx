@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { FiltrosBarConectado } from '@/components/ui/filtros-bar-conectado'
 import { useFiltrosBar } from '@/hooks/useFiltrosBar'
+import { eventoTieneCosto } from '@/lib/costoEvento'
 
 export const OPCIONES_ESTADO_PAGO = [
   { value: 'todos', label: 'Todos' },
@@ -36,8 +37,9 @@ export const OPCIONES_EDAD = [
 const PAGE_SIZE = 10
 
 export function ParticipantesDataTable({ columns, data, evento, camposForm = [], onDescargar, descargando = false, onRefresh, refreshing = false, extraAcciones }) {
-  const tieneCosto = parseFloat(evento?.costo ?? 0) > 0
+  const tieneCosto = eventoTieneCosto(evento)
   const tieneGrupos = evento?.tiene_grupos ?? false
+  const tieneZonas = evento?.tiene_precio_por_zona ?? false
   const tieneFicha = evento?.config_ficha_medica !== 'no'
   const tieneAutorizacion = evento?.requiere_autorizacion_menores ?? false
   const tieneCertificado = evento?.config_certificado !== 'no'
@@ -50,6 +52,7 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
   const [columnVisibility, setColumnVisibility] = useState(() => {
     const initial = { dni: false }
     if (tieneGrupos) initial.grupo = false
+    if (tieneZonas) initial.zona = false
     if (tieneCosto) initial.estado_pago = false
     camposForm.forEach((campo) => {
       initial[`campo_${campo.id}`] = false
@@ -66,6 +69,12 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
   const grupos = useMemo(() => {
     const set = new Set()
     data.forEach((p) => { if (p.grupo?.nombre) set.add(p.grupo.nombre) })
+    return Array.from(set).sort()
+  }, [data])
+
+  const zonas = useMemo(() => {
+    const set = new Set()
+    data.forEach((p) => { if (p.zona?.nombre) set.add(p.zona.nombre) })
     return Array.from(set).sort()
   }, [data])
 
@@ -98,6 +107,19 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
         predicate: (p, v) => v === 'sin_grupo' ? !p.grupo?.nombre : p.grupo?.nombre === v,
       })
     }
+    if (tieneZonas && zonas.length > 0) {
+      base.push({
+        key: 'zona',
+        label: 'Zona',
+        placeholder: 'Todas las zonas',
+        opciones: [
+          { value: 'todos', label: 'Todas las zonas' },
+          { value: 'sin_zona', label: 'Sin zona' },
+          ...zonas.map((zona) => ({ value: zona, label: zona })),
+        ],
+        predicate: (p, v) => v === 'sin_zona' ? !p.zona?.nombre : p.zona?.nombre === v,
+      })
+    }
     camposSeleccion.forEach((campo) => {
       base.push({
         key: `campo_${campo.id}`,
@@ -110,7 +132,7 @@ export function ParticipantesDataTable({ columns, data, evento, camposForm = [],
       })
     })
     return base
-  }, [tieneCosto, tieneGrupos, grupos, camposSeleccion])
+  }, [tieneCosto, tieneGrupos, grupos, tieneZonas, zonas, camposSeleccion])
 
   const buscarParticipante = useMemo(() => (p, q) =>
     p.nombre.toLowerCase().includes(q) ||

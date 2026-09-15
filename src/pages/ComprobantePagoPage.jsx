@@ -12,6 +12,7 @@ import { verificarDni } from '@/api/participantes.api'
 import { subirComprobantePublico } from '@/api/archivos.api'
 import { InscripcionLayout } from '@/components/inscripcion/InscripcionLayout'
 import { cn } from '@/lib/utils'
+import { eventoTieneCosto } from '@/lib/costoEvento'
 
 function CopyButton({ texto }) {
   const [copiado, setCopiado] = useState(false)
@@ -111,7 +112,8 @@ export default function ComprobantePagoPage() {
     )
   }
 
-  const tieneCosto = parseFloat(evento.costo ?? 0) > 0
+  const tieneCosto = eventoTieneCosto(evento)
+  const monto = participante?.zona ? parseFloat(participante.zona.costo) : parseFloat(evento.costo ?? 0)
 
   if (enviado) {
     return (
@@ -152,10 +154,17 @@ export default function ComprobantePagoPage() {
             Pago de inscripción
           </p>
           <h1 className="mt-1 text-xl font-semibold text-foreground">{evento.nombre}</h1>
-          {tieneCosto && (
-            <p className="mt-1 text-2xl font-bold text-foreground">
-              ${parseFloat(evento.costo).toLocaleString('es-AR')}
-            </p>
+          {tieneCosto && (!evento.tiene_precio_por_zona || participante) && (
+            <>
+              {participante?.zona && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Tu zona: {participante.zona.nombre}
+                </p>
+              )}
+              <p className="mt-1 text-2xl font-bold text-foreground">
+                ${monto.toLocaleString('es-AR')}
+              </p>
+            </>
           )}
         </div>
 

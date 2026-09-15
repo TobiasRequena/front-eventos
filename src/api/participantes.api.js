@@ -107,3 +107,8 @@ export async function patchEstadoPago(participanteId, estadoPago) {
   const { data } = await httpClient.patch(`/participantes/${participanteId}/estado-pago`, { estadoPago })
   return data
 }
+
+export async function patchZonaCosto(participanteId, zonaCostoId) {
+  const { data } = await httpClient.patch(`/participantes/${participanteId}/zona-costo`, { zonaCostoId })
+  return data
+}

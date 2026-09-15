@@ -65,6 +65,9 @@ export function PagosPendientesPanel({ evento, onVolver }) {
                     <TableHead className="font-medium text-foreground">Nombre</TableHead>
                     <TableHead className="font-medium text-foreground">DNI</TableHead>
                     <TableHead className="font-medium text-foreground">Grupo</TableHead>
+                    {evento.tiene_precio_por_zona && (
+                      <TableHead className="font-medium text-foreground">Zona</TableHead>
+                    )}
                     <TableHead className="font-medium text-foreground">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -80,6 +83,11 @@ export function PagosPendientesPanel({ evento, onVolver }) {
                       <TableCell className="text-sm text-muted-foreground">
                         {p.grupo?.nombre ?? '—'}
                       </TableCell>
+                      {evento.tiene_precio_por_zona && (
+                        <TableCell className="text-sm text-muted-foreground">
+                          {p.zona?.nombre ?? '—'}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <TooltipProvider>
                           <Tooltip>

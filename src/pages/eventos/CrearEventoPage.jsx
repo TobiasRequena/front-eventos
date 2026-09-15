@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { SeccionDatosEvento } from '@/components/eventos/SeccionDatosEvento'
 import { SeccionFormularioInscripcion } from '@/components/eventos/SeccionFormularioInscripcion'
 import { SeccionTalleres } from '@/components/eventos/SeccionTalleres'
+import { SeccionZonasCosto } from '@/components/eventos/SeccionZonasCosto'
 import { EventoPreviewPanel } from '@/components/eventos/EventoPreviewPanel'
 
 const VALORES_INICIALES = {
@@ -25,9 +26,11 @@ const VALORES_INICIALES = {
   cupoMaximo: null,
   tieneGrupos: false,
   tieneTalleres: false,
+  tienePrecioPorZona: false,
   cbuCvu: '',
   aliasCobro: '',
   costo: 0,
+  zonasCosto: [],
   camposForm: [],
   seccionTalleres: [],
   configFichaMedica: 'no',
@@ -64,6 +67,14 @@ function armarPayload(values) {
       })),
     }))
 
+  const zonasCosto = values.tienePrecioPorZona
+    ? values.zonasCosto.map((zona, index) => ({
+      nombre: zona.nombre,
+      costo: zona.costo,
+      orden: index,
+    }))
+    : []
+
   const talleresSueltos = values.seccionTalleres
     .filter((item) => item.tipo === 'taller_suelto')
     .map((taller) => ({
@@ -85,6 +96,7 @@ function armarPayload(values) {
     cupoMaximo: values.cupoMaximo ?? null,
     tieneGrupos: values.tieneGrupos,
     tieneTalleres: values.tieneTalleres,
+    tienePrecioPorZona: values.tienePrecioPorZona,
     cbuCvu: values.cbuCvu || undefined,
     aliasCobro: values.aliasCobro || undefined,
     costo: values.costo,
@@ -94,6 +106,7 @@ function armarPayload(values) {
     camposForm,
     bloquesTaller,
     talleresSueltos,
+    zonasCosto,
   }
 }
 
@@ -220,6 +233,7 @@ export default function CrearEventoPage() {
               archivoTemplateRef={archivoTemplateRef}
             />
 
+            <SeccionZonasCosto />
             <SeccionFormularioInscripcion />
             <SeccionTalleres />
 

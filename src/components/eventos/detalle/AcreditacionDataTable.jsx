@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { FiltrosBarConectado } from '@/components/ui/filtros-bar-conectado'
 import { useFiltrosBar } from '@/hooks/useFiltrosBar'
+import { eventoTieneCosto } from '@/lib/costoEvento'
 
 const OPCIONES_ESTADO_PAGO = [
   { value: 'todos', label: 'Todos' },
@@ -47,7 +48,7 @@ export function AcreditacionDataTable({
   initialColumnVisibility = {}, onVerDetalle, onRefresh, refreshing = false,
   acreditadores = [],
 }) {
-  const tieneCosto = parseFloat(evento?.costo ?? 0) > 0
+  const tieneCosto = eventoTieneCosto(evento)
   const tieneGrupos = evento?.tiene_grupos ?? false
 
   const camposSeleccion = useMemo(
