@@ -260,8 +260,8 @@ export default function EventoDetallePage() {
     setSearchParams({ tab: nuevoTab })
   }
 
-  function handleGuardado(eventoActualizado) {
-    setEvento((prev) => ({ ...prev, ...eventoActualizado }))
+  function handleGuardado() {
+    reintentar()
     setModoEdicion(false)
   }
 
