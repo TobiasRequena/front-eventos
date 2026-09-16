@@ -104,7 +104,7 @@ export function CampoFormInput({ campo, preview = false, control, name }) {
 
       return (
         <Select disabled={preview} value={valor ?? ''} onValueChange={onChange}>
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Elegí una opción" />
           </SelectTrigger>
 

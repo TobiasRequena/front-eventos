@@ -11,6 +11,10 @@ function buildSchema(camposForm) {
   camposForm.forEach((campo) => {
     if (campo.tipo === 'booleano') {
       shape[campo.id] = z.boolean()
+    } else if (campo.tipo === 'numero') {
+      shape[campo.id] = campo.requerido
+        ? z.number({ message: `${campo.etiqueta} es obligatorio.` })
+        : z.number().optional()
     } else if (campo.requerido) {
       shape[campo.id] = z.string().min(1, `${campo.etiqueta} es obligatorio.`)
     } else {
