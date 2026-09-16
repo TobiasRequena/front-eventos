@@ -262,7 +262,7 @@ export function PasarListaTab({ evento, participantes, camposForm = [], particip
     const base = [
       {
         key: 'universo',
-        label: 'Universo',
+        label: 'Participantes',
         opciones: [
           { value: 'todos', label: 'Inscriptos' },
           { value: 'acreditados', label: 'Acreditados' },
