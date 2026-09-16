@@ -50,6 +50,22 @@ export async function getParticipantesEliminados(eventoId) {
   return data.participantes
 }
 
+export async function descargarListaAsistenciaPdf(eventoId, { registros, filtros }, nombreArchivo) {
+  const response = await httpClient.post(
+    `/eventos/${eventoId}/participantes/lista-pdf`,
+    { registros, filtros },
+    { responseType: 'blob' }
+  )
+  const url = window.URL.createObjectURL(new Blob([response.data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', `lista_asistencia_${nombreArchivo ?? eventoId}.pdf`)
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
+
 export async function descargarInscriptosTaller(tallerId, nombreTaller) {
   const response = await httpClient.get(`/talleres/${tallerId}/excel`, {
     responseType: 'blob',

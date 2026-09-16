@@ -7,7 +7,7 @@ import {
   flexRender,
 } from '@tanstack/react-table'
 import { toast } from 'sonner'
-import { CheckCircle2, ChevronLeft, ChevronRight, Eye, Loader2, Mail, RotateCcw, Undo2, XCircle } from 'lucide-react'
+import { CheckCircle2, ChevronLeft, ChevronRight, Download, Eye, Loader2, Mail, RotateCcw, Undo2, XCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -46,6 +46,7 @@ import { useFiltrosBar } from '@/hooks/useFiltrosBar'
 import { OPCIONES_ESTADO_PAGO, OPCIONES_EDAD } from '@/components/eventos/detalle/ParticipantesDataTable'
 import { ESTADO_PAGO_CONFIG } from '@/components/eventos/detalle/participantes.columns'
 import { enviarMailAusentes } from '@/api/comunicaciones.api'
+import { descargarListaAsistenciaPdf } from '@/api/participantes.api'
 import { getApiErrorMessage } from '@/api/httpClient'
 import { cn } from '@/lib/utils'
 
@@ -84,7 +85,7 @@ function ParticipanteCard({ participante, className }) {
   )
 }
 
-function PasarListaDialog({ open, onOpenChange, pendientes, total, contados, onMarcar, onDeshacer, puedeDeshacer }) {
+function PasarListaDialog({ open, onOpenChange, pendientes, total, contados, onMarcar, onDeshacer, puedeDeshacer, repasando }) {
   const cardActual = pendientes[0]
   const siguientes = pendientes.slice(1, 3)
 
@@ -120,7 +121,10 @@ function PasarListaDialog({ open, onOpenChange, pendientes, total, contados, onM
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                className="h-12 flex-1 cursor-pointer gap-2 text-base text-destructive"
+                className={cn(
+                  'h-12 flex-1 cursor-pointer gap-2 text-base text-destructive',
+                  repasando && cardActual._estadoAsistencia === 'ausente' && 'bg-destructive/5'
+                )}
                 onClick={() => onMarcar(cardActual.id, 'ausente')}
               >
                 <XCircle className="h-5 w-5" />
@@ -128,7 +132,10 @@ function PasarListaDialog({ open, onOpenChange, pendientes, total, contados, onM
               </Button>
               <Button
                 variant="outline"
-                className="h-12 flex-1 cursor-pointer gap-2 text-base text-emerald-600"
+                className={cn(
+                  'h-12 flex-1 cursor-pointer gap-2 text-base text-emerald-600',
+                  repasando && cardActual._estadoAsistencia === 'presente' && 'bg-emerald-600/5'
+                )}
                 onClick={() => onMarcar(cardActual.id, 'presente')}
               >
                 <CheckCircle2 className="h-5 w-5" />
@@ -228,6 +235,9 @@ export function PasarListaTab({ evento, participantes, camposForm = [], particip
   const [participanteSeleccionado, setParticipanteSeleccionado] = useState(null)
   const [drawerAbierto, setDrawerAbierto] = useState(false)
   const [envioAbierto, setEnvioAbierto] = useState(false)
+  const [repasando, setRepasando] = useState(false)
+  const [colaRepaso, setColaRepaso] = useState([])
+  const [descargando, setDescargando] = useState(false)
 
   const tieneCosto = eventoTieneCosto(evento)
   const tieneGrupos = evento?.tiene_grupos ?? false
@@ -250,6 +260,15 @@ export function PasarListaTab({ evento, participantes, camposForm = [], particip
 
   const filtrosSelect = useMemo(() => {
     const base = [
+      {
+        key: 'universo',
+        label: 'Universo',
+        opciones: [
+          { value: 'todos', label: 'Inscriptos' },
+          { value: 'acreditados', label: 'Acreditados' },
+        ],
+        predicate: (p, v) => v === 'acreditados' ? !!p.acreditado : true,
+      },
       {
         key: 'checkin',
         label: 'Estado',
@@ -320,9 +339,36 @@ export function PasarListaTab({ evento, participantes, camposForm = [], particip
     [participantes, asistencia]
   )
 
+  async function descargarPdf() {
+    const registros = filtrados
+      .filter((p) => p._estadoAsistencia !== 'pendiente')
+      .map((p) => ({ participanteId: p.id, estado: p._estadoAsistencia }))
+
+    if (registros.length === 0) {
+      toast.error('No hay participantes contados para descargar con ese filtro.')
+      return
+    }
+
+    const filtrosTexto = Object.fromEntries(
+      filtrosState.filtrosActivos
+        .filter((f) => f.key !== '__busqueda')
+        .map((f) => [f.key, f.label.split(': ').slice(1).join(': ')])
+    )
+
+    setDescargando(true)
+    try {
+      await descargarListaAsistenciaPdf(evento.id, { registros, filtros: filtrosTexto }, evento?.codigo)
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'No pudimos generar el PDF.'))
+    } finally {
+      setDescargando(false)
+    }
+  }
+
   function marcarDesdeDialog(id, estado) {
     setAsistencia((prev) => ({ ...prev, [id]: estado }))
     setOrden((prev) => [...prev, id])
+    if (repasando) setColaRepaso((prev) => prev.slice(1))
   }
 
   function deshacerUltimo() {
@@ -514,6 +560,14 @@ export function PasarListaTab({ evento, participantes, camposForm = [], particip
         columnas={yaComenzo ? { items: columnasOcultables, onToggle: (column, value) => column.toggleVisibility(value) } : undefined}
         acciones={[
           {
+            key: 'descargar',
+            icon: Download,
+            tooltip: 'Descargar lista (PDF)',
+            onClick: descargarPdf,
+            disabled: descargando,
+            loading: descargando,
+          },
+          {
             key: 'reiniciar',
             icon: RotateCcw,
             tooltip: 'Reiniciar lista',
@@ -552,15 +606,23 @@ export function PasarListaTab({ evento, participantes, camposForm = [], particip
             </Badge>
 
             {pendientes.length > 0 && (
-              <Button variant="outline" size="sm" onClick={() => setDialogAbierto(true)}>
+              <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => { setRepasando(false); setDialogAbierto(true) }}>
                 Continuar pasando lista
               </Button>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="cursor-pointer"
+              onClick={() => { setColaRepaso(filtrados); setRepasando(true); setDialogAbierto(true) }}
+            >
+              Repasar todos
+            </Button>
 
             <Button
               variant="outline"
               size="sm"
-              className="gap-1.5"
+              className="gap-1.5 cursor-pointer"
               disabled={ausentesGlobal.length === 0}
               onClick={() => setEnvioAbierto(true)}
             >
@@ -644,13 +706,14 @@ export function PasarListaTab({ evento, participantes, camposForm = [], particip
 
       <PasarListaDialog
         open={dialogAbierto}
-        onOpenChange={setDialogAbierto}
-        pendientes={pendientes}
+        onOpenChange={(v) => { setDialogAbierto(v); if (!v) setRepasando(false) }}
+        pendientes={repasando ? colaRepaso : pendientes}
         total={totalFiltrados}
         contados={presentesCount + ausentesCount}
         onMarcar={marcarDesdeDialog}
         onDeshacer={deshacerUltimo}
-        puedeDeshacer={orden.length > 0}
+        puedeDeshacer={!repasando && orden.length > 0}
+        repasando={repasando}
       />
 
       <AlertDialog open={confirmReiniciar} onOpenChange={setConfirmReiniciar}>
