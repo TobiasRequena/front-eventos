@@ -75,6 +75,7 @@ export function TabParticipantes({ evento, participantesState }) {
   const tieneFicha = evento?.config_ficha_medica !== 'no'
   const tieneAutorizacion = evento?.requiere_autorizacion_menores ?? false
   const tieneCertificado = evento?.config_certificado !== 'no'
+  const tieneContactoEmergencia = evento?.solicita_contacto_emergencia ?? false
 
   async function cargarEsquemas() {
     setEsquemasCargando(true)
@@ -225,7 +226,9 @@ export function TabParticipantes({ evento, participantesState }) {
           <TabsTrigger value="grupos_trabajo">Agrupar</TabsTrigger>
           <TabsTrigger value="pasar_lista">Pasar lista</TabsTrigger>
           {/* "Modo emergencia" siempre debe ser la última tab: si agregás una nueva sub-tab, insertala antes de esta. */}
-          <TabsTrigger value="modo_emergencia" className="text-destructive/80 data-[state=active]:text-destructive/80">Modo emergencia</TabsTrigger>
+          {tieneContactoEmergencia && (
+            <TabsTrigger value="modo_emergencia" className="text-destructive/80 data-[state=active]:text-destructive/80">Modo emergencia</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="listado" className="mt-2" forceMount>
@@ -335,9 +338,11 @@ export function TabParticipantes({ evento, participantesState }) {
           />
         </TabsContent>
         {/* "Modo emergencia" siempre debe ser la última tab: si agregás una nueva sub-tab, insertala antes de esta. */}
-        <TabsContent value="modo_emergencia" className="mt-2" forceMount>
-          <ModoEmergenciaTab evento={evento} />
-        </TabsContent>
+        {tieneContactoEmergencia && (
+          <TabsContent value="modo_emergencia" className="mt-2" forceMount>
+            <ModoEmergenciaTab evento={evento} />
+          </TabsContent>
+        )}
       </Tabs>
 
     </>
