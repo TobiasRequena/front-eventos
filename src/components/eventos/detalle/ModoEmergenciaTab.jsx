@@ -43,7 +43,9 @@ export function ModoEmergenciaTab({ evento }) {
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Cargando contactos de emergencia...</p>
       ) : contactosFiltrados.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No hay contactos de emergencia cargados.</p>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center">
+          <p className="text-sm text-muted-foreground">No hay contactos de emergencia cargados.</p>
+        </div>
       ) : (
         <div className="rounded-md border border-border overflow-x-auto">
           <Table>
