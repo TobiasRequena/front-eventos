@@ -36,6 +36,7 @@ const VALORES_INICIALES = {
   configFichaMedica: 'no',
   configCertificado: 'no',
   requiereAutorizacionMenores: false,
+  solicitaContactoEmergencia: false,
 }
 
 function armarPayload(values) {
@@ -103,6 +104,7 @@ function armarPayload(values) {
     configFichaMedica: values.configFichaMedica,
     configCertificado: values.configCertificado,
     requiereAutorizacionMenores: values.requiereAutorizacionMenores,
+    solicitaContactoEmergencia: values.solicitaContactoEmergencia,
     camposForm,
     bloquesTaller,
     talleresSueltos,

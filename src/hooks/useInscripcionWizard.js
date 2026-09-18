@@ -49,7 +49,8 @@ function calcularPasos(evento, datosWizard) {
   const necesitaDocumentacion = (
     (evento.config_ficha_medica && evento.config_ficha_medica !== 'no') ||
     (evento.config_certificado && evento.config_certificado !== 'no') ||
-    evento.requiere_autorizacion_menores
+    evento.requiere_autorizacion_menores ||
+    Boolean(evento.solicita_contacto_emergencia || evento.solicitaContactoEmergencia)
   )
 
   if (necesitaDocumentacion) {
@@ -96,6 +97,7 @@ const ESTADO_INICIAL = {
   fichaMedica: null,
   autorizacionArchivo: null,
   certificadoArchivo: null,
+  contactoEmergencia: null,
 
   // Resultado final
   participanteCreado: null,

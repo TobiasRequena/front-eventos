@@ -64,6 +64,69 @@ const schemaFichaMedica = (obligatoria) => z.object({
   }
 )
 
+const TELEFONO_REGEX = /^[0-9+\-\s()]{6,20}$/
+
+const schemaContactoEmergencia = (obligatorio) => z.object({
+  nombre: obligatorio
+    ? z.string().min(1, 'El nombre es obligatorio.')
+    : z.string().optional(),
+  telefono: obligatorio
+    ? z.string().regex(TELEFONO_REGEX, 'Ingresá un teléfono válido.')
+    : z.string().refine(
+      (val) => !val || TELEFONO_REGEX.test(val),
+      { message: 'Ingresá un teléfono válido.' }
+    ),
+  parentesco: z.string().optional(),
+})
+
+function ContactoEmergenciaForm({ form }) {
+  return (
+    <Form {...form}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FormField
+          control={form.control}
+          name="nombre"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nombre y apellido</FormLabel>
+              <FormControl>
+                <Input placeholder="Ej. María Pérez" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="telefono"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Teléfono</FormLabel>
+              <FormControl>
+                <Input type="tel" placeholder="Ej. 351 555 1234" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="parentesco"
+          render={({ field }) => (
+            <FormItem className="sm:col-span-2">
+              <FormLabel>Parentesco / relación</FormLabel>
+              <FormControl>
+                <Input placeholder="Ej. Madre, padre, tutor" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+    </Form>
+  )
+}
+
 function FichaMedicaForm({ form, obligatoria }) {
   const v = form.watch()
 
@@ -385,6 +448,20 @@ export function StepDocumentacion({ evento, wizard }) {
 
   const certificadoObligatorio = mostrarCertificado && configCert.startsWith('obligatorio')
 
+  const solicitaContacto = Boolean(evento.solicita_contacto_emergencia || evento.solicitaContactoEmergencia)
+  const mostrarContactoEmergencia = solicitaContacto
+  const contactoEmergenciaObligatorio = solicitaContacto && esMenor
+
+  const formContacto = useForm({
+    resolver: zodResolver(schemaContactoEmergencia(contactoEmergenciaObligatorio)),
+    defaultValues: {
+      nombre: '',
+      telefono: '',
+      parentesco: '',
+      ...(datosWizard.contactoEmergencia ?? {}),
+    },
+  })
+
   const formFicha = useForm({
     resolver: zodResolver(schemaFichaMedica(fichaMedicaObligatoria)),
     defaultValues: {
@@ -410,16 +487,27 @@ export function StepDocumentacion({ evento, wizard }) {
             ...values,
             tipo_sangre: values.tipo_sangre === 'no_se' || values.tipo_sangre === '' ? null : values.tipo_sangre,
           }
-          continuar(fichaMedicaNormalizada)
+          continuarConContacto(fichaMedicaNormalizada)
         },
         () => toast.error('Completá los campos obligatorios antes de continuar.')
       )()
       return
     }
-    continuar(null)
+    continuarConContacto(null)
   }
 
-  function continuar(fichaMedicaValues) {
+  function continuarConContacto(fichaMedicaValues) {
+    if (mostrarContactoEmergencia) {
+      formContacto.handleSubmit(
+        (contactoValues) => continuar(fichaMedicaValues, contactoValues),
+        () => toast.error('Completá los campos obligatorios antes de continuar.')
+      )()
+      return
+    }
+    continuar(fichaMedicaValues, null)
+  }
+
+  function continuar(fichaMedicaValues, contactoValues) {
     if (mostrarAutorizacion && !autorizacionArchivo) {
       toast.error('Debés subir la autorización firmada.')
       return
@@ -428,14 +516,16 @@ export function StepDocumentacion({ evento, wizard }) {
       toast.error('Debés subir el certificado de antecedentes.')
       return
     }
+    const contactoConValor = contactoValues?.nombre?.trim() || contactoValues?.telefono?.trim()
     avanzar({
       fichaMedica: fichaMedicaValues,
       autorizacionArchivo,
       certificadoArchivo,
+      contactoEmergencia: contactoConValor ? contactoValues : null,
     })
   }
 
-  const hayAlgoQueMostrar = mostrarFicha || mostrarAutorizacion || mostrarCertificado
+  const hayAlgoQueMostrar = mostrarFicha || mostrarAutorizacion || mostrarCertificado || mostrarContactoEmergencia
 
   if (!hayAlgoQueMostrar) {
     return (
@@ -481,6 +571,23 @@ export function StepDocumentacion({ evento, wizard }) {
             </CardHeader>
             <CardContent>
               <FichaMedicaForm form={formFicha} obligatoria={fichaMedicaObligatoria} />
+            </CardContent>
+          </Card>
+        )}
+
+        {mostrarContactoEmergencia && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                Contacto de emergencia
+                {contactoEmergenciaObligatorio
+                  ? <span className="ml-2 text-xs font-normal text-destructive">Obligatorio</span>
+                  : <span className="ml-2 text-xs font-normal text-muted-foreground">Opcional</span>
+                }
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ContactoEmergenciaForm form={formContacto} />
             </CardContent>
           </Card>
         )}

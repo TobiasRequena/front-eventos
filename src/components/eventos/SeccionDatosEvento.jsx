@@ -396,30 +396,55 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
               </div>
             </div>
 
-            <FormField
-              control={form.control}
-              name="tienePrecioPorZona"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border border-border p-3">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <FormLabel>Costo diferido por zona</FormLabel>
-                      <HelpTooltip>
-                        En vez de un costo único, cada participante elige su zona al
-                        inscribirse y paga el monto de esa zona. Configurá las zonas
-                        en la sección "Zonas de costo".
-                      </HelpTooltip>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="solicitaContactoEmergencia"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <FormLabel>Contacto de emergencia</FormLabel>
+                        <HelpTooltip>
+                          Se solicita nombre y teléfono. Obligatorio para menores, opcional para mayores.
+                        </HelpTooltip>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {field.value ? 'Se solicitará un contacto de emergencia.' : 'No se solicitará.'}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {field.value ? 'El costo se define por zona.' : 'Costo único para todos los participantes.'}
-                    </p>
-                  </div>
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="tienePrecioPorZona"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <FormLabel>Costo diferido por zona</FormLabel>
+                        <HelpTooltip>
+                          En vez de un costo único, cada participante elige su zona al
+                          inscribirse y paga el monto de esa zona. Configurá las zonas
+                          en la sección "Zonas de costo".
+                        </HelpTooltip>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {field.value ? 'El costo se define por zona.' : 'Costo único para todos los participantes.'}
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
               {tienePrecioPorZona ? (

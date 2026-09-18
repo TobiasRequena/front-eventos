@@ -69,6 +69,7 @@ function armarPayload(evento, datosWizard) {
     ...(usaZonas ? { zonaCostoId: datosWizard.zonaCostoId } : {}),
     ...(tieneCosto ? { estadoPago: 'pendiente' } : {}),
     ...(datosWizard.fichaMedica ? { fichaMedica: datosWizard.fichaMedica } : {}),
+    ...(datosWizard.contactoEmergencia ? { contactoEmergencia: datosWizard.contactoEmergencia } : {}),
   }
 }
 

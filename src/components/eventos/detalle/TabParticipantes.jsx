@@ -31,6 +31,7 @@ import { getAgrupaciones } from '@/api/gruposTrabajo.api'
 import { ComunicacionesTab } from '@/components/eventos/detalle/ComunicacionesTab'
 import { getComunicaciones } from '@/api/comunicaciones.api'
 import { PasarListaTab } from '@/components/eventos/detalle/PasarListaTab'
+import { ModoEmergenciaTab } from '@/components/eventos/detalle/ModoEmergenciaTab'
 import { eventoTieneCosto } from '@/lib/costoEvento'
 
 function TablaSkeletonRows() {
@@ -223,6 +224,8 @@ export function TabParticipantes({ evento, participantesState }) {
           <TabsTrigger value="comunicaciones">Comunicaciones</TabsTrigger>
           <TabsTrigger value="grupos_trabajo">Agrupar</TabsTrigger>
           <TabsTrigger value="pasar_lista">Pasar lista</TabsTrigger>
+          {/* "Modo emergencia" siempre debe ser la última tab: si agregás una nueva sub-tab, insertala antes de esta. */}
+          <TabsTrigger value="modo_emergencia" className="text-destructive/80 data-[state=active]:text-destructive/80">Modo emergencia</TabsTrigger>
         </TabsList>
 
         <TabsContent value="listado" className="mt-2" forceMount>
@@ -330,6 +333,10 @@ export function TabParticipantes({ evento, participantesState }) {
             camposForm={camposForm}
             participantesCargando={isLoading}
           />
+        </TabsContent>
+        {/* "Modo emergencia" siempre debe ser la última tab: si agregás una nueva sub-tab, insertala antes de esta. */}
+        <TabsContent value="modo_emergencia" className="mt-2" forceMount>
+          <ModoEmergenciaTab evento={evento} />
         </TabsContent>
       </Tabs>
 

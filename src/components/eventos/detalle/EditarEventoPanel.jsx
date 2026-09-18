@@ -30,6 +30,7 @@ function adaptarEventoAForm(evento) {
     configFichaMedica: evento.config_ficha_medica ?? 'no',
     configCertificado: evento.config_certificado ?? 'no',
     requiereAutorizacionMenores: evento.requiere_autorizacion_menores ?? false,
+    solicitaContactoEmergencia: evento.solicita_contacto_emergencia ?? false,
     autorizacionTemplateUrl: evento.autorizacion_template_url ?? null,
     seccionTalleres: [
       ...(evento.bloquesTaller ?? []).map((b) => ({ tipo: 'bloque', ...b })),
@@ -85,6 +86,7 @@ export function EditarEventoPanel({ evento, onVolver, onGuardado }) {
         configFichaMedica: values.configFichaMedica,
         configCertificado: values.configCertificado,
         requiereAutorizacionMenores: values.requiereAutorizacionMenores,
+        solicitaContactoEmergencia: values.solicitaContactoEmergencia,
         autorizacionTemplateUrl: values.autorizacionTemplateUrl,
       })
 

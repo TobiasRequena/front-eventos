@@ -96,3 +96,8 @@ export async function getFichasMedicas(eventoId) {
   const { data } = await httpClient.get(`/eventos/${eventoId}/fichas-medicas`)
   return data.fichas
 }
+
+export async function getContactosEmergencia(eventoId) {
+  const { data } = await httpClient.get(`/eventos/${eventoId}/contactos-emergencia`)
+  return data.contactos
+}

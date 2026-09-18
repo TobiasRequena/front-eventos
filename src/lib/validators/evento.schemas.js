@@ -115,6 +115,7 @@ export const eventoSchema = z
       'obligatorio_menores', 'obligatorio_mayores', 'obligatorio_todos', 'obligatorio_referentes',
     ]).default('no'),
     requiereAutorizacionMenores: z.boolean().default(false),
+    solicitaContactoEmergencia: z.boolean().default(false),
     seccionTalleres: z.array(seccionTallerItem).default([]),
   })
   .superRefine((evento, ctx) => {
@@ -237,6 +238,7 @@ export const editarEventoSchema = z.object({
     'obligatorio_menores', 'obligatorio_mayores', 'obligatorio_todos', 'obligatorio_referentes',
   ]).default('no'),
   requiereAutorizacionMenores: z.boolean().default(false),
+  solicitaContactoEmergencia: z.boolean().default(false),
   seccionTalleres: z.array(seccionTallerItem).default([]),
 }).refine(
   (data) => new Date(data.fechaFin) >= new Date(data.fechaInicio),
