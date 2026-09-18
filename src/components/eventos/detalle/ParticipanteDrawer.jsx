@@ -11,8 +11,8 @@ import {
 } from '@/components/ui/drawer'
 import { ComprobanteButton, ArchivoButton } from '@/components/ComprobanteButton'
 import { useState, useEffect } from 'react'
-import { getFichaMedica } from '@/api/participantes.api'
-import { ClipboardList } from 'lucide-react'
+import { getFichaMedica, getContactoEmergencia } from '@/api/participantes.api'
+import { ClipboardList, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { patchEstadoPago, patchZonaCosto } from '@/api/participantes.api'
 import { Loader2 } from 'lucide-react'
@@ -152,8 +152,70 @@ function FichaMedicaDrawer({ participanteId, open, onClose }) {
   )
 }
 
+function ContactoEmergenciaDrawer({ participanteId, open, onClose }) {
+  const [contacto, setContacto] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    if (!open || !participanteId) return
+    setIsLoading(true)
+    getContactoEmergencia(participanteId)
+      .then(setContacto)
+      .catch(() => setContacto(null))
+      .finally(() => setIsLoading(false))
+  }, [open, participanteId])
+
+  return (
+    <Drawer open={open} onOpenChange={(v) => !v && onClose()} direction="right">
+      <DrawerContent className="ml-auto flex h-full w-full max-w-md flex-col rounded-l-xl rounded-r-none font-sans">
+        <div className="flex items-center justify-between border-b border-border p-5">
+          <h2 className="text-lg font-semibold text-foreground">Contacto de emergencia</h2>
+          <DrawerClose asChild>
+            <button type="button" onClick={onClose} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent">
+              <X className="h-4 w-4" />
+            </button>
+          </DrawerClose>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5">
+          {isLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-4 w-full" />)}
+            </div>
+          ) : !contacto ? (
+            <p className="text-sm text-muted-foreground">Este participante no tiene contacto de emergencia cargado.</p>
+          ) : (
+            <div className="space-y-4 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground">Nombre y apellido</p>
+                <p className="font-medium text-foreground">{contacto.nombre}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Teléfono</p>
+                <a
+                  href={`tel:${contacto.telefono.replace(/[^\d+]/g, '')}`}
+                  className="inline-flex items-center gap-1.5 font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  <Phone className="h-3.5 w-3.5" />
+                  {contacto.telefono}
+                </a>
+              </div>
+              {contacto.parentesco && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Parentesco / relación</p>
+                  <p className="font-medium text-foreground">{contacto.parentesco}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </DrawerContent>
+    </Drawer>
+  )
+}
+
 export function ParticipanteDrawer({ participante, camposForm = [], evento, open, onClose, cargando, onActualizar }) {
   const [fichaMedicaAbierta, setFichaMedicaAbierta] = useState(false)
+  const [contactoEmergenciaAbierto, setContactoEmergenciaAbierto] = useState(false)
   const [actualizandoPago, setActualizandoPago] = useState(false)
   const [actualizandoZona, setActualizandoZona] = useState(false)
   const [zonaOverride, setZonaOverride] = useState(null)
@@ -379,7 +441,7 @@ export function ParticipanteDrawer({ participante, camposForm = [], evento, open
                 </>
               )}
 
-              {(participante?.tiene_ficha_medica || participante?.tiene_autorizacion || participante?.tiene_certificado) && (
+              {(participante?.tiene_ficha_medica || participante?.tiene_contacto_emergencia || participante?.tiene_autorizacion || participante?.tiene_certificado) && (
                 <>
                   <Separator />
                   <div className="space-y-3">
@@ -394,6 +456,16 @@ export function ParticipanteDrawer({ participante, camposForm = [], evento, open
                       >
                         <ClipboardList className="h-4 w-4" />
                         Ver ficha médica
+                      </button>
+                    )}
+                    {participante?.tiene_contacto_emergencia && (
+                      <button
+                        type="button"
+                        onClick={() => setContactoEmergenciaAbierto(true)}
+                        className="flex items-center gap-2 text-sm text-primary underline-offset-4 hover:underline"
+                      >
+                        <Phone className="h-4 w-4" />
+                        Ver contacto de emergencia
                       </button>
                     )}
                     {participante?.tiene_autorizacion && participante?.autorizacion_url && (
@@ -456,6 +528,11 @@ export function ParticipanteDrawer({ participante, camposForm = [], evento, open
                 participanteId={participante?.id}
                 open={fichaMedicaAbierta}
                 onClose={() => setFichaMedicaAbierta(false)}
+              />
+              <ContactoEmergenciaDrawer
+                participanteId={participante?.id}
+                open={contactoEmergenciaAbierto}
+                onClose={() => setContactoEmergenciaAbierto(false)}
               />
             </div>
           </>

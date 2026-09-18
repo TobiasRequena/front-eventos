@@ -90,6 +90,11 @@ export async function patchFichaMedica(participanteId, payload) {
   return data.ficha
 }
 
+export async function getContactoEmergencia(participanteId) {
+  const { data } = await httpClient.get(`/participantes/${participanteId}/contacto-emergencia`)
+  return data.contacto
+}
+
 export async function subirAutorizacion(participanteId, archivo) {
   const formData = new FormData()
   formData.append('archivo', archivo)
