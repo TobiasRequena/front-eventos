@@ -72,6 +72,7 @@ export function DateTimePicker({ value, onChange, placeholder = 'Elegí fecha y 
             mode="single"
             selected={fechaActual ?? undefined}
             onSelect={handleSeleccionarDia}
+            disabled={{ before: new Date(new Date().setHours(0, 0, 0, 0)) }}
             locale={es}
             modifiers={mostrarRango ? { enRango: { from: inicioRango, to: fechaActual } } : undefined}
             modifiersClassNames={mostrarRango ? { enRango: 'bg-accent text-accent-foreground' } : undefined}

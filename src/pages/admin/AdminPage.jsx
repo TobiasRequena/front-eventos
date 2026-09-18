@@ -4,45 +4,25 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useBreadcrumb } from '@/hooks/useBreadcrumb'
 import { getAdminStats } from '@/api/admin.api'
 import { toast } from 'sonner'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { KpiCard } from '@/components/dashboard/KpiCard'
 import { Bar, BarChart, CartesianGrid, XAxis, Line, LineChart } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { Users, Building2, CalendarRange, UserCheck, DollarSign, Loader2, RefreshCw } from 'lucide-react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Users, Building2, CalendarRange, UserCheck, DollarSign, Loader2, RefreshCw, CalendarIcon } from 'lucide-react'
 
-const MESES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-]
-
-function generarOpcionesMes() {
-  const opciones = []
+function inicioMesActual() {
   const hoy = new Date()
-  for (let anio = hoy.getFullYear(); anio >= hoy.getFullYear() - 1; anio--) {
-    for (let mes = 11; mes >= 0; mes--) {
-      if (anio === hoy.getFullYear() && mes > hoy.getMonth()) continue
-      opciones.push({
-        value: `${anio}-${String(mes + 1).padStart(2, '0')}`,
-        label: `${MESES[mes]} ${anio}`,
-      })
-    }
-  }
-  return opciones
+  return new Date(hoy.getFullYear(), hoy.getMonth(), 1)
 }
 
-function mesADesdeHasta(mesStr) {
-  const [anio, mes] = mesStr.split('-').map(Number)
-  const desde = new Date(anio, mes - 1, 1).toISOString().split('T')[0]
-  const hasta = new Date(anio, mes, 0).toISOString().split('T')[0]
-  return { desde, hasta }
-}
-
-const OPCIONES_MES = generarOpcionesMes()
-const MES_ACTUAL = OPCIONES_MES[0].value
+const RANGO_INICIAL = { from: inicioMesActual(), to: new Date() }
 
 function formatearFechaCorta(fechaIso) {
   if (!fechaIso) return ''
@@ -94,18 +74,21 @@ export default function AdminPage() {
   const navigate = useNavigate()
   const [stats, setStats] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [mesSeleccionado, setMesSeleccionado] = useState(MES_ACTUAL)
+  const [rango, setRango] = useState(RANGO_INICIAL)
 
   useBreadcrumb([{ label: 'Panel Admin' }])
 
   useEffect(() => {
     if (!usuario) return
     if (!usuario.es_super_admin) { navigate('/dashboard'); return }
-    cargar(mesSeleccionado)
-  }, [usuario, mesSeleccionado])
+    if (!rango?.from || !rango?.to) return
+    cargar(rango)
+  }, [usuario, rango])
 
-  async function cargar(mes) {
-    const { desde, hasta } = mesADesdeHasta(mes ?? mesSeleccionado)
+  async function cargar(r) {
+    const rangoActual = r ?? rango
+    const desde = format(rangoActual.from, 'yyyy-MM-dd')
+    const hasta = format(rangoActual.to, 'yyyy-MM-dd')
     setIsLoading(true)
     try {
       const data = await getAdminStats({ desde, hasta })
@@ -129,19 +112,31 @@ export default function AdminPage() {
         <div className="flex items-end gap-3">
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Período</Label>
-            <Select value={mesSeleccionado} onValueChange={setMesSeleccionado}>
-              <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {OPCIONES_MES.map((op) => (
-                  <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-60 justify-start text-left font-normal">
+                  <CalendarIcon className="h-4 w-4 shrink-0" />
+                  {rango?.from && rango?.to
+                    ? `${format(rango.from, 'd MMM yyyy', { locale: es })} - ${format(rango.to, 'd MMM yyyy', { locale: es })}`
+                    : 'Elegí un período'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="range"
+                  selected={rango}
+                  onSelect={setRango}
+                  disabled={{ after: new Date() }}
+                  locale={es}
+                  numberOfMonths={1}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           <Button
             variant="outline"
             size="icon"
-            onClick={() => cargar(mesSeleccionado)}
+            onClick={() => cargar(rango)}
             disabled={isLoading}
           >
             {isLoading
