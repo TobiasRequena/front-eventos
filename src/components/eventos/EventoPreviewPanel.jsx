@@ -1,6 +1,7 @@
 import { useFormContext, useWatch } from 'react-hook-form'
 import { CalendarRange, ImageOff, Users } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { TextoFormateado } from '@/components/eventos/TextoFormateado'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
 import { Separator } from '@/components/ui/separator'
 import { CAMPOS_BASE_INSCRIPCION } from '@/lib/constants/camposBase'
@@ -118,7 +119,7 @@ export function EventoPreviewPanel({ evento, imagenPreview: imagenPreviewExterna
             </div>
           )}
           {descripcion && (
-            <p className="mt-2 text-sm text-muted-foreground">{descripcion}</p>
+            <TextoFormateado texto={descripcion} className="mt-2 text-sm text-muted-foreground" />
           )}
         </div>
 

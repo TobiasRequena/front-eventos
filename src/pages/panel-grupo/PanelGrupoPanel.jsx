@@ -8,6 +8,7 @@ import {
   flexRender,
 } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
+import { TextoFormateado } from '@/components/eventos/TextoFormateado'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -61,7 +62,7 @@ function EventoHeader({ evento, grupo }) {
         <div>
           <h2 className="text-lg font-semibold text-foreground">{evento.nombre}</h2>
           {evento.descripcion && (
-            <p className="mt-1 text-sm text-muted-foreground">{evento.descripcion}</p>
+            <TextoFormateado texto={evento.descripcion} className="mt-1 text-sm text-muted-foreground" />
           )}
           <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
             <CalendarRange className="h-3.5 w-3.5" />

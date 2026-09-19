@@ -1,5 +1,6 @@
 import { CalendarRange, ImageOff } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { TextoFormateado } from '@/components/eventos/TextoFormateado'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
 import { Separator } from '@/components/ui/separator'
 
@@ -40,7 +41,7 @@ export function InscripcionStepLayout({ evento, titulo, children }) {
             </div>
           )}
           {evento?.descripcion && (
-            <p className="mt-2 text-sm text-muted-foreground">{evento.descripcion}</p>
+            <TextoFormateado texto={evento.descripcion} className="mt-2 text-sm text-muted-foreground" />
           )}
         </div>
 

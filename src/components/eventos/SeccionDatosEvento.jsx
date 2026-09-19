@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { DescripcionEditor } from '@/components/eventos/TextoFormateado'
 import { Switch } from '@/components/ui/switch'
 import {
   Select,
@@ -127,14 +127,11 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
               name="descripcion"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Descripción</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Contales a los participantes de qué se trata el evento"
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
+                  <DescripcionEditor
+                    field={field}
+                    label="Descripción"
+                    placeholder="Contales a los participantes de qué se trata el evento"
+                  />
                   <FormMessage />
                 </FormItem>
               )}
