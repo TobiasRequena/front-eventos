@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { redesFields, hayRedes } from '@/lib/validators/redes.schemas'
 
 export const loginSchema = z.object({
     email: z
@@ -20,9 +21,15 @@ export const registerStep1Schema = z.object({
         .min(8, 'La contraseña debe tener al menos 8 caracteres.'),
 })
 
-export const registerStep2Schema = z.object({
-    nombreOrganizacion: z.string().max(150).optional().or(z.literal('')),
-})
+export const registerStep2Schema = z
+    .object({
+        nombreOrganizacion: z.string().max(150).optional().or(z.literal('')),
+        ...redesFields,
+    })
+    .refine((v) => !hayRedes(v) || v.nombreOrganizacion?.trim(), {
+        path: ['nombreOrganizacion'],
+        message: 'Ingresá el nombre para guardar las redes.',
+    })
 
 export const verificarEmailSchemaEmail = z.object({
     email: z.string().min(1, 'Ingresá tu email.').email('Email inválido.'),

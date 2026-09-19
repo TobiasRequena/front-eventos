@@ -14,6 +14,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle } from 'lucide-react'
+import { RedesFields } from '@/components/organizacion/RedesFields'
+import { redesFields, REDES_VACIAS, REDES_CAMPOS } from '@/lib/validators/redes.schemas'
 import {
   Form,
   FormControl,
@@ -25,7 +27,22 @@ import {
 
 const schema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio.').max(150),
+  ...redesFields,
 })
+
+const valoresDe = (org) => ({
+  nombre: org?.nombre ?? '',
+  sitioWeb: org?.sitio_web ?? '',
+  instagram: org?.instagram ?? '',
+  twitter: org?.twitter ?? '',
+  facebook: org?.facebook ?? '',
+})
+
+const URL_RED = {
+  instagram: (u) => `https://instagram.com/${u}`,
+  twitter: (u) => `https://x.com/${u}`,
+  facebook: (u) => `https://facebook.com/${u}`,
+}
 
 export default function OrganizacionPage() {
   const { orgActiva } = useAuth()
@@ -38,7 +55,7 @@ export default function OrganizacionPage() {
 
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { nombre: '' },
+    defaultValues: { nombre: '', ...REDES_VACIAS },
   })
 
   useEffect(() => {
@@ -47,7 +64,7 @@ export default function OrganizacionPage() {
     getOrganizacion(orgActiva.id)
       .then((data) => {
         setOrg(data)
-        form.reset({ nombre: data.nombre })
+        form.reset(valoresDe(data))
       })
       .finally(() => setIsLoading(false))
   }, [orgActiva?.id])
@@ -55,8 +72,9 @@ export default function OrganizacionPage() {
   async function onSubmit(values) {
     setGuardando(true)
     try {
-      const actualizada = await patchOrganizacion(orgActiva.id, { nombre: values.nombre })
+      const actualizada = await patchOrganizacion(orgActiva.id, values)
       setOrg(actualizada)
+      form.reset(valoresDe(actualizada))
       setEditando(false)
       toast.success('Organización actualizada.')
     } catch (err) {
@@ -75,8 +93,11 @@ export default function OrganizacionPage() {
     )
   }
 
-  const nombreActual = form.watch('nombre')
-  const sinCambios = nombreActual === (org?.nombre ?? '')
+  const actuales = form.watch()
+  const originales = valoresDe(org)
+  const sinCambios = Object.keys(originales).every(
+    (k) => (actuales[k] ?? '').trim() === originales[k]
+  )
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -124,13 +145,14 @@ export default function OrganizacionPage() {
                     </FormItem>
                   )}
                 />
+                <RedesFields control={form.control} />
                 <div className="flex gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => {
                       setEditando(false)
-                      form.reset({ nombre: org?.nombre ?? '' })
+                      form.reset(valoresDe(org))
                     }}
                     disabled={guardando}
                   >
@@ -154,6 +176,30 @@ export default function OrganizacionPage() {
                   )}
                 </p>
               </div>
+              {REDES_CAMPOS.map(({ name, label }) => {
+                const valor = org?.[name === 'sitioWeb' ? 'sitio_web' : name]
+                if (!valor) return null
+                const href = name === 'sitioWeb' ? valor : URL_RED[name](valor)
+                return (
+                  <div key={name}>
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {/^https?:\/\//i.test(href) ? (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer nofollow"
+                          className="underline-offset-4 hover:underline"
+                        >
+                          {name === 'sitioWeb' || name === 'facebook' ? valor : `@${valor}`}
+                        </a>
+                      ) : (
+                        valor
+                      )}
+                    </p>
+                  </div>
+                )
+              })}
             </div>
           )}
         </CardContent>

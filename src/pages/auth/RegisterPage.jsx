@@ -22,6 +22,8 @@ import {
 } from '@/components/ui/form'
 import { Card, CardContent } from '@/components/ui/card'
 import { PasswordInput } from '@/components/ui/password-input'
+import { RedesFields } from '@/components/organizacion/RedesFields'
+import { REDES_VACIAS } from '@/lib/validators/redes.schemas'
 
 function RegisterStepOne({ datosIniciales, onContinuar }) {
   const form = useForm({
@@ -150,6 +152,8 @@ function RegisterStepTwo({ datosIniciales, isSubmitting, onConfirmar, onVolver }
                 )}
               />
 
+              <RedesFields control={form.control} />
+
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -171,7 +175,7 @@ function RegisterStepTwo({ datosIniciales, isSubmitting, onConfirmar, onVolver }
 
       <button
         type="button"
-        onClick={() => onConfirmar({ nombreOrganizacion: '' })}
+        onClick={() => onConfirmar({ nombreOrganizacion: '', ...REDES_VACIAS })}
         disabled={isSubmitting}
         className="w-full text-center text-sm text-muted-foreground underline-offset-4 hover:underline disabled:opacity-50"
       >
@@ -209,7 +213,7 @@ export default function RegisterPage() {
     setStep(2)
   }
 
-  async function handleConfirmar({ nombreOrganizacion }) {
+  async function handleConfirmar({ nombreOrganizacion, ...redes }) {
     setIsSubmitting(true)
     try {
       const nombreOrg = nombreOrganizacion?.trim()
@@ -217,7 +221,7 @@ export default function RegisterPage() {
         ...datosPaso1,
         // Si no completó el nombre, no mandamos el campo: el back
         // crea una organización implícita automáticamente.
-        ...(nombreOrg ? { organizacion: { nombre: nombreOrg } } : {}),
+        ...(nombreOrg ? { organizacion: { nombre: nombreOrg, ...redes } } : {}),
       })
       if (data?.usuario?.email_verificado === false) {
         navigate('/verificar-email', { replace: true, state: { email: datosPaso1.email } })
@@ -239,7 +243,7 @@ export default function RegisterPage() {
         <RegisterStepOne datosIniciales={datosPaso1} onContinuar={handleContinuar} />
       ) : (
         <RegisterStepTwo
-          datosIniciales={{ nombreOrganizacion: '' }}
+          datosIniciales={{ nombreOrganizacion: '', ...REDES_VACIAS }}
           isSubmitting={isSubmitting}
           onConfirmar={handleConfirmar}
           onVolver={() => setStep(1)}
