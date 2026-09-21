@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { SeccionDatosEvento } from '@/components/eventos/SeccionDatosEvento'
 import { editarEventoSchema } from '@/lib/validators/evento.schemas'
+import { recortarDescripcion } from '@/lib/descripcionFormato'
 import { patchEvento } from '@/api/eventos.api'
 import { subirPortadaEvento } from '@/api/archivos.api'
 import { getApiErrorMessage } from '@/api/httpClient'
@@ -72,7 +73,7 @@ export function EditarEventoPanel({ evento, onVolver, onGuardado }) {
       const eventoActualizado = await patchEvento(evento.id, {
         nombre: values.nombre,
         codigo: values.codigo,
-        descripcion: values.descripcion || undefined,
+        descripcion: recortarDescripcion(values.descripcion) || undefined,
         fechaInicio: values.fechaInicio,
         fechaFin: values.fechaFin,
         politicaMenor: values.politicaMenor,

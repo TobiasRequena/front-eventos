@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { useBreadcrumb } from '@/hooks/useBreadcrumb'
 import { useAuth } from '@/contexts/AuthContext'
 import { eventoSchema } from '@/lib/validators/evento.schemas'
+import { recortarDescripcion } from '@/lib/descripcionFormato'
 import { crearEvento } from '@/api/eventos.api'
 import { subirPortadaEvento, subirTemplateAutorizacion } from '@/api/archivos.api'
 import { getApiErrorMessage } from '@/api/httpClient'
@@ -90,7 +91,7 @@ function armarPayload(values) {
   return {
     nombre: values.nombre,
     codigo: values.codigo,
-    descripcion: values.descripcion || undefined,
+    descripcion: recortarDescripcion(values.descripcion) || undefined,
     fechaInicio: values.fechaInicio,
     fechaFin: values.fechaFin,
     politicaMenor: values.politicaMenor,

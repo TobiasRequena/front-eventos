@@ -88,7 +88,7 @@ export const eventoSchema = z
       .min(3, 'El código debe tener al menos 3 caracteres.')
       .max(20, 'El código no puede superar los 20 caracteres.')
       .regex(/^[a-zA-Z0-9-]+$/, 'Solo letras, números y guiones.'),
-    descripcion: z.string().max(2000).optional().or(z.literal('')),
+    descripcion: z.string().optional().or(z.literal('')),
     fechaInicio: z.string().min(1, 'Definí la fecha de inicio.'),
     fechaFin: z.string().min(1, 'Definí la fecha de fin.'),
     politicaMenor: z.enum(['obligatorio', 'opcional', 'no_aplica']).default('no_aplica'),
@@ -214,7 +214,7 @@ export const editarEventoSchema = z.object({
     .min(3, 'El código debe tener al menos 3 caracteres.')
     .max(20)
     .regex(/^[a-zA-Z0-9-]+$/, 'Solo letras, números y guiones.'),
-  descripcion: z.string().max(2000).optional().or(z.literal('')),
+  descripcion: z.string().optional().or(z.literal('')),
   fechaInicio: z.string().min(1, 'Definí la fecha de inicio.'),
   fechaFin: z.string().min(1, 'Definí la fecha de fin.'),
   politicaMenor: z.enum(['obligatorio', 'opcional', 'no_aplica']).default('no_aplica'),
