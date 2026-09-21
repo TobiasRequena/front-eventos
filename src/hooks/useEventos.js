@@ -28,7 +28,8 @@ export function useEventos() {
 
   return {
     eventos,
-    isLoading: status === 'loading',
+    // 'idle' cuenta como carga: evita el flash de "sin eventos" al montar la página
+    isLoading: status !== 'success' && status !== 'error',
     isError: status === 'error',
     error,
     reintentar: cargarEventos,

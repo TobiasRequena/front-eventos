@@ -46,7 +46,7 @@ const TABS = [
   // { value: 'pagos', label: 'Pagos' },
 ]
 
-function HeaderEvento({ evento, onEditar, onEliminar, onToggleInscripciones, toggleandoInscripciones }) {
+function HeaderEvento({ evento, onEditar, onEliminar, eliminando, onToggleInscripciones, toggleandoInscripciones }) {
   const [linkCopiado, setLinkCopiado] = useState(false)
   const imagenUrl = evento.imagen_url ?? evento.imagenUrl
 
@@ -160,9 +160,10 @@ function HeaderEvento({ evento, onEditar, onEliminar, onToggleInscripciones, tog
                     variant="outline"
                     size="icon"
                     onClick={onEliminar}
+                    disabled={eliminando}
                     className="shrink-0 bg-destructive/20 text-white border-white/20 hover:bg-destructive/40 hover:text-white backdrop-blur-sm"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {eliminando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Eliminar evento</TooltipContent>
@@ -292,6 +293,7 @@ export default function EventoDetallePage() {
         evento={evento}
         onEditar={() => setModoEdicion(true)}
         onEliminar={() => setConfirmandoEliminar(true)}
+        eliminando={eliminando}
         onToggleInscripciones={handleToggleInscripciones}
         toggleandoInscripciones={toggleandoInscripciones}
       />}
@@ -353,7 +355,7 @@ export default function EventoDetallePage() {
               disabled={eliminando}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
+              Sí, eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

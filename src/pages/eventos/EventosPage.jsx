@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import { CalendarX2, Plus } from 'lucide-react'
+import { CalendarX2, Plus, RefreshCw } from 'lucide-react'
 import { useEventos } from '@/hooks/useEventos'
 import { useBreadcrumb } from '@/hooks/useBreadcrumb'
 import { FILTROS_EVENTO, filtrarEventosPorEstado } from '@/lib/eventos.helpers'
@@ -64,12 +64,17 @@ export default function EventosPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">Eventos</h1>
-        <Button asChild>
-          <a href="/eventos/nuevo">
-            <Plus className="h-4 w-4" />
-            Crear evento
-          </a>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild>
+            <a href="/eventos/nuevo">
+              <Plus className="h-4 w-4" />
+              Crear evento
+            </a>
+          </Button>
+          <Button variant="outline" onClick={reintentar} disabled={isLoading}>
+            <RefreshCw className={`cursor-pointer h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
       </div>
 
       <EventosFilterToggle filtroActivo={filtro} />
