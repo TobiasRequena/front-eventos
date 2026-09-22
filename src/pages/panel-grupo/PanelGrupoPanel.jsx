@@ -233,18 +233,6 @@ export function PanelGrupoPanel({ sesion, onLogout }) {
   const [loadingSolicitudes, setLoadingSolicitudes] = useState(true)
   const [procesando, setProcesando] = useState({})
 
-  useEffect(() => {
-    getIntegrantes(grupo.id, token)
-      .then(setIntegrantes)
-      .catch(() => toast.error('No pudimos cargar los integrantes.'))
-      .finally(() => setLoadingIntegrantes(false))
-
-    getSolicitudes(grupo.id, token)
-      .then(setSolicitudes)
-      .catch(() => toast.error('No pudimos cargar las solicitudes.'))
-      .finally(() => setLoadingSolicitudes(false))
-  }, [grupo.id, token])
-
   function onTokenExpirado() {
     toast.error('Tu sesión expiró. Ingresá de nuevo.')
     onLogout()
