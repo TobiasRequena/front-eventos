@@ -81,7 +81,7 @@ export function SeccionTalleres() {
           <button
             type="button"
             disabled={!tieneTalleres}
-            className="flex w-full items-center justify-between p-6 disabled:cursor-not-allowed"
+            className="flex w-full items-center justify-between p-6 cursor-pointer disabled:cursor-not-allowed"
           >
             <div className="text-left">
               <div className="flex items-center gap-2">

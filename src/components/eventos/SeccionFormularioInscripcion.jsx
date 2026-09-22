@@ -14,7 +14,7 @@ export function SeccionFormularioInscripcion() {
     <Card>
       <Collapsible open={abierto} onOpenChange={setAbierto}>
         <CollapsibleTrigger asChild>
-          <button type="button" className="flex w-full items-center justify-between px-4 py-3">
+          <button type="button" className="flex w-full items-center justify-between px-4 py-3 cursor-pointer">
             <div className="text-left">
               <h2 className="text-base font-semibold text-foreground">
                 Formulario de inscripción

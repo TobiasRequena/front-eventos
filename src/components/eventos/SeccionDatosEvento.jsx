@@ -65,7 +65,7 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
         <Card>
           <Collapsible open={abierto} onOpenChange={setAbierto}>
             <CollapsibleTrigger asChild>
-              <button type="button" className="flex w-full items-center justify-between px-4 py-3">
+              <button type="button" className="flex w-full items-center justify-between px-4 py-3 cursor-pointer">
                 <div className="text-left">
                   <h2 className="text-base font-semibold text-foreground">Datos del evento</h2>
                   <p className="text-sm text-muted-foreground">A continuación podrás completar: portada, nombre, descripción, fechas y cobro.</p>
@@ -296,7 +296,7 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
         <Card>
           <Collapsible open={abiertoAdic} onOpenChange={setAbiertoAdic}>
             <CollapsibleTrigger asChild>
-              <button type="button" className="flex w-full items-center justify-between px-4 py-3">
+              <button type="button" className="flex w-full items-center justify-between px-4 py-3 cursor-pointer">
                 <div className="text-left">
                   <h2 className="text-base font-semibold text-foreground">Adicionales</h2>
                   <p className="text-sm text-muted-foreground">Cupo, grupos, talleres, requisitos y contacto.</p>
