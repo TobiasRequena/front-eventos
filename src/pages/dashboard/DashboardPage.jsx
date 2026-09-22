@@ -1,4 +1,5 @@
-import { Plus, CalendarRange, Users } from 'lucide-react'
+import { Plus, CalendarRange, Users, RefreshCw } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useEventos } from '@/hooks/useEventos'
 import { useBreadcrumb } from '@/hooks/useBreadcrumb'
@@ -40,15 +41,13 @@ function EstadoError({ onRetry }) {
 
 export default function DashboardPage() {
   const { usuario } = useAuth()
+  const navigate = useNavigate()
   const { eventos, isLoading, isError, reintentar } = useEventos()
   useBreadcrumb([{ label: 'Dashboard' }])
 
-  if (isLoading) return <DashboardSkeleton />
-  if (isError) return <EstadoError onRetry={reintentar} />
-
-  const proximoEvento = getProximoEvento(eventos)
-  const totalEventosActivos = eventos.filter(esEventoActivo).length
-  const totalInscriptos = getTotalInscriptosActivos(eventos)
+  const proximoEvento = !isLoading && !isError ? getProximoEvento(eventos) : null
+  const totalEventosActivos = !isLoading && !isError ? eventos.filter(esEventoActivo).length : 0
+  const totalInscriptos = !isLoading && !isError ? getTotalInscriptosActivos(eventos) : 0
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -56,25 +55,34 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Hola, {usuario?.nombre}
         </h1>
-        <Button asChild>
-          <a href="/eventos/nuevo">
+        <div className="flex items-center gap-2">
+          <Button className="cursor-pointer" onClick={() => navigate('/eventos/nuevo')} disabled={isLoading}>
             <Plus className="h-4 w-4" />
             Crear evento
-          </a>
-        </Button>
+          </Button>
+          <Button variant="outline" onClick={reintentar} disabled={isLoading}>
+            <RefreshCw className={`cursor-pointer h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
       </div>
 
-      <ProximoEventoCard evento={proximoEvento} />
+      {isLoading && <DashboardSkeleton />}
+      {!isLoading && isError && <EstadoError onRetry={reintentar} />}
+      {!isLoading && !isError && (
+        <>
+          <ProximoEventoCard evento={proximoEvento} />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <KpiCard icon={CalendarRange} label="Eventos activos" value={totalEventosActivos} />
-        <KpiCard icon={Users} label="Inscriptos (eventos activos)" value={totalInscriptos} />
-      </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <KpiCard icon={CalendarRange} label="Eventos activos" value={totalEventosActivos} />
+            <KpiCard icon={Users} label="Inscriptos (eventos activos)" value={totalInscriptos} />
+          </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <TendenciaInscripcionesChart className="lg:col-span-2" />
-        <EventosActivosList eventos={eventos} />
-      </div>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <TendenciaInscripcionesChart className="lg:col-span-2" />
+            <EventosActivosList eventos={eventos} />
+          </div>
+        </>
+      )}
     </div>
   )
 }

@@ -218,7 +218,7 @@ export default function CrearEventoPage() {
               type="button"
               variant="outline"
               disabled={isSubmitting}
-              onClick={() => navigate('/eventos')}
+              onClick={() => navigate(-1)}
             >
               Cancelar
             </Button>
@@ -261,7 +261,7 @@ export default function CrearEventoPage() {
                 type="button"
                 variant="outline"
                 disabled={isSubmitting}
-                onClick={() => navigate('/eventos')}
+                onClick={() => navigate(-1)}
               >
                 Cancelar
               </Button>
