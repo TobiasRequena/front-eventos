@@ -15,10 +15,10 @@ export function AuthProvider({ children }) {
 
     const limpiarSesion = useCallback(() => {
         localStorage.removeItem(TOKEN_KEY)
-        // No borramos ORG_ACTIVA_KEY para que al volver a iniciar sesión
-        // se recupere la última org activa (se valida en aplicarSesion).
+        localStorage.removeItem(ORG_ACTIVA_KEY)
         setUsuario(null)
         setOrganizaciones([])
+        setOrgActivaId(null)
         setStatus('unauthenticated')
     }, [])
 
@@ -34,13 +34,16 @@ export function AuthProvider({ children }) {
 
         setOrgActivaId((prevOrgActivaId) => {
             const sigueSiendoValida = organizacionesData.some((org) => org.id === prevOrgActivaId)
-            if (sigueSiendoValida) return prevOrgActivaId
+            const orgActivaFinal = sigueSiendoValida ? prevOrgActivaId : (organizacionesData[0]?.id ?? null)
 
-            const nuevaOrgActivaId = organizacionesData[0]?.id ?? null
-            if (nuevaOrgActivaId) {
-                localStorage.setItem(ORG_ACTIVA_KEY, nuevaOrgActivaId)
+            // Siempre sincronizamos localStorage con el resultado, en vez de asumir
+            // que ya está correcto cuando la org previa sigue siendo válida.
+            if (orgActivaFinal) {
+                localStorage.setItem(ORG_ACTIVA_KEY, orgActivaFinal)
+            } else {
+                localStorage.removeItem(ORG_ACTIVA_KEY)
             }
-            return nuevaOrgActivaId
+            return orgActivaFinal
         })
 
         setStatus('authenticated')
