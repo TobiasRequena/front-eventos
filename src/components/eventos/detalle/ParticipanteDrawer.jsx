@@ -50,7 +50,13 @@ function InfoRow({ icon: Icon, label, value }) {
 function formatFechaSafely(fechaStr, formatPattern) {
   if (!fechaStr) return null
   try {
-    const d = new Date(fechaStr)
+    // Fechas sin hora (ej. "2003-04-29") las arma "new Date" en UTC medianoche,
+    // así que en husos negativos (Argentina) mostraban el día anterior.
+    // Para date-only, se arman con los componentes en hora local.
+    const soloFecha = /^\d{4}-\d{2}-\d{2}$/.test(fechaStr)
+    const d = soloFecha
+      ? new Date(...fechaStr.split('-').map((n, i) => Number(n) - (i === 1 ? 1 : 0)))
+      : new Date(fechaStr)
     if (isNaN(d.getTime())) return null
     return format(d, formatPattern, { locale: es })
   } catch {

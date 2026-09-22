@@ -36,9 +36,15 @@ function formatearFecha(fechaIso) {
 
 function formatearFechaNac(fechaIso) {
   if (!fechaIso) return '—'
+  // "YYYY-MM-DD" lo interpreta "new Date" en UTC medianoche, mostrando el
+  // día anterior en husos negativos (Argentina). Se arma en hora local.
+  const soloFecha = /^\d{4}-\d{2}-\d{2}$/.test(fechaIso)
+  const fecha = soloFecha
+    ? new Date(...fechaIso.split('-').map((n, i) => Number(n) - (i === 1 ? 1 : 0)))
+    : new Date(fechaIso)
   return new Intl.DateTimeFormat('es-AR', {
     day: '2-digit', month: '2-digit', year: 'numeric',
-  }).format(new Date(fechaIso))
+  }).format(fecha)
 }
 
 function EventoHeader({ evento, grupo }) {

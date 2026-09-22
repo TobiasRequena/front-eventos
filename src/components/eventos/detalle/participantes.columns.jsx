@@ -19,11 +19,18 @@ export const ESTADO_PAGO_CONFIG = {
 
 function formatearFecha(fechaIso) {
   if (!fechaIso) return '—'
+  // "YYYY-MM-DD" (fecha de nacimiento, sin hora) lo interpreta "new Date"
+  // en UTC medianoche, mostrando el día anterior en husos negativos
+  // (Argentina). Se arma con los componentes en hora local.
+  const soloFecha = /^\d{4}-\d{2}-\d{2}$/.test(fechaIso)
+  const fecha = soloFecha
+    ? new Date(...fechaIso.split('-').map((n, i) => Number(n) - (i === 1 ? 1 : 0)))
+    : new Date(fechaIso)
   return new Intl.DateTimeFormat('es-AR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-  }).format(new Date(fechaIso))
+  }).format(fecha)
 }
 
 export function buildColumns({ camposForm, tieneCosto, tieneGrupos, tieneZonas, tieneFicha, tieneAutorizacion, tieneCertificado, onVerDetalle, onEliminar }) {
