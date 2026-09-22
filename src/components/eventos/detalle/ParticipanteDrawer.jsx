@@ -1,6 +1,7 @@
 import { X, CreditCard, Calendar, Mail, Users, Hash } from 'lucide-react'
 import { format, differenceInYears } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { parseFechaCalendario } from '@/lib/fechas'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -50,13 +51,7 @@ function InfoRow({ icon: Icon, label, value }) {
 function formatFechaSafely(fechaStr, formatPattern) {
   if (!fechaStr) return null
   try {
-    // Fechas sin hora (ej. "2003-04-29") las arma "new Date" en UTC medianoche,
-    // así que en husos negativos (Argentina) mostraban el día anterior.
-    // Para date-only, se arman con los componentes en hora local.
-    const soloFecha = /^\d{4}-\d{2}-\d{2}$/.test(fechaStr)
-    const d = soloFecha
-      ? new Date(...fechaStr.split('-').map((n, i) => Number(n) - (i === 1 ? 1 : 0)))
-      : new Date(fechaStr)
+    const d = parseFechaCalendario(fechaStr)
     if (isNaN(d.getTime())) return null
     return format(d, formatPattern, { locale: es })
   } catch {
