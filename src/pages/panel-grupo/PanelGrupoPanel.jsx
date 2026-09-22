@@ -44,6 +44,7 @@ function formatearFechaNac(fechaIso) {
 
 function EventoHeader({ evento, grupo }) {
   const [copiado, setCopiado] = useState(false)
+  if (!evento || !grupo) return null
   const linkGrupo = `${import.meta.env.VITE_API_URL_FRONT ?? 'http://localhost:5173'}/inscribirse/${evento.codigo}?grupo=${grupo.codigoInv}`
 
   function copiarLink() {

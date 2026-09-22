@@ -1,12 +1,17 @@
 import { useState, useCallback } from 'react'
 import { loginReferente } from '@/api/panelGrupo.api'
 
-const STORAGE_KEY = 'puerta_panel_grupo'
+const STORAGE_KEY = 'talita_panel_grupo'
 
 function cargarSesion() {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : null
+    const sesion = raw ? JSON.parse(raw) : null
+    if (sesion && sesion.token && sesion.grupo && sesion.responsable && sesion.evento) {
+      return sesion
+    }
+    if (sesion) sessionStorage.removeItem(STORAGE_KEY)
+    return null
   } catch {
     return null
   }

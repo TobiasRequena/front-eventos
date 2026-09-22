@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { crearSesionAcreditacion } from '@/api/acreditacion.api'
 
-const STORAGE_KEY = 'puerta_acreditacion_sesion'
+const STORAGE_KEY = 'talita_acreditacion_sesion'
 
 function cargarSesion() {
   try {
