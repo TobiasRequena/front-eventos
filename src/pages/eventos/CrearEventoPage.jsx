@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { SeccionDatosEvento } from '@/components/eventos/SeccionDatosEvento'
 import { SeccionFormularioInscripcion } from '@/components/eventos/SeccionFormularioInscripcion'
 import { SeccionTalleres } from '@/components/eventos/SeccionTalleres'
-import { SeccionZonasCosto } from '@/components/eventos/SeccionZonasCosto'
+import { EventoStepperProvider, PasoConNumero } from '@/components/eventos/EventoStepper'
 import { EventoPreviewPanel } from '@/components/eventos/EventoPreviewPanel'
 
 const VALORES_INICIALES = {
@@ -125,6 +125,18 @@ export default function CrearEventoPage() {
     mode: 'onChange',
   })
 
+  const v = form.watch()
+  const pasos = ['paso-datos', 'paso-adicionales', 'paso-formulario', 'paso-talleres']
+  // Un paso se marca con check cuando su colapsable tiene información cargada.
+  const hechos = [
+    v.nombre && v.codigo && v.fechaInicio && v.fechaFin && 'paso-datos',
+    (v.descripcion || v.cupoMaximo || v.tieneGrupos || v.tieneTalleres || v.politicaMenor !== 'no_aplica' ||
+      v.configFichaMedica !== 'no' || v.configCertificado !== 'no' || v.requiereAutorizacionMenores ||
+      v.solicitaContactoEmergencia) && 'paso-adicionales',
+    v.camposForm?.length > 0 && 'paso-formulario',
+    v.seccionTalleres?.length > 0 && 'paso-talleres',
+  ]
+
   const [imagenArchivo, setImagenArchivo] = useState(null)
   const [imagenPreview, setImagenPreview] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -197,6 +209,7 @@ export default function CrearEventoPage() {
 
   return (
     <FormProvider {...form}>
+      <EventoStepperProvider ids={pasos} hechos={hechos}>
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Nuevo evento</h1>
@@ -236,9 +249,12 @@ export default function CrearEventoPage() {
               archivoTemplateRef={archivoTemplateRef}
             />
 
-            <SeccionZonasCosto />
-            <SeccionFormularioInscripcion />
-            <SeccionTalleres />
+            <PasoConNumero id="paso-formulario">
+              <SeccionFormularioInscripcion />
+            </PasoConNumero>
+            <PasoConNumero id="paso-talleres">
+              <SeccionTalleres />
+            </PasoConNumero>
 
             <div className="flex justify-end gap-2 pt-2">
               <Button
@@ -279,6 +295,7 @@ export default function CrearEventoPage() {
           </div>
         </div>
       </div>
+      </EventoStepperProvider>
     </FormProvider>
   )
 }
