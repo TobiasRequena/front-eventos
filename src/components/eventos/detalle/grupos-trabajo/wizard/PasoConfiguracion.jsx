@@ -36,12 +36,13 @@ const schema = z.object({
   modoTamano: z.enum(['por_cantidad', 'por_tamano']),
   valorTamano: z.number().min(1).int(),
   mantenerGruposInscripcion: z.boolean().default(false),
+  asignacionManual: z.boolean().default(false),
   nombresPreset: z.string().default('colores'),
   nombresLista: z.array(z.string()).default([]),
   accionSinNombres: z.enum(['reciclar_numerado', 'bloquear_generacion']).default('reciclar_numerado'),
 })
 
-export function PasoConfiguracion({ evento, agrupacion, onCreada, onActualizada, onSiguiente }) {
+export function PasoConfiguracion({ evento, agrupacion, onCreada, onActualizada, onSiguiente, onModoManualChange }) {
   const [presets, setPresets] = useState([])
   const [guardando, setGuardando] = useState(false)
   const [nuevoNombre, setNuevoNombre] = useState('')
@@ -61,6 +62,7 @@ export function PasoConfiguracion({ evento, agrupacion, onCreada, onActualizada,
       modoTamano: agrupacion.modo_tamano,
       valorTamano: agrupacion.valor_tamano,
       mantenerGruposInscripcion: agrupacion.mantener_grupos_inscripcion ?? false,
+      asignacionManual: agrupacion.asignacion_manual ?? false,
       nombresPreset: agrupacion.nombres_preset ?? 'colores',
       nombresLista: agrupacion.nombres_lista ?? [],
       accionSinNombres: agrupacion.accion_sin_nombres ?? 'reciclar_numerado',
@@ -70,6 +72,7 @@ export function PasoConfiguracion({ evento, agrupacion, onCreada, onActualizada,
       modoTamano: 'por_cantidad',
       valorTamano: 5,
       mantenerGruposInscripcion: false,
+      asignacionManual: false,
       nombresPreset: 'colores',
       nombresLista: [],
       accionSinNombres: 'reciclar_numerado',
@@ -79,6 +82,7 @@ export function PasoConfiguracion({ evento, agrupacion, onCreada, onActualizada,
   const nombresPreset = form.watch('nombresPreset')
   const nombresLista = form.watch('nombresLista')
   const mantenerGrupos = form.watch('mantenerGruposInscripcion')
+  const asignacionManual = form.watch('asignacionManual')
 
   function agregarNombre() {
     const valor = toTitleCase(nuevoNombre.trim())
@@ -110,7 +114,8 @@ export function PasoConfiguracion({ evento, agrupacion, onCreada, onActualizada,
         universoBase: values.universoBase,
         modoTamano: values.modoTamano,
         valorTamano: values.valorTamano,
-        mantenerGruposInscripcion: values.mantenerGruposInscripcion,
+        mantenerGruposInscripcion: values.asignacionManual ? false : values.mantenerGruposInscripcion,
+        asignacionManual: values.asignacionManual,
         nombresPreset: values.nombresPreset,
         nombresLista: values.nombresPreset === 'custom' ? values.nombresLista : [],
         accionSinNombres: values.accionSinNombres,
@@ -223,8 +228,33 @@ export function PasoConfiguracion({ evento, agrupacion, onCreada, onActualizada,
           </CardContent>
         </Card>
 
+        {/* Asignación manual */}
+        <Card>
+          <CardContent>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">Asignación manual</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Se crean los grupos vacíos y vos elegís quién va en cada uno.
+                </p>
+              </div>
+              <FormField
+                control={form.control}
+                name="asignacionManual"
+                render={({ field }) => (
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={(v) => { field.onChange(v); onModoManualChange?.(v) }}
+                    disabled={!esBorrador}
+                  />
+                )}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Grupos de inscripción */}
-        {evento.tiene_grupos && (
+        {evento.tiene_grupos && !asignacionManual && (
           <Card>
             <CardContent >
               <div className="flex items-center justify-between">

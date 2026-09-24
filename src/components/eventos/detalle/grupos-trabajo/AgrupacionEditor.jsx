@@ -14,7 +14,8 @@ import { PasoGenerar } from './wizard/PasoGenerar'
 import { GruposResultado } from './resultado/GruposResultado'
 import { cn } from "@/lib/utils"
 
-const PASOS = ['configuracion', 'excluidos', 'preview', 'generar']
+const PASOS_AUTOMATICO = ['configuracion', 'excluidos', 'preview', 'generar']
+const PASOS_MANUAL = ['configuracion', 'generar']
 
 export function AgrupacionEditor({
   evento,
@@ -33,6 +34,10 @@ export function AgrupacionEditor({
   const [pasoActivo, setPasoActivo] = useState('configuracion')
   const [mostrarResultado, setMostrarResultado] = useState(cacheada?.estado === 'generado')
   const [huboCambios, setHuboCambios] = useState(false)
+  // null = todavía no se tocó el switch → se usa lo guardado
+  const [modoManual, setModoManual] = useState(null)
+  const esManual = modoManual ?? agrupacion?.asignacion_manual ?? false
+  const PASOS = esManual ? PASOS_MANUAL : PASOS_AUTOMATICO
 
   useEffect(() => {
     if (!agrupacionId || cacheada) return
@@ -99,6 +104,7 @@ export function AgrupacionEditor({
       <GruposResultado
         evento={evento}
         esquema={agrupacion}
+        participantes={participantes}
         onVolverConfiguracion={() => setMostrarResultado(false)}
         onVolver={() => onVolver()}
         onRegenerar={() => {
@@ -249,7 +255,8 @@ export function AgrupacionEditor({
             agrupacion={agrupacion}
             onCreada={handleCreada}
             onActualizada={handleActualizada}
-            onSiguiente={() => setPasoActivo('excluidos')}
+            onModoManualChange={setModoManual}
+            onSiguiente={() => setPasoActivo(esManual ? 'generar' : 'excluidos')}
           />
         )}
 
@@ -279,7 +286,7 @@ export function AgrupacionEditor({
             evento={evento}
             esquema={agrupacion}
             onGenerado={handleGenerado}
-            onAnterior={() => setPasoActivo('preview')}
+            onAnterior={() => setPasoActivo(esManual ? 'configuracion' : 'preview')}
           />
         )}
 

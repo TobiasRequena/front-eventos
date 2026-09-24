@@ -51,12 +51,26 @@ export async function getPendientes(eventoId, esquemaId) {
   return data.pendientes
 }
 
-export async function agregarAGrupo(eventoId, esquemaId, grupoId, participanteId) {
+export async function agregarAGrupo(eventoId, esquemaId, grupoId, participanteIds) {
   const { data } = await httpClient.patch(
     `${base(eventoId)}/${esquemaId}/grupos/${grupoId}/agregar`,
-    { participanteId }
+    { participanteIds }
   )
   return data
+}
+
+export async function crearGrupo(eventoId, esquemaId, nombre) {
+  const { data } = await httpClient.post(`${base(eventoId)}/${esquemaId}/grupos`, nombre ? { nombre } : {})
+  return data.grupo
+}
+
+export async function renombrarGrupo(eventoId, esquemaId, grupoId, nombre) {
+  const { data } = await httpClient.patch(`${base(eventoId)}/${esquemaId}/grupos/${grupoId}`, { nombre })
+  return data.grupo
+}
+
+export async function eliminarGrupo(eventoId, esquemaId, grupoId) {
+  await httpClient.delete(`${base(eventoId)}/${esquemaId}/grupos/${grupoId}`)
 }
 
 export async function quitarDeGrupo(eventoId, esquemaId, grupoId, participanteId) {

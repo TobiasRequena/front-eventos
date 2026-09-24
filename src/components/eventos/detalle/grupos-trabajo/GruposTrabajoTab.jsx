@@ -206,6 +206,7 @@ export function GruposTrabajoTab({
                       {agrupacion.modo_tamano === 'por_cantidad'
                         ? `${agrupacion.valor_tamano} grupos`
                         : `Grupos de ${agrupacion.valor_tamano} personas`}
+                      {agrupacion.asignacion_manual && ' · Manual'}
                       {' · '}
                       {agrupacion.estado === 'generado' && agrupacion.generado_en
                         ? `Generada el ${formatearFecha(agrupacion.generado_en)}`

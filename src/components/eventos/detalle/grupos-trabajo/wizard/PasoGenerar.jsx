@@ -84,7 +84,9 @@ export function PasoGenerar({ evento, esquema, onGenerado, onAnterior }) {
               <div>
                 <p className="text-sm font-medium text-foreground">Listo para generar</p>
                 <p className="mt-1 text-xs text-muted-foreground max-w-sm">
-                  Se van a crear los grupos según la configuración definida.
+                  {esquema.asignacion_manual
+                    ? 'Se van a crear los grupos vacíos y todos los participantes quedan sin asignar para que los ubiques a mano.'
+                    : 'Se van a crear los grupos según la configuración definida.'}
                   {yaGenerado && ' Como ya fue generada, los grupos actuales se van a reemplazar.'}
                 </p>
               </div>
