@@ -186,8 +186,8 @@ export default function FacturacionPage() {
 
         <TabsContent value="activos" className="mt-4 space-y-4">
           {eventosActivos.length === 0 ? (
-            <Card>
-              <CardContent className="flex items-center gap-3 p-5">
+            <Card size="sm">
+              <CardContent className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-success/15">
                   <CheckCircle2 className="h-5 w-5 text-success" />
                 </div>
@@ -198,6 +198,11 @@ export default function FacturacionPage() {
                   </p>
                 </div>
               </CardContent>
+              {tramos.length > 0 && (
+                <div className="px-(--card-spacing)">
+                  <TramoStepper tramos={tramos} disabled />
+                </div>
+              )}
             </Card>
           ) : (
             eventosActivos.map((evento) => (

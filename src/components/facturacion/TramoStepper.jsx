@@ -17,7 +17,8 @@ function formatearMonto(monto) {
   return `$${num.toLocaleString('es-AR')}`
 }
 
-function TramoStepper({ tramos, participantesFacturados, eventoId, tramoPendienteId }) {
+// disabled: solo muestra los valores de los tramos, sin estado ni acciones (org sin eventos activos)
+function TramoStepper({ tramos, participantesFacturados = 0, eventoId, tramoPendienteId, disabled = false }) {
   const [tramoSeleccionado, setTramoSeleccionado] = useState(null)
   const [generando, setGenerando] = useState(false)
   const [reenviando, setReenviando] = useState(false)
@@ -56,21 +57,21 @@ function TramoStepper({ tramos, participantesFacturados, eventoId, tramoPendient
 
   return (
     <>
-      <div className="rounded-md border border-border overflow-hidden">
+      <div className={`rounded-md border border-border overflow-hidden ${disabled ? 'opacity-60 select-none [&_th]:h-8 [&_td]:py-1' : ''}`} aria-disabled={disabled}>
         <Table>
           <TableHeader>
             <TableRow className="bg-muted hover:bg-muted">
               <TableHead className="font-medium text-foreground">Tramo</TableHead>
               <TableHead className="font-medium text-foreground">Monto fijo</TableHead>
               <TableHead className="font-medium text-foreground">Por participante</TableHead>
-              <TableHead className="font-medium text-foreground">Estado</TableHead>
-              <TableHead className="font-medium text-foreground text-right">Acciones</TableHead>
+              {!disabled && <TableHead className="font-medium text-foreground">Estado</TableHead>}
+              {!disabled && <TableHead className="font-medium text-foreground text-right">Acciones</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {tramos.map((tramo, index) => {
               const esPasado = index < tramoActualIndex
-              const esActual = index === tramoActualIndex
+              const esActual = !disabled && index === tramoActualIndex
               const esPendiente = tramo.id === tramoPendienteId
               const esFuturo = index > tramoActualIndex && !esPendiente
               const esGratis = parseFloat(tramo.monto_fijo) === 0
@@ -92,7 +93,7 @@ function TramoStepper({ tramos, participantesFacturados, eventoId, tramoPendient
                       : `$${Math.round(parseFloat(tramo.precio_por_participante_desde)).toLocaleString('es-AR')} — $${Math.round(parseFloat(tramo.precio_por_participante_hasta)).toLocaleString('es-AR')}`
                     }
                   </TableCell>
-                  <TableCell>
+                  {!disabled && <TableCell>
                     {esPasado && (
                       <Badge variant="default" className="gap-1 text-xs">
                         <CheckCircle2 className="h-3 w-3" /> Pagado
@@ -113,8 +114,8 @@ function TramoStepper({ tramos, participantesFacturados, eventoId, tramoPendient
                         <Circle className="h-3 w-3" /> Próximo
                       </Badge>
                     )}
-                  </TableCell>
-                  <TableCell className="text-right">
+                  </TableCell>}
+                  {!disabled && <TableCell className="text-right">
                     {esPendiente && (
                       <button
                         type="button"
@@ -136,7 +137,7 @@ function TramoStepper({ tramos, participantesFacturados, eventoId, tramoPendient
                         Pagar adelantado
                       </button>
                     )}
-                  </TableCell>
+                  </TableCell>}
                 </TableRow>
               )
             })}
