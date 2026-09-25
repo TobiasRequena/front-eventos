@@ -10,6 +10,7 @@ import { Costos } from './secciones/Costos'
 import { ProximosEventos } from './secciones/ProximosEventos'
 import { Nosotros } from './secciones/Nosotros'
 import { Galeria } from './secciones/Galeria'
+import { PieLanding } from './PieLanding'
 
 // conTitulos: en escritorio y en el menú abierto del celular; sin títulos, solo los números
 function ListaSecciones({ activa, onElegir, conTitulos }) {
@@ -22,7 +23,7 @@ function ListaSecciones({ activa, onElegir, conTitulos }) {
             <button
               type="button"
               onClick={() => onElegir(s.id)}
-              aria-current={esActiva ? 'true' : undefined}
+              aria-current={esActiva ? 'location' : undefined}
               aria-label={s.titulo}
               className={cn(
                 'relative flex w-full cursor-pointer items-baseline gap-3 rounded-lg py-2.5 text-left transition-colors',
@@ -61,13 +62,26 @@ export default function LandingPage() {
     return () => observer.disconnect()
   }, [])
 
+  // Links compartibles: /#costos entra directo a esa sección
+  useEffect(() => {
+    const id = decodeURIComponent(window.location.hash.slice(1))
+    if (SECCIONES.some((s) => s.id === id)) document.getElementById(id).scrollIntoView()
+  }, [])
+
   function irA(id) {
     setMenuAbierto(false)
+    history.replaceState(null, '', id === SECCIONES[0].id ? window.location.pathname : `#${id}`)
     document.getElementById(id).scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
     <div className="grid h-dvh grid-cols-[3.5rem_1fr] bg-background text-foreground md:grid-cols-[15rem_1fr] lg:grid-cols-[20rem_1fr]">
+      <a
+        href="#contenido"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:shadow-md"
+      >
+        Saltar al contenido
+      </a>
       <nav aria-label="Secciones" className="relative flex flex-col justify-center border-r border-border bg-sidebar px-1.5 py-8 md:px-4 lg:px-6">
         {/* Celular: solo números + botón para abrir el menú con los títulos */}
         <Button
@@ -94,13 +108,14 @@ export default function LandingPage() {
         </SheetContent>
       </Sheet>
 
-      <main ref={contenidoRef} className="snap-y snap-mandatory overflow-y-auto overflow-x-hidden motion-safe:scroll-smooth">
-        <Inicio />
+      <main id="contenido" ref={contenidoRef} tabIndex={-1} className="snap-y snap-proximity overflow-y-auto overflow-x-hidden outline-none motion-safe:scroll-smooth">
+        <Inicio onIrA={irA} />
         <ComoFunciona />
         <Costos />
         <ProximosEventos />
         <Nosotros />
         <Galeria />
+        <PieLanding />
       </main>
     </div>
   )

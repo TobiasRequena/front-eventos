@@ -38,5 +38,5 @@ export async function cambiarRolMiembro(orgId, usuarioId, rol) {
 }
 
 export async function salirOrganizacion(orgId) {
-  await httpClient.delete(`/organizaciones/${orgId}/miembros/me`)
+  await httpClient.delete(`/organizaciones/${orgId}/miembros/salir`)
 }

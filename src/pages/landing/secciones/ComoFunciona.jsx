@@ -1,21 +1,64 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { Check, ChevronDown, Heart, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { useAuth } from '@/contexts/AuthContext'
+import { enviarSugerencia, marcarMeInteresa, quitarMeInteresa, sincronizarMeInteresa } from '@/api/landing.api'
 import { Seccion, Pregunta, Resaltado } from '../Seccion'
 import { FUNCIONES } from '../datosLanding'
 
-// ponytail: corazones y buzón viven solo en el estado local (maqueta); en la etapa 2 se guardan y se ven en /admin
-function BotonMeGusta({ nombre }) {
-  const [marcado, setMarcado] = useState(false)
+const CLAVE_ME_GUSTA = 'talita.meGusta'
+
+function leerGuardados() {
+  try {
+    return JSON.parse(localStorage.getItem(CLAVE_ME_GUSTA)) ?? []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Me gusta de las funciones. Sin sesión se recuerdan en este navegador; con
+ * sesión se guardan en el usuario y se ven desde cualquier dispositivo.
+ * Al iniciar sesión se le pasan al usuario los que marcó antes en este navegador.
+ */
+function useMeGusta() {
+  const { isAuthenticated } = useAuth()
+  const [marcados, setMarcados] = useState(leerGuardados)
+
+  useEffect(() => {
+    localStorage.setItem(CLAVE_ME_GUSTA, JSON.stringify(marcados))
+  }, [marcados])
+
+  useEffect(() => {
+    if (isAuthenticated) sincronizarMeInteresa(leerGuardados()).then(setMarcados).catch(() => { })
+  }, [isAuthenticated])
+
+  async function alternar(nombre) {
+    const estaba = marcados.includes(nombre)
+    const cambiar = (lista, agregar) => (agregar ? [...lista, nombre] : lista.filter((f) => f !== nombre))
+    setMarcados((m) => cambiar(m, !estaba))
+    try {
+      await (estaba ? quitarMeInteresa(nombre) : marcarMeInteresa(nombre))
+    } catch {
+      setMarcados((m) => cambiar(m, estaba))
+      toast.error('No pudimos guardar tu me gusta. Probá de nuevo.')
+    }
+  }
+
+  return { marcados, alternar }
+}
+
+function BotonMeGusta({ nombre, marcado, onAlternar }) {
   return (
     <Button
       type="button"
       variant="ghost"
       size="icon-lg"
-      onClick={() => setMarcado((m) => !m)}
+      onClick={() => onAlternar(nombre)}
       aria-pressed={marcado}
       aria-label={`Me interesa: ${nombre}`}
       className="shrink-0 text-muted-foreground"
@@ -25,7 +68,7 @@ function BotonMeGusta({ nombre }) {
   )
 }
 
-function Funcion({ funcion }) {
+function Funcion({ funcion, meGusta }) {
   if (funcion.enDesarrollo) {
     return (
       <li className="flex items-center gap-2 px-5 py-2">
@@ -34,7 +77,7 @@ function Funcion({ funcion }) {
           {funcion.nombre}
           <span className="ml-auto rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">en desarrollo</span>
         </div>
-        <BotonMeGusta nombre={funcion.nombre} />
+        <BotonMeGusta nombre={funcion.nombre} marcado={meGusta.marcados.includes(funcion.nombre)} onAlternar={meGusta.alternar} />
       </li>
     )
   }
@@ -50,7 +93,7 @@ function Funcion({ funcion }) {
           {funcion.descripcion}
         </CollapsibleContent>
       </Collapsible>
-      <BotonMeGusta nombre={funcion.nombre} />
+      <BotonMeGusta nombre={funcion.nombre} marcado={meGusta.marcados.includes(funcion.nombre)} onAlternar={meGusta.alternar} />
     </li>
   )
 }
@@ -58,6 +101,20 @@ function Funcion({ funcion }) {
 function Buzon() {
   const [texto, setTexto] = useState('')
   const [enviado, setEnviado] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+
+  async function enviar(e) {
+    e.preventDefault()
+    setEnviando(true)
+    try {
+      await enviarSugerencia(texto.trim())
+      setEnviado(true)
+    } catch {
+      toast.error('No pudimos enviar tu sugerencia. Probá de nuevo.')
+    } finally {
+      setEnviando(false)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -68,7 +125,7 @@ function Buzon() {
             ¡Gracias! Lo vamos a tener en cuenta.
           </p>
         ) : (
-          <form onSubmit={(e) => { e.preventDefault(); setEnviado(true) }} className="flex flex-col gap-3">
+          <form onSubmit={enviar} className="flex flex-col gap-3">
             <Textarea
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
@@ -77,8 +134,8 @@ function Buzon() {
               placeholder="Contanos qué te gustaría poder hacer..."
               className="resize-none text-base"
             />
-            <Button type="submit" disabled={!texto.trim()} className="h-10 self-end px-6">
-              Enviar
+            <Button type="submit" disabled={!texto.trim() || enviando} className="h-10 self-end px-6">
+              {enviando ? 'Enviando...' : 'Enviar'}
             </Button>
           </form>
         )}
@@ -88,6 +145,8 @@ function Buzon() {
 }
 
 export function ComoFunciona() {
+  const meGusta = useMeGusta()
+
   return (
     <Seccion id="como-funciona" numero={2} titulo={<>Qué es y cómo <Resaltado>funciona</Resaltado></>}>
       <div className="flex flex-col gap-6">
@@ -102,7 +161,7 @@ export function ComoFunciona() {
             ))}
           </ul>
           <p className="border-border text-2xl leading-snug text-muted-foreground sm:border-l sm:pl-8">
-            Encuentros como <span className="text-foreground">peregrinaciones</span>,{' '}
+            encuentros como <span className="text-foreground">peregrinaciones</span>,{' '}
             <span className="text-foreground">convivencias</span> y{' '}
             <span className="text-foreground">campamentos</span>.
           </p>
@@ -112,7 +171,7 @@ export function ComoFunciona() {
       <div className="flex flex-col gap-4">
         <Pregunta>Funciones específicas</Pregunta>
         <ul className="divide-y divide-border rounded-xl border border-border bg-card">
-          {FUNCIONES.map((f) => <Funcion key={f.nombre} funcion={f} />)}
+          {FUNCIONES.map((f) => <Funcion key={f.nombre} funcion={f} meGusta={meGusta} />)}
         </ul>
       </div>
 

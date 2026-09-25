@@ -7,10 +7,11 @@ import { useTabsPersistentes } from '@/hooks/useTabsPersistentes'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import { getEstadoEvento } from '@/lib/eventos.helpers'
+import { getEstadoEvento, esEventoFinalizado } from '@/lib/eventos.helpers'
 import { TabResumen } from '@/components/eventos/detalle/TabResumen'
 import { TabParticipantes } from '@/components/eventos/detalle/TabParticipantes'
 import { TabAcreditacion } from '@/components/eventos/detalle/TabAcreditacion'
+import { TabGaleria } from '@/components/eventos/detalle/TabGaleria'
 // import { TabPagos } from '@/components/eventos/detalle/TabPagos'
 import { EditarEventoPanel } from '@/components/eventos/detalle/EditarEventoPanel'
 import { toast } from 'sonner'
@@ -43,6 +44,7 @@ const TABS = [
   { value: 'resumen', label: 'Resumen' },
   { value: 'participantes', label: 'Participantes' },
   { value: 'acreditacion', label: 'Acreditación' },
+  { value: 'galeria', label: 'Galería' },
   // { value: 'pagos', label: 'Pagos' },
 ]
 
@@ -208,8 +210,11 @@ export default function EventoDetallePage() {
   const navigate = useNavigate()
   const { id } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
-  const tabActivo = searchParams.get('tab') ?? 'resumen'
   const { evento, setEvento, isLoading, isError, reintentar } = useEvento(id)
+  // La galería se habilita recién cuando el evento terminó
+  const tabs = TABS.filter((t) => t.value !== 'galeria' || (evento && esEventoFinalizado(evento)))
+  const tabPedido = searchParams.get('tab') ?? 'resumen'
+  const tabActivo = tabPedido === 'galeria' && evento && !esEventoFinalizado(evento) ? 'resumen' : tabPedido
   const participantesState = useParticipantes(evento?.id)
   const fueVisitada = useTabsPersistentes(tabActivo)
   const [modoEdicion, setModoEdicion] = useState(false)
@@ -300,7 +305,7 @@ export default function EventoDetallePage() {
 
       <Tabs value={tabActivo} onValueChange={handleCambiarTab}>
         <TabsList>
-          {TABS.map((tab) => (
+          {tabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
               {tab.label}
             </TabsTrigger>
@@ -327,6 +332,10 @@ export default function EventoDetallePage() {
               ? <PantallaBloqueoPago monto={bloqueoPago.monto} onIrAFacturacion={() => navigate('/facturacion')} />
               : <TabAcreditacion evento={evento} participantesState={participantesState} />
           )}
+        </TabsContent>
+
+        <TabsContent value="galeria" className="mt-3">
+          {evento && esEventoFinalizado(evento) && <TabGaleria evento={evento} />}
         </TabsContent>
 
         {/* <TabsContent value="pagos" className="mt-6">

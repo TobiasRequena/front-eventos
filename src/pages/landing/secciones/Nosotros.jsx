@@ -1,6 +1,7 @@
 import { FormularioContacto } from '@/components/soporte/FormularioContacto'
 import { Seccion, Pregunta } from '../Seccion'
-import { EQUIPO, MANIFIESTO } from '../datosLanding'
+import { EQUIPO, INSTAGRAM, MANIFIESTO } from '../datosLanding'
+import { IconoInstagram } from '../IconoInstagram'
 
 export function Nosotros() {
   return (
@@ -38,6 +39,16 @@ export function Nosotros() {
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <FormularioContacto textoBoton="Enviar mensaje" />
         </div>
+        <a
+          href={`https://instagram.com/${INSTAGRAM}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center gap-3 rounded-xl border border-border bg-card px-5 py-3 text-lg font-medium shadow-sm transition-colors hover:border-talita-amarillo"
+        >
+          <IconoInstagram className="size-6 text-talita-rojo" />
+          @{INSTAGRAM}
+          <span className="text-base font-normal text-muted-foreground">· seguinos en Instagram</span>
+        </a>
       </div>
     </Seccion>
   )

@@ -60,7 +60,7 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
   }, [tienePrecioPorZona])
 
   return (
-    <>
+    <div className="space-y-4">
       <PasoConNumero id="paso-datos">
         <Card>
           <Collapsible open={abierto} onOpenChange={setAbierto}>
@@ -287,6 +287,28 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                   )}
                 />
               </div>
+              <FormField
+                control={form.control}
+                name="mostrarEnLanding"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <FormLabel>Mostrar en la página de Talita Encuentro</FormLabel>
+                        <HelpTooltip>
+                          Aparece en "Próximos eventos" de la página principal, con el link para inscribirse, mientras la inscripción esté abierta.
+                        </HelpTooltip>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {field.value ? 'Cualquiera puede encontrarlo e inscribirse desde la página.' : 'Solo quien tenga el link o el código.'}
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
               </CardContent>
             </CollapsibleContent>
           </Collapsible>
@@ -544,6 +566,6 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
           </Collapsible>
         </Card>
       </PasoConNumero>
-    </>
+    </div>
   )
 }

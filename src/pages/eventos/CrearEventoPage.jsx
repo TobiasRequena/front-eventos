@@ -38,6 +38,7 @@ const VALORES_INICIALES = {
   configCertificado: 'no',
   requiereAutorizacionMenores: false,
   solicitaContactoEmergencia: false,
+  mostrarEnLanding: false,
 }
 
 function armarPayload(values) {
@@ -106,6 +107,7 @@ function armarPayload(values) {
     configCertificado: values.configCertificado,
     requiereAutorizacionMenores: values.requiereAutorizacionMenores,
     solicitaContactoEmergencia: values.solicitaContactoEmergencia,
+    mostrarEnLanding: values.mostrarEnLanding,
     camposForm,
     bloquesTaller,
     talleresSueltos,

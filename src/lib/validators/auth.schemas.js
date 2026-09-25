@@ -25,6 +25,7 @@ export const registerStep2Schema = z
     .object({
         nombreOrganizacion: z.string().max(150).optional().or(z.literal('')),
         ...redesFields,
+        mostrarEnLanding: z.boolean().default(false),
     })
     .refine((v) => !hayRedes(v) || v.nombreOrganizacion?.trim(), {
         path: ['nombreOrganizacion'],

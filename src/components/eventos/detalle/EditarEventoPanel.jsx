@@ -32,6 +32,7 @@ function adaptarEventoAForm(evento) {
     configCertificado: evento.config_certificado ?? 'no',
     requiereAutorizacionMenores: evento.requiere_autorizacion_menores ?? false,
     solicitaContactoEmergencia: evento.solicita_contacto_emergencia ?? false,
+    mostrarEnLanding: evento.mostrar_en_landing ?? false,
     autorizacionTemplateUrl: evento.autorizacion_template_url ?? null,
     seccionTalleres: [
       ...(evento.bloquesTaller ?? []).map((b) => ({ tipo: 'bloque', ...b })),
@@ -88,6 +89,7 @@ export function EditarEventoPanel({ evento, onVolver, onGuardado }) {
         configCertificado: values.configCertificado,
         requiereAutorizacionMenores: values.requiereAutorizacionMenores,
         solicitaContactoEmergencia: values.solicitaContactoEmergencia,
+        mostrarEnLanding: values.mostrarEnLanding,
         autorizacionTemplateUrl: values.autorizacionTemplateUrl,
       })
 

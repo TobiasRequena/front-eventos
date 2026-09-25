@@ -16,6 +16,7 @@ export function AuthProvider({ children }) {
     const limpiarSesion = useCallback(() => {
         localStorage.removeItem(TOKEN_KEY)
         localStorage.removeItem(ORG_ACTIVA_KEY)
+        localStorage.removeItem('talita.meGusta') // son del usuario: no quedan para quien use la máquina después
         setUsuario(null)
         setOrganizaciones([])
         setOrgActivaId(null)

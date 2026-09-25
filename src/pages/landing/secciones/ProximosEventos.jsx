@@ -2,27 +2,34 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth,
-  isToday, startOfDay, startOfMonth, startOfWeek,
+  isToday, startOfMonth, startOfWeek,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { getEventosLanding, getOrganizacionesLanding } from '@/api/landing.api'
 import { Seccion, Resaltado } from '../Seccion'
-import { EVENTOS, ORGANIZACIONES } from '../datosLanding'
 
 const POR_PAGINA = 5
 const DIAS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 
+const iniciales = (nombre) =>
+  nombre.split(/\s+/).filter((p) => p.length > 2 || /^\d+$/.test(p)).slice(0, 2).map((p) => p[0]).join('').toUpperCase() || nombre[0].toUpperCase()
+
 function LogoOrg({ org, className }) {
+  if (org.logo_url) {
+    return <img src={org.logo_url} alt="" loading="lazy" className={cn('shrink-0 rounded-full bg-background object-contain', className)} />
+  }
   return (
     <span className={cn('flex shrink-0 items-center justify-center rounded-full bg-foreground font-semibold text-background', className)}>
-      {org.sigla}
+      {iniciales(org.nombre)}
     </span>
   )
 }
 
-function Calendario({ mes, setMes, tick }) {
+function Calendario({ eventos, mes, setMes, tick }) {
   const dias = eachDayOfInterval({
     start: startOfWeek(startOfMonth(mes), { weekStartsOn: 1 }),
     end: endOfWeek(endOfMonth(mes), { weekStartsOn: 1 }),
@@ -42,7 +49,7 @@ function Calendario({ mes, setMes, tick }) {
       <div className="grid grid-cols-7 gap-1 text-center">
         {DIAS.map((d, i) => <span key={i} className="pb-2 text-xs font-medium text-muted-foreground">{d}</span>)}
         {dias.map((dia) => {
-          const delDia = EVENTOS.filter((e) => isSameDay(e.fecha, dia))
+          const delDia = eventos.filter((e) => isSameDay(e.fecha, dia))
           // Si hay más de un evento el mismo día, se turnan
           const evento = delDia[tick % delDia.length]
           return (
@@ -51,7 +58,7 @@ function Calendario({ mes, setMes, tick }) {
               className={cn(
                 'flex aspect-square min-w-0 flex-col items-center gap-0.5 rounded-md p-0.5 text-sm tabular-nums',
                 !isSameMonth(dia, mes) && 'text-muted-foreground/40',
-                isToday(dia) && 'font-semibold text-talita-rojo',
+                isToday(dia) && 'font-semibold ring-1 ring-foreground/40',
                 evento && 'bg-talita-amarillo/25'
               )}
               title={delDia.map((e) => e.nombre).join(' · ') || undefined}
@@ -71,15 +78,15 @@ function Calendario({ mes, setMes, tick }) {
   )
 }
 
-function Logos() {
+function Logos({ organizaciones }) {
   // Si son pocas entran quietas; si son muchas se deslizan en loop (lista duplicada)
-  const desliza = ORGANIZACIONES.length > 5
-  const lista = desliza ? [...ORGANIZACIONES, ...ORGANIZACIONES] : ORGANIZACIONES
+  const desliza = organizaciones.length > 5
+  const lista = desliza ? [...organizaciones, ...organizaciones] : organizaciones
   return (
     <div className="overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
       <ul className={cn('flex w-max gap-12', desliza ? 'animate-marquee hover:[animation-play-state:paused] motion-reduce:animate-none' : 'mx-auto')}>
         {lista.map((o, i) => (
-          <li key={i} aria-hidden={i >= ORGANIZACIONES.length} className="flex w-28 flex-col items-center gap-2 text-center opacity-70">
+          <li key={i} aria-hidden={i >= organizaciones.length} className="flex w-28 flex-col items-center gap-2 text-center opacity-70">
             <LogoOrg org={o} className="size-14 text-base" />
             <span className="text-sm leading-tight text-muted-foreground">{o.nombre}</span>
           </li>
@@ -94,27 +101,50 @@ export function ProximosEventos() {
   const [pagina, setPagina] = useState(0)
   const [tick, setTick] = useState(0)
 
+  const [eventos, setEventos] = useState(null)
+  const [organizaciones, setOrganizaciones] = useState([])
+  const [error, setError] = useState(false)
+
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 4000)
     return () => clearInterval(id)
   }, [])
 
-  const proximos = EVENTOS.filter((e) => e.fecha >= startOfDay(new Date())).sort((a, b) => a.fecha - b.fecha)
+  useEffect(() => {
+    getEventosLanding()
+      .then((lista) => setEventos(lista.map((e) => ({ ...e, fecha: new Date(e.fecha_inicio) }))))
+      .catch(() => setError(true))
+    getOrganizacionesLanding().then(setOrganizaciones).catch(() => {})
+  }, [])
+
+  // Los que ya empezaron pero siguen abiertos (duran varios días) también cuentan como próximos
+  const proximos = eventos ?? []
   const visibles = proximos.slice(pagina * POR_PAGINA, (pagina + 1) * POR_PAGINA)
   const hayMas = (pagina + 1) * POR_PAGINA < proximos.length
 
   return (
     <Seccion id="proximos-eventos" numero={4} titulo={<>Próximos <Resaltado>eventos</Resaltado> !</>}>
       <div className="grid grid-cols-1 items-start gap-8 xl:grid-cols-[1fr_1.15fr]">
-        <Calendario mes={mes} setMes={setMes} tick={tick} />
+        <Calendario eventos={proximos} mes={mes} setMes={setMes} tick={tick} />
 
         <div className="flex flex-col gap-4">
           <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-            {visibles.length === 0 && (
+            {!eventos && !error &&
+              Array.from({ length: 3 }, (_, i) => (
+                <li key={i} className="flex items-center gap-4 px-5 py-4">
+                  <Skeleton className="size-11" />
+                  <div className="flex flex-1 flex-col gap-2">
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </div>
+                </li>
+              ))}
+            {error && <li className="p-6 text-muted-foreground">No pudimos cargar los eventos. Probá de nuevo en un rato.</li>}
+            {eventos && visibles.length === 0 && (
               <li className="p-6 text-muted-foreground">Todavía no hay eventos publicados.</li>
             )}
             {visibles.map((e) => (
-              <li key={e.codigo} className="flex items-center gap-4 px-5 py-4">
+              <li key={e.codigo + e.fecha_inicio} className="flex items-center gap-4 px-5 py-4">
                 <div className="flex w-11 shrink-0 flex-col items-center leading-none">
                   <span className="text-2xl font-bold tabular-nums">{format(e.fecha, 'd')}</span>
                   <span className="mt-1 text-xs font-medium uppercase text-talita-rojo">{format(e.fecha, 'MMM', { locale: es })}</span>
@@ -143,10 +173,13 @@ export function ProximosEventos() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-8 border-t border-border pt-12">
-        <h3 className="text-center text-2xl font-semibold tracking-tight">Gracias por elegirnos</h3>
-        <Logos />
-      </div>
+      {/* Se muestra si alguna ya creó un evento; si ninguna lo hizo, recién cuando son 3 */}
+      {(organizaciones.some((o) => o.tiene_eventos) || organizaciones.length >= 3) && (
+        <div className="flex flex-col gap-8 border-t border-border pt-12">
+          <h3 className="text-center text-2xl font-semibold tracking-tight">Gracias por elegirnos</h3>
+          <Logos organizaciones={organizaciones} />
+        </div>
+      )}
     </Seccion>
   )
 }

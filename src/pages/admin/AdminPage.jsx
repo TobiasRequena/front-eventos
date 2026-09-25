@@ -15,7 +15,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { KpiCard } from '@/components/dashboard/KpiCard'
 import { Bar, BarChart, CartesianGrid, XAxis, Line, LineChart } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { Users, Building2, CalendarRange, UserCheck, DollarSign, Loader2, RefreshCw, CalendarIcon } from 'lucide-react'
+import { Progress } from '@/components/ui/progress'
+import { Users, Building2, CalendarRange, UserCheck, DollarSign, Loader2, RefreshCw, CalendarIcon, Heart, MessageSquare } from 'lucide-react'
 
 function inicioMesActual() {
   const hoy = new Date()
@@ -66,6 +67,60 @@ function GraficoLinea({ titulo, datos }) {
         </ChartContainer>
       </CardContent>
     </Card>
+  )
+}
+
+// Me gusta de las funciones y buzón de sugerencias de la landing
+function StatsLanding({ landing }) {
+  const maximo = landing.topFunciones[0]?.votos ?? 0
+  return (
+    <>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <KpiCard icon={Heart} label="Me gusta en funciones" value={landing.totalMeGusta.toLocaleString('es-AR')} />
+        <KpiCard icon={MessageSquare} label="Sugerencias nuevas" value={landing.sugerencias.nuevas.toLocaleString('es-AR')} />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle className="text-base">Top 5 funciones con más me gusta</CardTitle></CardHeader>
+          <CardContent>
+            {landing.topFunciones.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Todavía nadie marcó me gusta.</p>
+            ) : (
+              <ol className="space-y-4">
+                {landing.topFunciones.map((f, i) => (
+                  <li key={f.funcion} className="space-y-1.5">
+                    <div className="flex items-baseline justify-between gap-3 text-sm">
+                      <span className="font-medium">{i + 1}. {f.funcion}</span>
+                      <span className="tabular-nums text-muted-foreground">{f.votos.toLocaleString('es-AR')}</span>
+                    </div>
+                    <Progress value={(f.votos / maximo) * 100} />
+                  </li>
+                ))}
+              </ol>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Últimas sugerencias del buzón</CardTitle></CardHeader>
+          <CardContent>
+            {landing.sugerencias.ultimas.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Todavía no llegaron sugerencias.</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {landing.sugerencias.ultimas.map((s) => (
+                  <li key={s.id} className="py-3 first:pt-0 last:pb-0">
+                    <p className="whitespace-pre-wrap break-words text-sm">{s.texto}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {format(new Date(s.creado_en), "d 'de' MMMM, HH:mm", { locale: es })}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
   )
 }
 
@@ -194,6 +249,7 @@ export default function AdminPage() {
             <GraficoBarra titulo="Inscriptos" datos={stats.inscriptos.evolucion} />
             <GraficoLinea titulo="Revenue" datos={stats.revenue.evolucion} />
           </div>
+          {stats.landing && <StatsLanding landing={stats.landing} />}
         </>
       )}
     </div>

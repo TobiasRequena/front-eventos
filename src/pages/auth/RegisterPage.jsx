@@ -23,6 +23,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card'
 import { PasswordInput } from '@/components/ui/password-input'
 import { RedesFields } from '@/components/organizacion/RedesFields'
+import { Checkbox } from '@/components/ui/checkbox'
 import { REDES_VACIAS } from '@/lib/validators/redes.schemas'
 
 function RegisterStepOne({ datosIniciales, onContinuar }) {
@@ -154,6 +155,24 @@ function RegisterStepTwo({ datosIniciales, isSubmitting, onConfirmar, onVolver }
 
               <RedesFields control={form.control} />
 
+              <FormField
+                control={form.control}
+                name="mostrarEnLanding"
+                render={({ field }) => (
+                  <FormItem className="flex items-start gap-3 rounded-lg border border-border p-3">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={(v) => field.onChange(v === true)} className="mt-0.5" />
+                    </FormControl>
+                    <div className="space-y-1">
+                      <FormLabel className="font-normal leading-snug">
+                        Acepto que el nombre y el logo de mi organización aparezcan en “Gracias por elegirnos” de la página de Talita Encuentro.
+                      </FormLabel>
+                      <FormDescription>Opcional. Lo podés cambiar cuando quieras desde Organización.</FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -175,7 +194,7 @@ function RegisterStepTwo({ datosIniciales, isSubmitting, onConfirmar, onVolver }
 
       <button
         type="button"
-        onClick={() => onConfirmar({ nombreOrganizacion: '', ...REDES_VACIAS })}
+        onClick={() => onConfirmar({ nombreOrganizacion: '', ...REDES_VACIAS, mostrarEnLanding: false })}
         disabled={isSubmitting}
         className="w-full text-center text-sm text-muted-foreground underline-offset-4 hover:underline disabled:opacity-50"
       >
@@ -243,7 +262,7 @@ export default function RegisterPage() {
         <RegisterStepOne datosIniciales={datosPaso1} onContinuar={handleContinuar} />
       ) : (
         <RegisterStepTwo
-          datosIniciales={{ nombreOrganizacion: '', ...REDES_VACIAS }}
+          datosIniciales={{ nombreOrganizacion: '', ...REDES_VACIAS, mostrarEnLanding: false }}
           isSubmitting={isSubmitting}
           onConfirmar={handleConfirmar}
           onVolver={() => setStep(1)}
