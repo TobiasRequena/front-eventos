@@ -9,9 +9,9 @@ import img6 from "@/assets/login/img-6.jpeg";
 import img8 from "@/assets/login/img-8.jpeg";
 import img9 from "@/assets/login/img-9.jpeg";
 
-const images = [img1, img2, img3, img4, img5, img6, img8, img9];
+const imagenesLogin = [img1, img2, img3, img4, img5, img6, img8, img9];
 
-export function AuthCarousel() {
+export function AuthCarousel({ images = imagenesLogin, className = "relative hidden overflow-hidden lg:block", overlay = true, onChange }) {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
@@ -20,27 +20,35 @@ export function AuthCarousel() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [images.length]);
+
+  useEffect(() => {
+    onChange?.(current);
+  }, [current, onChange]);
 
   return (
-    <div className="relative hidden overflow-hidden lg:block">
+    <div className={className}>
       {images.map((image, index) => (
         <img
-          key={image}
+          key={index}
           src={image}
           alt=""
-          className={`absolute inset-0 h-full w-full object-cover transition-all duration-[5000ms] ${current === index
+          className={`absolute inset-0 h-full w-full object-cover transition-all duration-[5000ms] motion-reduce:transition-none ${current === index
               ? "scale-105 opacity-100"
               : "scale-100 opacity-0"
             }`}
         />
       ))}
 
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/30" />
+      {overlay && (
+        <>
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black/30" />
 
-      {/* Degradado hacia el formulario */}
-      <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-r from-transparent to-background/20" />
+          {/* Degradado hacia el formulario */}
+          <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-r from-transparent to-background/20" />
+        </>
+      )}
     </div>
   );
 }
