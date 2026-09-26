@@ -3,7 +3,8 @@ import { INSTAGRAM } from './datosLanding'
 
 export function PieLanding() {
   return (
-    <footer className="flex flex-col items-center gap-3 border-t border-border px-6 py-8 text-sm text-muted-foreground sm:flex-row sm:justify-between md:px-14 lg:px-20">
+    // snap-end: el final de la página también es punto de enganche; sin esto el scroll-snap lo devuelve a Galería
+    <footer className="snap-end flex flex-col items-center gap-3 border-t border-border px-6 py-8 text-sm text-muted-foreground sm:flex-row sm:justify-between md:px-14 lg:px-20">
       <p>© {new Date().getFullYear()} Talita Software</p>
       <a
         href={`https://instagram.com/${INSTAGRAM}`}

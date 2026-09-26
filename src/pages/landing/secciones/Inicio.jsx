@@ -28,7 +28,7 @@ export function Inicio({ onIrA }) {
       </div>
 
       {/* Para quien llega a inscribirse y no a organizar */}
-      <Button variant="link" onClick={() => onIrA('proximos-eventos')} className="cursor-pointer text-base">
+      <Button variant="link" onClick={() => onIrA('proximos-eventos')} className="h-auto cursor-pointer text-base whitespace-normal">
         ¿Venís a inscribirte? Mirá los próximos eventos
       </Button>
     </Seccion>
