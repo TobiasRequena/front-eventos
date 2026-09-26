@@ -20,7 +20,6 @@ import RecuperarContrasenaPage from '@/pages/auth/RecuperarContrasenaPage'
 import VerificarEmailPage from '@/pages/auth/VerificarEmailPage'
 import ComprobantePagoPage from '@/pages/ComprobantePagoPage'
 import FacturacionPage from '@/pages/facturacion/FacturacionPage'
-import LandingPage from '@/pages/landing/LandingPage'
 
 export function AppRouter() {
   return (
@@ -36,10 +35,12 @@ export function AppRouter() {
         element={
           <AuthProvider>
             <Routes>
+              {/* Landing oculta hasta terminar los textos: volver a <Route path="/" element={<LandingPage />} /> dentro de GuestRoute */}
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
               <Route path="/verificar-email" element={<VerificarEmailPage />} />
 
               <Route element={<GuestRoute />}>
-                <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
               </Route>
