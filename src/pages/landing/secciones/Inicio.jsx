@@ -5,7 +5,7 @@ import { Seccion, Resaltado } from '../Seccion'
 
 export function Inicio({ onIrA }) {
   return (
-    <Seccion id="inicio" className="relative isolate items-center gap-8 overflow-hidden py-10 text-center">
+    <Seccion id="inicio" className="relative isolate min-h-full items-center justify-center gap-8 overflow-hidden py-10 text-center md:py-10">
       {/* Fotos de fondo que van cambiando (las mismas del login), lavadas como en las piezas de Instagram */}
       <AuthCarousel overlay={false} className="absolute inset-0 -z-20 overflow-hidden grayscale-[30%]" />
       <div aria-hidden className="absolute inset-0 -z-10 bg-background/85" />

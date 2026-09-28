@@ -1,13 +1,12 @@
 import { cn } from '@/lib/utils'
 
-// Cada sección ocupa al menos el alto de la columna y arranca alineada arriba (scroll-snap),
-// así nunca queda cortada al medio.
+// Cada sección mide lo que su contenido (la portada agrega min-h-full) y arranca alineada arriba (scroll-snap).
 export function Seccion({ id, numero, titulo, className, children }) {
   return (
     <section
       id={id}
       aria-labelledby={titulo ? `${id}-titulo` : undefined}
-      className={cn('flex min-h-full snap-start flex-col justify-center gap-12 px-6 py-20 md:px-14 lg:px-20', className)}
+      className={cn('flex snap-start flex-col gap-12 px-6 py-12 md:px-14 md:py-16 lg:px-20', className)}
     >
       {titulo && (
         <header className="flex flex-col gap-3">
