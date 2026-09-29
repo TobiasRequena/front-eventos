@@ -5,10 +5,10 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/contexts/AuthContext'
-import { enviarSugerencia, marcarMeInteresa, quitarMeInteresa, sincronizarMeInteresa } from '@/api/landing.api'
+import { getFuncionesLanding, enviarSugerencia, marcarMeInteresa, quitarMeInteresa, sincronizarMeInteresa } from '@/api/landing.api'
 import { Seccion, Pregunta, Resaltado } from '../Seccion'
-import { FUNCIONES } from '../datosLanding'
 
 const CLAVE_ME_GUSTA = 'talita.meGusta'
 
@@ -69,7 +69,7 @@ function BotonMeGusta({ nombre, marcado, onAlternar }) {
 }
 
 function Funcion({ funcion, meGusta }) {
-  if (funcion.enDesarrollo) {
+  if (funcion.en_desarrollo) {
     return (
       <li className="flex items-center gap-2 px-5 py-2">
         <div className="flex flex-1 items-center gap-3 py-2 text-lg text-muted-foreground/70">
@@ -144,7 +144,18 @@ function Buzon() {
   )
 }
 
+// Vienen de la tabla funcion_landing: agregar o editar una función es un cambio en la base, no en el código
+function useFunciones() {
+  const [funciones, setFunciones] = useState(null)
+  const [error, setError] = useState(false)
+  useEffect(() => {
+    getFuncionesLanding().then(setFunciones).catch(() => setError(true))
+  }, [])
+  return { funciones, error }
+}
+
 export function ComoFunciona() {
+  const { funciones, error } = useFunciones()
   const meGusta = useMeGusta()
 
   return (
@@ -171,7 +182,14 @@ export function ComoFunciona() {
       <div className="flex flex-col gap-4">
         <Pregunta>Funciones específicas</Pregunta>
         <ul className="divide-y divide-border rounded-xl border border-border bg-card">
-          {FUNCIONES.map((f) => <Funcion key={f.nombre} funcion={f} meGusta={meGusta} />)}
+          {!funciones && !error &&
+            Array.from({ length: 5 }, (_, i) => (
+              <li key={i} className="px-5 py-4">
+                <Skeleton className="h-6 w-1/2" />
+              </li>
+            ))}
+          {error && <li className="px-5 py-4 text-muted-foreground">No pudimos cargar las funciones. Probá de nuevo en un rato.</li>}
+          {funciones?.map((f) => <Funcion key={f.nombre} funcion={f} meGusta={meGusta} />)}
         </ul>
       </div>
 

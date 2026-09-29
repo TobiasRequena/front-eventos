@@ -2,6 +2,11 @@ import { httpClient } from '@/api/httpClient'
 
 // httpClient manda el token si hay sesión: así los me gusta quedan guardados en el usuario
 
+export async function getFuncionesLanding() {
+  const { data } = await httpClient.get('/landing/funciones')
+  return data.funciones
+}
+
 export async function getEventosLanding() {
   const { data } = await httpClient.get('/landing/eventos')
   return data.eventos
