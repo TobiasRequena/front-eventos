@@ -42,8 +42,6 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
   const [abiertoAdic, setAbiertoAdic] = useState(false)
   const politicaMenor = form.watch('politicaMenor')
   const tienePrecioPorZona = form.watch('tienePrecioPorZona')
-  // En edición las zonas todavía no se editan acá: se mantiene el placeholder.
-  const zonasMode = tienePrecioPorZona && !eventoId
 
   useEffect(() => {
     if (politicaMenor !== 'no_aplica') {
@@ -225,17 +223,10 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                 />
               </div>
   
-              {zonasMode && <ZonasCostoCampos />}
+              {tienePrecioPorZona && <ZonasCostoCampos />}
 
-              <div className={cn('grid gap-4', zonasMode ? 'sm:grid-cols-2' : 'sm:grid-cols-3')}>
-                {zonasMode ? null : tienePrecioPorZona ? (
-                  <FormItem>
-                    <FormLabel>Costo de inscripción</FormLabel>
-                    <div className="flex h-9 items-center truncate rounded-md border border-dashed border-border px-3 text-sm text-muted-foreground">
-                      Definido por zona
-                    </div>
-                  </FormItem>
-                ) : (
+              <div className={cn('grid gap-4', tienePrecioPorZona ? 'sm:grid-cols-2' : 'sm:grid-cols-3')}>
+                {tienePrecioPorZona ? null : (
                   <FormField
                     control={form.control}
                     name="costo"

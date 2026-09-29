@@ -19,6 +19,7 @@ export const campoFormSchema = z
   )
 
 export const zonaCostoSchema = z.object({
+  id: z.string().uuid().optional(),
   nombre: z.string().min(1, 'El nombre de la zona es obligatorio.').max(100),
   costo: z.preprocess(
     (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
@@ -241,9 +242,13 @@ export const editarEventoSchema = z.object({
   requiereAutorizacionMenores: z.boolean().default(false),
   solicitaContactoEmergencia: z.boolean().default(false),
   mostrarEnLanding: z.boolean().default(false),
+  zonasCosto: z.array(zonaCostoSchema).default([]),
   seccionTalleres: z.array(seccionTallerItem).default([]),
 }).refine(
   (data) => new Date(data.fechaFin) >= new Date(data.fechaInicio),
   { message: 'La fecha de fin debe ser igual o posterior a la de inicio.', path: ['fechaFin'] }
+).refine(
+  (data) => !data.tienePrecioPorZona || data.zonasCosto.length > 0,
+  { message: 'Agregá al menos una zona de costo.', path: ['zonasCosto'] }
 )
 

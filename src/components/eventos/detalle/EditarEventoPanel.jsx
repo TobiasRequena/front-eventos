@@ -8,10 +8,42 @@ import { SeccionDatosEvento } from '@/components/eventos/SeccionDatosEvento'
 import { editarEventoSchema } from '@/lib/validators/evento.schemas'
 import { recortarDescripcion } from '@/lib/descripcionFormato'
 import { patchEvento } from '@/api/eventos.api'
+import { crearZonaCosto, editarZonaCosto, eliminarZonaCosto } from '@/api/zonasCosto.api'
 import { subirPortadaEvento } from '@/api/archivos.api'
 import { getApiErrorMessage } from '@/api/httpClient'
 import { useAuth } from '@/contexts/AuthContext'
 import { EventoPreviewPanel } from '@/components/eventos/EventoPreviewPanel'
+
+/**
+ * Compara las zonas del form contra las zonas originales del evento y
+ * dispara solo los POST/PATCH/DELETE necesarios, todos juntos (un único
+ * batch al hacer submit, no una request por campo tocado).
+ */
+async function sincronizarZonasCosto(eventoId, zonasForm, zonasOriginales) {
+  const originalesPorId = new Map(zonasOriginales.map((z) => [z.id, z]))
+  const idsEnForm = new Set(zonasForm.filter((z) => z.id).map((z) => z.id))
+
+  const llamadas = []
+
+  for (const zona of zonasForm) {
+    if (!zona.id) {
+      llamadas.push(crearZonaCosto(eventoId, { nombre: zona.nombre, costo: zona.costo }))
+      continue
+    }
+    const original = originalesPorId.get(zona.id)
+    if (original && (original.nombre !== zona.nombre || parseFloat(original.costo) !== zona.costo)) {
+      llamadas.push(editarZonaCosto(eventoId, zona.id, { nombre: zona.nombre, costo: zona.costo }))
+    }
+  }
+
+  for (const original of zonasOriginales) {
+    if (!idsEnForm.has(original.id)) {
+      llamadas.push(eliminarZonaCosto(eventoId, original.id))
+    }
+  }
+
+  await Promise.all(llamadas)
+}
 
 function adaptarEventoAForm(evento) {
   return {
@@ -34,6 +66,11 @@ function adaptarEventoAForm(evento) {
     solicitaContactoEmergencia: evento.solicita_contacto_emergencia ?? false,
     mostrarEnLanding: evento.mostrar_en_landing ?? false,
     autorizacionTemplateUrl: evento.autorizacion_template_url ?? null,
+    zonasCosto: (evento.zonasCosto ?? []).map((z) => ({
+      id: z.id,
+      nombre: z.nombre,
+      costo: parseFloat(z.costo),
+    })),
     seccionTalleres: [
       ...(evento.bloquesTaller ?? []).map((b) => ({ tipo: 'bloque', ...b })),
       ...(evento.talleresSueltos ?? []).map((t) => ({ tipo: 'taller_suelto', ...t })),
@@ -98,6 +135,14 @@ export function EditarEventoPanel({ evento, onVolver, onGuardado }) {
           await subirPortadaEvento(imagenArchivo, evento.id, orgActiva.id)
         } catch {
           toast.warning('El evento se actualizó, pero no pudimos subir la imagen de portada.')
+        }
+      }
+
+      if (values.tienePrecioPorZona) {
+        try {
+          await sincronizarZonasCosto(evento.id, values.zonasCosto, evento.zonasCosto ?? [])
+        } catch {
+          toast.warning('El evento se actualizó, pero no pudimos guardar todos los cambios de zonas.')
         }
       }
 
