@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export function ProtectedRoute() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, cerroSesion } = useAuth()
   const location = useLocation()
 
   if (isLoading) {
@@ -19,6 +19,8 @@ export function ProtectedRoute() {
   }
 
   if (!isAuthenticated) {
+    // Si cerró sesión a propósito va a la landing; si no hay sesión (o venció), a iniciar sesión
+    if (cerroSesion) return <Navigate to="/" replace />
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 

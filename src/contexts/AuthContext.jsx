@@ -12,6 +12,8 @@ export function AuthProvider({ children }) {
     const [orgActivaId, setOrgActivaId] = useState(() => localStorage.getItem(ORG_ACTIVA_KEY))
     // 'loading' = todavía no sabemos si hay sesión válida (chequeo inicial)
     const [status, setStatus] = useState('loading')
+    // true si la sesión la cerró el usuario (ProtectedRoute lo manda a la landing y no a /login)
+    const [cerroSesion, setCerroSesion] = useState(false)
 
     const limpiarSesion = useCallback(() => {
         localStorage.removeItem(TOKEN_KEY)
@@ -21,6 +23,7 @@ export function AuthProvider({ children }) {
         setOrganizaciones([])
         setOrgActivaId(null)
         setStatus('unauthenticated')
+        setCerroSesion(false)
     }, [])
 
     // El httpClient avisa por acá cuando una request vuelve 401,
@@ -100,6 +103,7 @@ export function AuthProvider({ children }) {
 
     const logout = useCallback(() => {
         limpiarSesion()
+        setCerroSesion(true)
     }, [limpiarSesion])
 
     const cambiarOrgActiva = useCallback((nuevaOrgId) => {
@@ -120,13 +124,14 @@ export function AuthProvider({ children }) {
             status,
             isAuthenticated: status === 'authenticated',
             isLoading: status === 'loading',
+            cerroSesion,
             login,
             register,
             completarSesion,
             logout,
             cambiarOrgActiva,
         }),
-        [usuario, organizaciones, orgActiva, status, login, register, completarSesion, logout, cambiarOrgActiva]
+        [usuario, organizaciones, orgActiva, status, cerroSesion, login, register, completarSesion, logout, cambiarOrgActiva]
     )
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
