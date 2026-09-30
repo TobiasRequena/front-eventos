@@ -27,7 +27,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Pencil, Trash2, Lock, LockOpen, Link2, Check, Loader2 } from 'lucide-react'
+import { Pencil, Trash2, Lock, LockOpen, Link2, Loader2, Share2, MessageCircle } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Tooltip,
   TooltipContent,
@@ -49,14 +55,17 @@ const TABS = [
 ]
 
 function HeaderEvento({ evento, onEditar, onEliminar, eliminando, onToggleInscripciones, toggleandoInscripciones }) {
-  const [linkCopiado, setLinkCopiado] = useState(false)
   const imagenUrl = evento.imagen_url ?? evento.imagenUrl
+  const url = `${import.meta.env.VITE_API_URL_FRONT ?? 'http://localhost:5173'}/inscribirse/${evento.codigo}`
 
   function copiarLink() {
-    const url = `${import.meta.env.VITE_API_URL_FRONT ?? 'http://localhost:5173'}/inscribirse/${evento.codigo}`
     navigator.clipboard.writeText(url)
-    setLinkCopiado(true)
-    setTimeout(() => setLinkCopiado(false), 2000)
+    toast.success('Link copiado')
+  }
+
+  function enviarWhatsapp() {
+    const texto = `¡Inscribite a ${evento.nombre}! ${url}`
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank', 'noopener')
   }
 
   return (
@@ -92,23 +101,34 @@ function HeaderEvento({ evento, onEditar, onEliminar, eliminando, onToggleInscri
             </p>
           </div>
           <div className="flex gap-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={copiarLink}
-                    className="shrink-0 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white backdrop-blur-sm"
-                  >
-                    {linkCopiado ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {linkCopiado ? '¡Copiado!' : 'Copiar link de inscripción'}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <DropdownMenu>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white backdrop-blur-sm"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>Compartir link de inscripción</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={copiarLink}>
+                  <Link2 className="h-4 w-4" />
+                  Copiar link
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={enviarWhatsapp}>
+                  <MessageCircle className="h-4 w-4" />
+                  Enviar por WhatsApp
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <TooltipProvider>
               <Tooltip>
