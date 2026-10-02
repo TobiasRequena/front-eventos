@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import * as authApi from '@/api/auth.api'
 import { TOKEN_KEY, setOnUnauthorized } from '@/api/httpClient'
+import { olvidarBorradorLocal } from '@/lib/borradorEvento'
 
 const ORG_ACTIVA_KEY = 'org_activa_id'
 
@@ -102,6 +103,7 @@ export function AuthProvider({ children }) {
     )
 
     const logout = useCallback(() => {
+        olvidarBorradorLocal() // queda en el servidor; acá no, para quien use la compu después
         limpiarSesion()
         setCerroSesion(true)
     }, [limpiarSesion])

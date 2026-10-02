@@ -1,4 +1,7 @@
+import { useEffect } from 'react'
 import { Plus, CalendarRange, Users, RefreshCw } from 'lucide-react'
+import { toast } from 'sonner'
+import { leerBorrador } from '@/lib/borradorEvento'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useEventos } from '@/hooks/useEventos'
@@ -44,6 +47,15 @@ export default function DashboardPage() {
   const navigate = useNavigate()
   const { eventos, isLoading, isError, reintentar } = useEventos()
   useBreadcrumb([{ label: 'Dashboard' }])
+
+  // Login, registro y verificación de email terminan acá: si armó un evento con el asistente, lo retomamos
+  useEffect(() => {
+    // Una vez por pestaña: después el borrador queda a mano desde el asistente, sin secuestrar el dashboard
+    if (!leerBorrador()?.nombre || sessionStorage.getItem('talita.borradorRetomado')) return
+    sessionStorage.setItem('talita.borradorRetomado', '1')
+    toast.info('Retomamos el evento que estabas armando.')
+    navigate('/eventos/nuevo', { replace: true })
+  }, [navigate])
 
   const proximoEvento = !isLoading && !isError ? getProximoEvento(eventos) : null
   const totalEventosActivos = !isLoading && !isError ? eventos.filter(esEventoActivo).length : 0

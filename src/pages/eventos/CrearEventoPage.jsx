@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,6 +10,7 @@ import { recortarDescripcion } from '@/lib/descripcionFormato'
 import { crearEvento } from '@/api/eventos.api'
 import { subirPortadaEvento, subirTemplateAutorizacion } from '@/api/archivos.api'
 import { getApiErrorMessage } from '@/api/httpClient'
+import { leerBorrador, guardarBorrador, borrarBorrador, EVENTO_BORRADOR } from '@/lib/borradorEvento'
 import { Button } from '@/components/ui/button'
 import { SeccionDatosEvento } from '@/components/eventos/SeccionDatosEvento'
 import { SeccionFormularioInscripcion } from '@/components/eventos/SeccionFormularioInscripcion'
@@ -123,9 +124,30 @@ export default function CrearEventoPage() {
 
   const form = useForm({
     resolver: zodResolver(eventoSchema),
-    defaultValues: VALORES_INICIALES,
+    defaultValues: { ...VALORES_INICIALES, ...leerBorrador() },
     mode: 'onChange',
   })
+
+  // El asistente cambia el borrador → se refleja en el formulario en vivo
+  useEffect(() => {
+    const aplicar = () => form.reset({ ...form.getValues(), ...leerBorrador() })
+    window.addEventListener(EVENTO_BORRADOR, aplicar)
+    return () => window.removeEventListener(EVENTO_BORRADOR, aplicar)
+  }, [form])
+
+  // Si hay un borrador del asistente, lo que se edita a mano vuelve a él (para que el asistente lo vea
+  // y no se pierda). Sin borrador, el formulario no guarda nada solo.
+  useEffect(() => {
+    let timer
+    const { unsubscribe } = form.watch((values) => {
+      clearTimeout(timer)
+      timer = setTimeout(() => leerBorrador() && guardarBorrador(values, { avisar: false }), 500)
+    })
+    return () => {
+      clearTimeout(timer)
+      unsubscribe()
+    }
+  }, [form])
 
   const v = form.watch()
   const pasos = ['paso-datos', 'paso-adicionales', 'paso-formulario', 'paso-talleres']
@@ -161,6 +183,7 @@ export default function CrearEventoPage() {
       const payload = armarPayload(values)
       const resultado = await crearEvento(payload)
       const eventoId = resultado.evento.id
+      borrarBorrador()
 
       // Subir imagen si el usuario seleccionó una
       if (imagenArchivo && orgActiva?.id) {

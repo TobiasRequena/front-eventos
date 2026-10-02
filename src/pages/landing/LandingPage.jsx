@@ -11,6 +11,7 @@ import { ProximosEventos } from './secciones/ProximosEventos'
 import { Nosotros } from './secciones/Nosotros'
 import { Galeria } from './secciones/Galeria'
 import { PieLanding } from './PieLanding'
+import { AsistenteEventoWidget } from '@/components/asistente/AsistenteEventoWidget'
 
 // conTitulos: en escritorio y en el menú abierto del celular; sin títulos, solo los números
 function ListaSecciones({ activa, onElegir, conTitulos }) {
@@ -117,6 +118,7 @@ export default function LandingPage() {
         <Galeria />
         <PieLanding />
       </main>
+      <AsistenteEventoWidget modo="publico" />
     </div>
   )
 }
