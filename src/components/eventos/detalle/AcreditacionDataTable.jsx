@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { FiltrosBarConectado } from '@/components/ui/filtros-bar-conectado'
 import { useFiltrosBar } from '@/hooks/useFiltrosBar'
 import { eventoTieneCosto } from '@/lib/costoEvento'
+import { respuestaIncluye } from '@/lib/respuestasForm'
 
 const OPCIONES_ESTADO_PAGO = [
   { value: 'todos', label: 'Todos' },
@@ -133,7 +134,7 @@ export function AcreditacionDataTable({
           { value: 'todos', label: 'Todos' },
           ...campo.opciones.map((op) => ({ value: op, label: op })),
         ],
-        predicate: (p, v) => String(p.respuestas_form?.[campo.id] ?? '') === v,
+        predicate: (p, v) => respuestaIncluye(p.respuestas_form?.[campo.id], v),
       })
     })
     return base

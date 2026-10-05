@@ -15,6 +15,10 @@ function buildSchema(camposForm) {
       shape[campo.id] = campo.requerido
         ? z.number({ message: `${campo.etiqueta} es obligatorio.` })
         : z.number().optional()
+    } else if (campo.tipo === 'seleccion' && campo.multiple) {
+      shape[campo.id] = campo.requerido
+        ? z.array(z.string()).min(1, `${campo.etiqueta} es obligatorio.`)
+        : z.array(z.string()).optional()
     } else if (campo.requerido) {
       shape[campo.id] = z.string().min(1, `${campo.etiqueta} es obligatorio.`)
     } else {
@@ -30,9 +34,8 @@ export default function StepFormulario({ evento, wizard }) {
 
   const defaultValues = {}
   camposForm.forEach((campo) => {
-    defaultValues[campo.id] = campo.tipo === 'booleano'
-      ? (datosWizard.respuestasForm?.[campo.id] ?? false)
-      : (datosWizard.respuestasForm?.[campo.id] ?? '')
+    const vacio = campo.tipo === 'booleano' ? false : campo.tipo === 'seleccion' && campo.multiple ? [] : ''
+    defaultValues[campo.id] = datosWizard.respuestasForm?.[campo.id] ?? vacio
   })
 
   const { control, handleSubmit } = useForm({

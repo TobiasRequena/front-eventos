@@ -49,9 +49,8 @@ function armarPayload(values) {
     tipo: campo.tipo,
     opciones: campo.tipo === 'seleccion' ? campo.opciones : undefined,
     requerido: campo.requerido,
+    multiple: campo.tipo === 'seleccion' && campo.multiple,
     orden: index,
-    // `multiple` no está en el contrato del back todavía, lo omitimos
-    // por ahora hasta que el back lo soporte
   }))
 
   const bloquesTaller = values.seccionTalleres

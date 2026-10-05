@@ -209,6 +209,21 @@ export const eventoSchema = z
     })
   })
 
+// Edición de campos ya creados: solo etiqueta, opciones (agregar/renombrar) y baja lógica.
+export const campoFormEdicionSchema = z
+  .object({
+    id: z.string(),
+    tipo: z.enum(TIPOS_CAMPO_FORM),
+    etiqueta: z.string().trim().min(1, 'La etiqueta es obligatoria.').max(100),
+    opciones: z.array(z.string().trim().min(1, 'Las opciones no pueden estar vacías.')).nullable().default(null),
+    activo: z.boolean(),
+    multiple: z.boolean().default(false),
+  })
+  .refine(
+    (campo) => !campo.opciones || new Set(campo.opciones).size === campo.opciones.length,
+    { message: 'Las opciones no pueden repetirse.', path: ['opciones'] }
+  )
+
 export const editarEventoSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio.').max(150),
   codigo: z
@@ -243,6 +258,7 @@ export const editarEventoSchema = z.object({
   solicitaContactoEmergencia: z.boolean().default(false),
   mostrarEnLanding: z.boolean().default(false),
   zonasCosto: z.array(zonaCostoSchema).default([]),
+  camposForm: z.array(campoFormEdicionSchema).default([]),
   seccionTalleres: z.array(seccionTallerItem).default([]),
 }).refine(
   (data) => new Date(data.fechaFin) >= new Date(data.fechaInicio),

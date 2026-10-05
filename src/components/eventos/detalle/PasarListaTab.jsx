@@ -49,6 +49,7 @@ import { enviarMailAusentes } from '@/api/comunicaciones.api'
 import { descargarListaAsistenciaPdf } from '@/api/participantes.api'
 import { getApiErrorMessage } from '@/api/httpClient'
 import { cn } from '@/lib/utils'
+import { textoRespuesta, respuestaIncluye } from '@/lib/respuestasForm'
 
 const MENSAJE_MAX_LENGTH = 2000
 
@@ -311,7 +312,7 @@ export function PasarListaTab({ evento, participantes, camposForm = [], particip
           { value: 'todos', label: 'Todos' },
           ...campo.opciones.map((op) => ({ value: op, label: op })),
         ],
-        predicate: (p, v) => String(p.respuestas_form?.[campo.id] ?? '') === v,
+        predicate: (p, v) => respuestaIncluye(p.respuestas_form?.[campo.id], v),
       })
     })
     return base
@@ -444,10 +445,7 @@ export function PasarListaTab({ evento, participantes, camposForm = [], particip
         header: campo.etiqueta,
         enableHiding: true,
         accessorFn: (row) => {
-          const valor = row.respuestas_form?.[campo.id]
-          if (valor === undefined || valor === null) return '—'
-          if (typeof valor === 'boolean') return valor ? 'Sí' : 'No'
-          return String(valor)
+          return textoRespuesta(row.respuestas_form?.[campo.id])
         },
       })),
       {
