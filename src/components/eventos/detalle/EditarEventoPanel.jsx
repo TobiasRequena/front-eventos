@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft } from 'lucide-react'
@@ -9,10 +9,12 @@ import { editarEventoSchema } from '@/lib/validators/evento.schemas'
 import { recortarDescripcion } from '@/lib/descripcionFormato'
 import { patchEvento } from '@/api/eventos.api'
 import { crearZonaCosto, editarZonaCosto, eliminarZonaCosto } from '@/api/zonasCosto.api'
+import { listarCamposForm, editarCampoForm } from '@/api/camposForm.api'
 import { subirPortadaEvento } from '@/api/archivos.api'
 import { getApiErrorMessage } from '@/api/httpClient'
 import { useAuth } from '@/contexts/AuthContext'
 import { EventoPreviewPanel } from '@/components/eventos/EventoPreviewPanel'
+import { SeccionCamposFormEdicion } from '@/components/eventos/detalle/SeccionCamposFormEdicion'
 
 /**
  * Compara las zonas del form contra las zonas originales del evento y
@@ -43,6 +45,44 @@ async function sincronizarZonasCosto(eventoId, zonasForm, zonasOriginales) {
   }
 
   await Promise.all(llamadas)
+}
+
+/**
+ * Igual que las zonas: compara contra los campos originales y manda un PATCH
+ * por campo solo con lo que cambió (etiqueta, opciones, multiple o activo).
+ */
+async function sincronizarCamposForm(eventoId, camposForm, originales) {
+  const llamadas = []
+
+  for (const campo of camposForm) {
+    const original = originales.get(campo.id)
+    if (!original) continue
+
+    const cambios = {}
+    if (campo.etiqueta !== original.etiqueta) cambios.etiqueta = campo.etiqueta
+    if (campo.activo !== original.activo) cambios.activo = campo.activo
+    if (campo.tipo === 'seleccion' && campo.multiple !== original.multiple) cambios.multiple = campo.multiple
+    if (campo.opciones && JSON.stringify(campo.opciones) !== JSON.stringify(original.opciones ?? [])) {
+      cambios.opciones = campo.opciones
+    }
+    if (Object.keys(cambios).length > 0) {
+      llamadas.push(editarCampoForm(eventoId, campo.id, cambios))
+    }
+  }
+
+  await Promise.all(llamadas)
+}
+
+function adaptarCampoAForm(campo) {
+  return {
+    id: campo.id,
+    tipo: campo.tipo,
+    etiqueta: campo.etiqueta,
+    opciones: campo.tipo === 'seleccion' ? [...(campo.opciones ?? [])] : null,
+    activo: campo.activo ?? true,
+    multiple: campo.multiple ?? false,
+    requerido: campo.requerido ?? false, // solo para mostrar, no se edita
+  }
 }
 
 function adaptarEventoAForm(evento) {
@@ -88,8 +128,31 @@ export function EditarEventoPanel({ evento, onVolver, onGuardado }) {
 
   const form = useForm({
     resolver: zodResolver(editarEventoSchema),
-    defaultValues: adaptarEventoAForm(evento),
+    defaultValues: {
+      ...adaptarEventoAForm(evento),
+      camposForm: (evento.camposForm ?? []).map(adaptarCampoAForm),
+    },
   })
+
+  // Los activos ya vienen en evento.camposForm, así que la sección se muestra al toque.
+  // Los dados de baja (para poder reactivarlos) se piden aparte y se agregan al final.
+  const [camposOriginales, setCamposOriginales] = useState(
+    () => new Map((evento.camposForm ?? []).map((c) => [c.id, adaptarCampoAForm(c)]))
+  )
+  useEffect(() => {
+    let cancelado = false
+    listarCamposForm(evento.id, { incluirInactivos: true })
+      .then((campos) => {
+        const inactivos = campos.filter((c) => c.activo === false).map(adaptarCampoAForm)
+        if (cancelado || inactivos.length === 0) return
+        form.setValue('camposForm', [...form.getValues('camposForm'), ...inactivos])
+        setCamposOriginales((prev) => new Map([...prev, ...inactivos.map((c) => [c.id, c])]))
+      })
+      .catch(() => {}) // sin los inactivos solo se pierde la opción de reactivar
+    return () => {
+      cancelado = true
+    }
+  }, [evento.id, form])
 
   function handleCambiarImagen(file) {
     if (!file) return
@@ -144,6 +207,12 @@ export function EditarEventoPanel({ evento, onVolver, onGuardado }) {
         } catch {
           toast.warning('El evento se actualizó, pero no pudimos guardar todos los cambios de zonas.')
         }
+      }
+
+      try {
+        await sincronizarCamposForm(evento.id, values.camposForm, camposOriginales)
+      } catch (error) {
+        toast.warning(getApiErrorMessage(error, 'El evento se actualizó, pero no pudimos guardar todos los cambios del formulario.'))
       }
 
       toast.success('Evento actualizado correctamente.')
@@ -210,6 +279,9 @@ export function EditarEventoPanel({ evento, onVolver, onGuardado }) {
               codigoOriginal={evento.codigo}
               eventoId={evento.id}
             />
+            <div className="mt-6">
+              <SeccionCamposFormEdicion originales={camposOriginales} />
+            </div>
           </div>
           <div className="lg:col-span-1">
             <div className="sticky top-6">

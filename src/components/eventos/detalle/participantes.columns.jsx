@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { parseFechaCalendario } from '@/lib/fechas'
+import { textoRespuesta } from '@/lib/respuestasForm'
 
 export const ESTADO_PAGO_CONFIG = {
   no_aplica: { label: 'Sin costo', variant: 'secondary' },
@@ -139,10 +140,7 @@ export function buildColumns({ camposForm, tieneCosto, tieneGrupos, tieneZonas, 
       header: campo.etiqueta,
       enableHiding: true,
       accessorFn: (row) => {
-        const valor = row.respuestas_form?.[campo.id]
-        if (valor === undefined || valor === null) return '—'
-        if (typeof valor === 'boolean') return valor ? 'Sí' : 'No'
-        return String(valor)
+        return textoRespuesta(row.respuestas_form?.[campo.id])
       },
       meta: { esExtra: true },
     })),
