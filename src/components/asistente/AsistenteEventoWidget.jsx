@@ -18,7 +18,13 @@ const MAX_MENSAJES = 40
  * modo "publico" (landing): al tener borrador invita a registrarse para crearlo.
  * modo "interno" (sistema): lleva al formulario de nuevo evento, que se llena en vivo.
  */
+// Tali se prende con VITE_TALI_ACTIVO=true (build time)
 export function AsistenteEventoWidget({ modo }) {
+  if (import.meta.env.VITE_TALI_ACTIVO !== 'true') return null
+  return <Widget modo={modo} />
+}
+
+function Widget({ modo }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [abierto, setAbierto] = useState(false)
@@ -27,6 +33,13 @@ export function AsistenteEventoWidget({ modo }) {
   const [enviando, setEnviando] = useState(false)
   const [hayBorrador, setHayBorrador] = useState(() => !!leerBorrador()?.nombre)
   const finRef = useRef(null)
+  // Al entrar se ve "Armá tu evento con Tali"; a los segundos queda solo el sol, medio transparente
+  const [achicado, setAchicado] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setAchicado(true), 4000)
+    return () => clearTimeout(timer)
+  }, [])
 
   // El borrador puede cambiar desde afuera (llegó del servidor, se creó el evento, otra pestaña del form)
   useEffect(() => {
@@ -79,12 +92,32 @@ export function AsistenteEventoWidget({ modo }) {
     return (
       <Button
         onClick={() => setAbierto(true)}
-        className="fixed right-4 bottom-4 z-50 size-14 cursor-pointer rounded-full p-0 shadow-lg md:h-12 md:w-auto md:px-5"
+        className={cn(
+          'group fixed right-4 bottom-4 z-50 h-14 cursor-pointer gap-0 rounded-full px-3 shadow-lg transition-all duration-700 ease-out',
+          'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-500',
+          achicado && 'opacity-60 hover:opacity-100 focus-visible:opacity-100'
+        )}
         aria-label="Abrir a Tali, asistente para armar tu evento"
       >
-        <img src="/logo_talita.png" alt="" className="size-8 md:size-6" />
-        {/* En celular, solo el sol */}
-        <span className="hidden md:inline">Armá tu evento con Tali</span>
+        {/* Al achicarse, el sol da una vuelta; con el mouse encima vuelve a girar */}
+        <img
+          src="/logo_talita.png"
+          alt=""
+          className={cn(
+            'size-8 transition-transform duration-700 ease-out',
+            achicado && 'motion-safe:rotate-[360deg] motion-safe:group-hover:rotate-[540deg]'
+          )}
+        />
+        <span
+          className={cn(
+            'overflow-hidden whitespace-nowrap transition-all duration-700 ease-out',
+            achicado
+              ? 'ml-0 max-w-0 opacity-0 md:group-hover:ml-2 md:group-hover:max-w-56 md:group-hover:opacity-100'
+              : 'ml-2 max-w-56 opacity-100'
+          )}
+        >
+          Armá tu evento con Tali
+        </span>
       </Button>
     )
   }
