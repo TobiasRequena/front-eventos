@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Loader2, CheckCircle2, Upload, X, Copy, Check } from 'lucide-react'
+import { Loader2, CheckCircle2, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,25 +12,8 @@ import { verificarDni } from '@/api/participantes.api'
 import { subirComprobantePublico } from '@/api/archivos.api'
 import { InscripcionLayout } from '@/components/inscripcion/InscripcionLayout'
 import { cn } from '@/lib/utils'
+import { CopyButton } from '@/components/CopyButton'
 import { eventoTieneCosto, formatoPesos, formatoVencimiento } from '@/lib/costoEvento'
-
-function CopyButton({ texto }) {
-  const [copiado, setCopiado] = useState(false)
-  function copiar() {
-    navigator.clipboard.writeText(texto)
-    setCopiado(true)
-    setTimeout(() => setCopiado(false), 2000)
-  }
-  return (
-    <button
-      type="button"
-      onClick={copiar}
-      className="ml-1.5 shrink-0 text-muted-foreground hover:text-foreground"
-    >
-      {copiado ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
-    </button>
-  )
-}
 
 const ESTADO_CUOTA = {
   aprobado: { label: 'Pagada', className: 'bg-success/10 text-success' },

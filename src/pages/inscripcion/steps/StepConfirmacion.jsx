@@ -9,6 +9,8 @@ import { inscribirParticipante, crearGrupo } from '@/api/inscripcion.api'
 import { subirComprobantePago } from '@/api/archivos.api'
 import { subirAutorizacion, subirCertificado } from '@/api/participantes.api'
 import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
+import { CopyButton } from '@/components/CopyButton'
+import { calcularMontosCuotas, costoParticipante, eventoTieneCosto, formatoPesos, formatoVencimiento } from '@/lib/costoEvento'
 
 function armarRespuestasForm(talleresSeleccionados) {
   const talleres = []
@@ -100,6 +102,100 @@ function QrDisplay({ qrPersonal, datosWizard }) {
           : <><Copy className="h-3.5 w-3.5" /> Copiar código QR</>
         }
       </button> */}
+    </div>
+  )
+}
+
+/**
+ * Toda la info de pago en la pantalla final (no mandamos mail al inscribirse):
+ * plan y cuotas, cuándo llega el QR, datos para transferir y el link para subir comprobantes.
+ */
+function InfoPago({ evento, datosWizard }) {
+  const costo = costoParticipante(evento, datosWizard.zonaCostoId)
+  const plan = (evento.planesPago ?? []).find((p) => p.id === datosWizard.planPagoId) ?? null
+  const montos = (plan && calcularMontosCuotas(costo, plan.cuotas)) ?? [costo]
+  const varias = montos.length > 1
+  const comprobanteEnviado = Boolean(datosWizard.comprobantePago && !datosWizard.pagoPostergado)
+  const link = `${window.location.origin}/comprobantepago/${evento.codigo}`
+  const cuotaQr = plan?.cuota_qr && plan.cuota_qr < montos.length ? plan.cuota_qr : null
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2 rounded-lg border border-border p-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tu pago</p>
+        <p className="text-sm font-medium text-foreground">
+          {plan ? plan.nombre : 'Pago total'} — {formatoPesos(costo)}
+        </p>
+        <ul className="space-y-1.5 text-sm">
+          {montos.map((monto, i) => (
+            <li key={i} className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">
+                {varias ? `Cuota ${i + 1}` : 'Monto'}
+                {plan?.cuotas[i]?.vencimiento && ` · vence el ${formatoVencimiento(plan.cuotas[i].vencimiento)}`}
+              </span>
+              <span className="flex items-center gap-2">
+                {i === 0 && comprobanteEnviado && (
+                  <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-medium text-blue-600">
+                    Comprobante enviado
+                  </span>
+                )}
+                <span className="font-medium text-foreground">{formatoPesos(monto)}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-muted-foreground">
+          {cuotaQr
+            ? `Tu credencial (QR) te llega por mail cuando el organizador apruebe la cuota ${cuotaQr}.`
+            : varias
+              ? 'Tu credencial (QR) te llega por mail cuando completes el pago.'
+              : 'Tu credencial (QR) te llega por mail cuando el organizador apruebe tu pago.'}
+        </p>
+      </div>
+
+      {(evento.alias_cobro || evento.cbu_cvu) && (
+        <div className="space-y-2 rounded-lg bg-muted/50 p-4 text-sm">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Transferí a</p>
+          {evento.alias_cobro && (
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Alias</span>
+              <span className="flex items-center font-medium text-foreground">
+                {evento.alias_cobro}<CopyButton texto={evento.alias_cobro} />
+              </span>
+            </div>
+          )}
+          {evento.cbu_cvu && (
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">CBU/CVU</span>
+              <span className="flex items-center font-medium text-foreground">
+                {evento.cbu_cvu}<CopyButton texto={evento.cbu_cvu} />
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="space-y-2 rounded-lg border-2 border-primary bg-primary/5 p-4">
+        <p className="text-sm font-semibold text-foreground">Guardá este link</p>
+        <p className="text-sm text-muted-foreground">
+          {varias
+            ? 'Ahí vas a subir el comprobante de cada cuota y ver cuáles ya están aprobadas.'
+            : comprobanteEnviado
+              ? 'Ahí podés ver el estado de tu pago o subir otro comprobante.'
+              : 'Ahí vas a subir el comprobante de tu transferencia.'}
+        </p>
+        <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-2">
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="min-w-0 truncate text-sm text-primary underline-offset-4 hover:underline"
+          >
+            {link}
+          </a>
+          <CopyButton texto={link} />
+        </div>
+      </div>
     </div>
   )
 }
@@ -345,27 +441,16 @@ export default function StepConfirmacion({ evento, wizard }) {
             ¡Inscripción completada!
           </h2>
           <p className="text-sm text-muted-foreground">
-            {(evento.tiene_precio_por_zona || parseFloat(evento.costo ?? 0) > 0)
+            {eventoTieneCosto(evento)
               ? datosWizard.comprobantePago && !datosWizard.pagoPostergado
-                ? datosWizard.planPagoId
-                  ? 'Comprobante de la primera cuota enviado. Las próximas las subís desde el link de comprobantes; te avisamos por mail antes de cada vencimiento.'
-                  : 'Comprobante enviado. El organizador lo revisará y recibirás tu credencial por mail.'
-                : <>
-                  Realizá la transferencia y subí el comprobante en{' '}
-                  <a
-                    href={`/comprobantepago/${evento.codigo}`}
-                    className="text-primary underline underline-offset-4 cursor-pointer hover:opacity-70"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    este link
-                  </a>
-                  . Tu QR llegará por mail una vez aprobado el pago.
-                </>
+                ? 'Recibimos tu comprobante. El organizador lo va a revisar.'
+                : 'Tu inscripción quedó registrada. Abajo tenés todo para hacer el pago.'
               : <>Tu QR personal llegará por email a <strong>{datosWizard.email}</strong>.</>
             }
           </p>
         </div>
+
+        {eventoTieneCosto(evento) && <InfoPago evento={evento} datosWizard={datosWizard} />}
 
         <QrDisplay qrPersonal={participante?.qr_personal} datosWizard={datosWizard} />
 

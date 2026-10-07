@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useFieldArray, useFormContext, Controller } from 'react-hook-form'
 import { format } from 'date-fns'
 import { Plus, Trash2 } from 'lucide-react'
@@ -12,7 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { calcularMontosCuotas, formatoPesos } from '@/lib/costoEvento'
+import { calcularMontosCuotas, cuotasDelForm, formatoPesos, repartirCuotas } from '@/lib/costoEvento'
+import { HelpTooltip } from '@/components/ui/help-tooltip'
 
 const CUOTA_RESTO = { tipo: 'resto', valor: '', vencimiento: '' }
 
@@ -51,18 +53,28 @@ function VencimientoPicker({ value, onChange }) {
 function PlanCampos({ planIndex, onEliminar, costos }) {
   const form = useFormContext()
   const base = `planesPago.${planIndex}`
-  const { fields, insert, remove } = useFieldArray({ control: form.control, name: `${base}.cuotas` })
+  const { fields, replace } = useFieldArray({ control: form.control, name: `${base}.cuotas` })
   const cuotas = form.watch(`${base}.cuotas`) ?? []
   const errores = form.formState.errors.planesPago?.[planIndex]
 
-  // Para la previsualización: valores del form → { porcentaje } / { monto }
-  const cuotasCalculo = cuotas.map((c) =>
-    c.tipo === 'porcentaje' ? { porcentaje: Number(c.valor) || 0 }
-      : c.tipo === 'monto' ? { monto: Number(c.valor) || 0 }
-        : {}
-  )
-  const previas = costos.map((c) => ({ ...c, montos: calcularMontosCuotas(c.costo, cuotasCalculo) }))
+  // Si el plan quedó con errores (al intentar guardar), cualquier cambio lo vuelve a
+  // validar entero: cambiar %/$ o el costo no pasa por el input que tenía el error.
+  const firma = JSON.stringify([cuotas, costos])
+  const tieneErrores = Boolean(errores)
+  useEffect(() => {
+    if (tieneErrores) form.trigger(base)
+  }, [firma]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const previas = costos.map((c) => ({ ...c, montos: calcularMontosCuotas(c.costo, cuotasDelForm(cuotas)) }))
   const unicoCosto = previas.length === 1 ? previas[0] : null
+
+  // Al agregar o quitar cuotas se vuelve a repartir parejo; después el organizador ajusta
+  function rearmar(nuevas) {
+    replace(repartirCuotas(nuevas, unicoCosto?.costo ?? 0))
+  }
+  const agregarCuota = () =>
+    rearmar([...cuotas.slice(0, -1), { tipo: 'monto', valor: '', vencimiento: '' }, cuotas[cuotas.length - 1]])
+  const quitarCuota = (i) => rearmar(cuotas.filter((_, j) => j !== i))
 
   return (
     <div className="space-y-3 rounded-lg border border-border p-3">
@@ -92,13 +104,17 @@ function PlanCampos({ planIndex, onEliminar, costos }) {
           const esResto = cuota.tipo === 'resto'
           const errorCuota = errores?.cuotas?.[i]
           return (
-            <div key={field.id} className="flex flex-wrap items-center gap-2">
+            <div key={field.id}>
+            <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
               <span className="w-16 shrink-0 text-xs font-medium text-muted-foreground">Cuota {i + 1}</span>
               {/* Mismo ancho para "%/$ + valor" y "El resto", así las filas quedan parejas */}
-              <div className="flex w-44 shrink-0 gap-2">
+              <div className="flex min-w-0 flex-1 basis-40 gap-2">
                 {esResto ? (
-                  <span className="flex h-9 w-full items-center rounded-md border border-dashed border-border px-3 text-sm text-muted-foreground">
+                  <span className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-dashed border-border px-3 text-sm text-muted-foreground">
                     El resto
+                    {unicoCosto?.montos && (
+                      <span className="font-medium text-foreground">{formatoPesos(unicoCosto.montos[i])}</span>
+                    )}
                   </span>
                 ) : (
                   <>
@@ -117,7 +133,7 @@ function PlanCampos({ planIndex, onEliminar, costos }) {
                   </>
                 )}
               </div>
-              <div className="w-48 shrink-0">
+              <div className="min-w-0 flex-1 basis-44">
                 <Controller
                   control={form.control}
                   name={`${base}.cuotas.${i}.vencimiento`}
@@ -125,21 +141,25 @@ function PlanCampos({ planIndex, onEliminar, costos }) {
                 />
               </div>
               {unicoCosto && (
-                <span className="text-xs text-muted-foreground">
-                  {unicoCosto.montos ? formatoPesos(unicoCosto.montos[i]) : '—'}
+                <span className="w-24 shrink-0 text-right text-xs text-muted-foreground">
+                  {esResto ? '' : unicoCosto.montos ? formatoPesos(unicoCosto.montos[i]) : '—'}
                 </span>
               )}
-              {!esResto && (
-                <button
-                  type="button"
-                  onClick={() => remove(i)}
-                  className="ml-auto shrink-0 text-muted-foreground hover:text-destructive"
-                  aria-label={`Quitar cuota ${i + 1}`}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              )}
-              {errorCuota?.valor && <p className="w-full pl-[4.5rem] text-xs text-destructive">{errorCuota.valor.message}</p>}
+              <div className="w-4 shrink-0">
+                {!esResto && (
+                  <button
+                    type="button"
+                    onClick={() => quitarCuota(i)}
+                    className="text-muted-foreground hover:text-destructive"
+                    aria-label={`Quitar cuota ${i + 1}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            {/* El error va debajo de la fila: adentro le quitaba ancho a los campos */}
+            {errorCuota?.valor && <p className="mt-1 pl-[4.5rem] text-xs text-destructive">{errorCuota.valor.message}</p>}
             </div>
           )
         })}
@@ -152,18 +172,13 @@ function PlanCampos({ planIndex, onEliminar, costos }) {
         <p className="text-xs text-destructive">{errores.cuotas.root.message}</p>
       )}
 
-      {fields.length < 12 && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => insert(fields.length - 1, { tipo: 'porcentaje', valor: '', vencimiento: '' })}
-        >
-          <Plus className="mr-1 h-4 w-4" /> Agregar cuota
-        </Button>
-      )}
-
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {fields.length < 12 ? (
+          <Button type="button" variant="ghost" size="sm" onClick={agregarCuota}>
+            <Plus className="mr-1 h-4 w-4" /> Agregar cuota
+          </Button>
+        ) : <span />}
+        <div className="flex items-center gap-2">
         <span className="text-xs font-medium text-muted-foreground">Enviar la credencial (QR) al aprobar</span>
         <Controller
           control={form.control}
@@ -178,14 +193,15 @@ function PlanCampos({ planIndex, onEliminar, costos }) {
                 </SelectTrigger>
                 <SelectContent>
                   {fields.slice(0, -1).map((_, i) => (
-                    <SelectItem key={i} value={String(i + 1)}>la cuota {i + 1}</SelectItem>
+                    <SelectItem key={i} value={String(i + 1)}>Cuota {i + 1}</SelectItem>
                   ))}
-                  <SelectItem value="completo">el pago completo</SelectItem>
+                  <SelectItem value="completo">Pago completo</SelectItem>
                 </SelectContent>
               </Select>
             )
           }}
         />
+        </div>
       </div>
 
       {!unicoCosto && previas.length > 0 && (
@@ -217,25 +233,27 @@ export function PlanesPagoCampos() {
     : [{ nombre: null, costo: Number(costo) || 0 }]
 
   function agregarPlan() {
+    const cantidad = fields.length + 2
     append({
-      nombre: `${fields.length + 2} cuotas`,
+      nombre: `${cantidad} cuotas`,
       cuotaQr: 'completo',
-      cuotas: [
-        ...Array.from({ length: fields.length + 1 }, () => ({ tipo: 'porcentaje', valor: '', vencimiento: '' })),
-        CUOTA_RESTO,
-      ],
+      // Reparto parejo como ayuda: con costo único en pesos, con zonas en porcentaje
+      cuotas: repartirCuotas(
+        Array.from({ length: cantidad }, () => ({ ...CUOTA_RESTO })),
+        tienePrecioPorZona ? 0 : Number(costo) || 0
+      ),
     })
   }
 
   return (
     <div className="space-y-3">
-      <div>
+      <div className="flex items-center gap-1.5">
         <p className="text-sm font-medium text-foreground">Planes de pago en cuotas</p>
-        <p className="text-xs text-muted-foreground">
+        <HelpTooltip>
           El participante siempre puede pagar el total de una vez; además puede elegir uno de estos planes.
           Cada cuota vale un porcentaje o un monto fijo, y la última es lo que falta. El vencimiento es
           opcional: si lo cargás, le avisamos por mail al participante 3 días antes.
-        </p>
+        </HelpTooltip>
       </div>
 
       {fields.map((field, index) => (

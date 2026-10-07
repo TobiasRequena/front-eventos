@@ -181,6 +181,11 @@ export default function CrearEventoPage() {
     setImagenPreview(null)
   }
 
+  function handleCancelar() {
+    borrarBorrador() // local, servidor y chat del asistente
+    navigate(-1)
+  }
+
   async function onSubmit(values) {
     setIsSubmitting(true)
     try {
@@ -247,7 +252,7 @@ export default function CrearEventoPage() {
               type="button"
               variant="outline"
               disabled={isSubmitting}
-              onClick={() => navigate(-1)}
+              onClick={handleCancelar}
             >
               Cancelar
             </Button>
@@ -290,7 +295,7 @@ export default function CrearEventoPage() {
                 type="button"
                 variant="outline"
                 disabled={isSubmitting}
-                onClick={() => navigate(-1)}
+                onClick={handleCancelar}
               >
                 Cancelar
               </Button>

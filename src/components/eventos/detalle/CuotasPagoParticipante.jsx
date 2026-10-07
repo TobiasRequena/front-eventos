@@ -20,9 +20,19 @@ const ESTADO_CUOTA = {
  * Cuotas de un participante, cada una con su comprobante y Aprobar / Rechazar.
  * Quien pagó el total tiene una sola cuota.
  */
+// El spinner ocupa el lugar del texto: el botón no cambia de ancho y la fila no se rompe
+function TextoConSpinner({ cargando, children }) {
+  return (
+    <>
+      <span className={cn(cargando && 'invisible')}>{children}</span>
+      {cargando && <Loader2 className="absolute inset-0 m-auto h-4 w-4 animate-spin" />}
+    </>
+  )
+}
+
 export function CuotasPagoParticipante({ participanteId, onActualizar }) {
   const [cuotas, setCuotas] = useState(null)
-  const [revisando, setRevisando] = useState(null) // id de la cuota en curso
+  const [revisando, setRevisando] = useState(null) // { id, estado } de la acción en curso
 
   // El padre monta con key={participanteId}: cambiar de participante arranca de cero
   useEffect(() => {
@@ -32,7 +42,7 @@ export function CuotasPagoParticipante({ participanteId, onActualizar }) {
   }, [participanteId])
 
   async function revisar(cuota, estado) {
-    setRevisando(cuota.id)
+    setRevisando({ id: cuota.id, estado })
     try {
       await patchEstadoCuota(cuota.id, estado)
       toast.success(estado === 'aprobado' ? 'Cuota aprobada.' : 'Cuota rechazada.')
@@ -64,7 +74,7 @@ export function CuotasPagoParticipante({ participanteId, onActualizar }) {
       {cuotas.map((cuota) => {
         const estado = ESTADO_CUOTA[cuota.estado] ?? ESTADO_CUOTA.pendiente
         const vencida = cuota.estado !== 'aprobado' && cuota.vencimiento && new Date(cuota.vencimiento) < new Date()
-        const enCurso = revisando === cuota.id
+        const enCurso = revisando?.id === cuota.id
         return (
           <div key={cuota.id} className="space-y-2 rounded-lg border border-border p-3">
             <div className="flex items-start justify-between gap-2">
@@ -81,29 +91,30 @@ export function CuotasPagoParticipante({ participanteId, onActualizar }) {
               <Badge variant={estado.variant} className="shrink-0">{estado.label}</Badge>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              {cuota.comprobante?.url ? (
-                <ArchivoButton url={cuota.comprobante.url} label="Ver comprobante" titulo="Comprobante de pago" />
-              ) : (
-                <span className="text-xs text-muted-foreground">Sin comprobante</span>
-              )}
+            <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1 truncate">
+                {cuota.comprobante?.url ? (
+                  <ArchivoButton url={cuota.comprobante.url} label="Ver comprobante" titulo="Comprobante de pago" />
+                ) : (
+                  <span className="text-xs text-muted-foreground">Sin comprobante</span>
+                )}
+              </div>
               {cuota.estado !== 'aprobado' && (
-                <div className="ml-auto flex gap-2">
+                <div className="flex shrink-0 gap-2">
                   {cuota.estado === 'en_revision' && (
                     <Button
                       type="button"
                       size="sm"
                       variant="outline"
-                      className="text-destructive hover:text-destructive"
+                      className="relative text-destructive hover:text-destructive"
                       disabled={enCurso}
                       onClick={() => revisar(cuota, 'rechazado')}
                     >
-                      Rechazar
+                      <TextoConSpinner cargando={enCurso && revisando.estado === 'rechazado'}>Rechazar</TextoConSpinner>
                     </Button>
                   )}
-                  <Button type="button" size="sm" disabled={enCurso} onClick={() => revisar(cuota, 'aprobado')}>
-                    {enCurso && <Loader2 className="h-4 w-4 animate-spin" />}
-                    Aprobar
+                  <Button type="button" size="sm" className="relative" disabled={enCurso} onClick={() => revisar(cuota, 'aprobado')}>
+                    <TextoConSpinner cargando={enCurso && revisando.estado === 'aprobado'}>Aprobar</TextoConSpinner>
                   </Button>
                 </div>
               )}

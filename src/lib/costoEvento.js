@@ -44,6 +44,30 @@ export const formatoPesos = (n) =>
 export const formatoVencimiento = (d) =>
   d ? new Date(d).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', timeZone: 'UTC' }) : null
 
+/** Cuotas del form → { porcentaje } / { monto } / {} (resto), para calcularMontosCuotas */
+export function cuotasDelForm(cuotas) {
+  return cuotas.map((c) =>
+    c.tipo === 'porcentaje' ? { porcentaje: Number(c.valor) || 0 }
+      : c.tipo === 'monto' ? { monto: Number(c.valor) || 0 }
+        : {}
+  )
+}
+
+/**
+ * Reparto parejo para ayudar al organizador (después lo puede cambiar):
+ * con un solo costo, en pesos (1000 en 2 cuotas → 500); con zonas, en porcentaje.
+ * La última cuota queda como resto.
+ */
+export function repartirCuotas(cuotas, costo) {
+  const n = cuotas.length
+  return cuotas.map((c, i) => {
+    if (i === n - 1) return { ...c, tipo: 'resto', valor: '' }
+    return costo > 0
+      ? { ...c, tipo: 'monto', valor: Math.floor(costo / n) }
+      : { ...c, tipo: 'porcentaje', valor: Math.floor((100 / n) * 100) / 100 }
+  })
+}
+
 // En el form cada cuota es { tipo: 'porcentaje' | 'monto' | 'resto', valor, vencimiento }
 // y cuotaQr es 'completo' o el número de cuota como string (para el Select).
 export function planFormAApi(plan) {

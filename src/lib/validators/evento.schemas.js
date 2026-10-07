@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { calcularMontosCuotas, cuotasDelForm } from '@/lib/costoEvento'
 
 const TIPOS_CAMPO_FORM = ['texto', 'numero', 'fecha', 'seleccion', 'booleano']
 
@@ -116,6 +117,28 @@ export const planPagoSchema = z
     }
   })
 
+// Cada plan tiene que entrar en el costo (con zonas, en al menos una zona):
+// la última cuota, el resto, tiene que quedar con algo.
+function validarPlanesContraCosto(data, ctx) {
+  if (!data.aceptaCuotas) return
+  const costos = data.tienePrecioPorZona
+    ? data.zonasCosto.map((z) => Number(z.costo) || 0)
+    : [Number(data.costo) || 0]
+  if (!costos.some((c) => c > 0)) return
+  data.planesPago.forEach((plan, i) => {
+    const cuotas = cuotasDelForm(plan.cuotas)
+    if (!costos.some((c) => c > 0 && calcularMontosCuotas(c, cuotas))) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: data.tienePrecioPorZona
+          ? 'Las cuotas superan el costo de todas las zonas. Ajustá los valores.'
+          : 'Las cuotas suman el costo o más. La última (el resto) tiene que quedar con algo.',
+        path: ['planesPago', i, 'cuotas'],
+      })
+    }
+  })
+}
+
 export const eventoSchema = z
   .object({
     nombre: z.string().min(1, 'El nombre es obligatorio.').max(150),
@@ -158,6 +181,7 @@ export const eventoSchema = z
     seccionTalleres: z.array(seccionTallerItem).default([]),
   })
   .superRefine((evento, ctx) => {
+    validarPlanesContraCosto(evento, ctx)
     const inicioEvento = new Date(evento.fechaInicio)
     const finEvento = new Date(evento.fechaFin)
 
@@ -305,5 +329,5 @@ export const editarEventoSchema = z.object({
 ).refine(
   (data) => !data.tienePrecioPorZona || data.zonasCosto.length > 0,
   { message: 'Agregá al menos una zona de costo.', path: ['zonasCosto'] }
-)
+).superRefine(validarPlanesContraCosto)
 
