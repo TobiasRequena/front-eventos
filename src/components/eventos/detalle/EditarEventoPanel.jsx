@@ -9,6 +9,8 @@ import { editarEventoSchema } from '@/lib/validators/evento.schemas'
 import { recortarDescripcion } from '@/lib/descripcionFormato'
 import { patchEvento } from '@/api/eventos.api'
 import { crearZonaCosto, editarZonaCosto, eliminarZonaCosto } from '@/api/zonasCosto.api'
+import { guardarPlanesPago } from '@/api/planesPago.api'
+import { planApiAForm, planFormAApi } from '@/lib/costoEvento'
 import { listarCamposForm, editarCampoForm } from '@/api/camposForm.api'
 import { subirPortadaEvento } from '@/api/archivos.api'
 import { getApiErrorMessage } from '@/api/httpClient'
@@ -111,6 +113,8 @@ function adaptarEventoAForm(evento) {
       nombre: z.nombre,
       costo: parseFloat(z.costo),
     })),
+    planesPago: (evento.planesPago ?? []).map(planApiAForm),
+    aceptaCuotas: (evento.planesPago ?? []).length > 0,
     seccionTalleres: [
       ...(evento.bloquesTaller ?? []).map((b) => ({ tipo: 'bloque', ...b })),
       ...(evento.talleresSueltos ?? []).map((t) => ({ tipo: 'taller_suelto', ...t })),
@@ -206,6 +210,17 @@ export function EditarEventoPanel({ evento, onVolver, onGuardado }) {
           await sincronizarZonasCosto(evento.id, values.zonasCosto, evento.zonasCosto ?? [])
         } catch {
           toast.warning('El evento se actualizó, pero no pudimos guardar todos los cambios de zonas.')
+        }
+      }
+
+      // Solo si cambiaron: guardar reemplaza los planes (y sus ids) del evento
+      const planesNuevos = values.aceptaCuotas ? values.planesPago.map(planFormAApi) : []
+      const planesOriginales = (evento.planesPago ?? []).map((p) => planFormAApi(planApiAForm(p)))
+      if (JSON.stringify(planesNuevos) !== JSON.stringify(planesOriginales)) {
+        try {
+          await guardarPlanesPago(evento.id, planesNuevos)
+        } catch (error) {
+          toast.warning(getApiErrorMessage(error, 'El evento se actualizó, pero no pudimos guardar los planes de pago.'))
         }
       }
 

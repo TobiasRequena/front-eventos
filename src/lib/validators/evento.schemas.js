@@ -81,6 +81,41 @@ export const bloqueTallerSchema = z.object({
   talleres: z.array(tallerSchema).min(1, 'Agregá al menos un taller a este bloque.'),
 })
 
+// Plan de pago en cuotas. La última cuota es siempre "resto" (sin valor).
+const cuotaPlanSchema = z.object({
+  tipo: z.enum(['porcentaje', 'monto', 'resto']),
+  valor: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined || Number.isNaN(val) ? undefined : Number(val)),
+    z.number({ invalid_type_error: 'Ingresá un número.' }).positive('Tiene que ser mayor a 0.').optional()
+  ),
+  vencimiento: z.string().optional().or(z.literal('')),
+})
+
+export const planPagoSchema = z
+  .object({
+    nombre: z.string().min(1, 'Poné un nombre al plan.').max(100),
+    cuotas: z.array(cuotaPlanSchema).min(1).max(12, 'Hasta 12 cuotas.'),
+    cuotaQr: z.string().default('completo'),
+  })
+  .superRefine((plan, ctx) => {
+    plan.cuotas.forEach((c, i) => {
+      if (c.tipo !== 'resto' && c.valor === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Completá el valor.', path: ['cuotas', i, 'valor'] })
+      }
+      if (c.tipo === 'porcentaje' && c.valor >= 100) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Menos de 100%.', path: ['cuotas', i, 'valor'] })
+      }
+    })
+    const totalPct = plan.cuotas.reduce((s, c) => s + (c.tipo === 'porcentaje' ? Number(c.valor ?? 0) : 0), 0)
+    if (totalPct >= 100) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Los porcentajes tienen que sumar menos de 100% (la última cuota es el resto).',
+        path: ['cuotas'],
+      })
+    }
+  })
+
 export const eventoSchema = z
   .object({
     nombre: z.string().min(1, 'El nombre es obligatorio.').max(150),
@@ -104,6 +139,8 @@ export const eventoSchema = z
       z.number({ invalid_type_error: 'Ingresá un número válido.' }).min(0, 'El costo no puede ser negativo.')
     ),
     zonasCosto: z.array(zonaCostoSchema).default([]),
+    planesPago: z.array(planPagoSchema).max(10).default([]),
+    aceptaCuotas: z.boolean().default(false), // solo del form: muestra los planes
     camposForm: z.array(campoFormSchema).default([]),
     // bloquesTaller: z.array(bloqueTallerSchema).default([]),
     configFichaMedica: z.enum([
@@ -258,6 +295,8 @@ export const editarEventoSchema = z.object({
   solicitaContactoEmergencia: z.boolean().default(false),
   mostrarEnLanding: z.boolean().default(false),
   zonasCosto: z.array(zonaCostoSchema).default([]),
+  planesPago: z.array(planPagoSchema).max(10).default([]),
+  aceptaCuotas: z.boolean().default(false), // solo del form: muestra los planes
   camposForm: z.array(campoFormEdicionSchema).default([]),
   seccionTalleres: z.array(seccionTallerItem).default([]),
 }).refine(

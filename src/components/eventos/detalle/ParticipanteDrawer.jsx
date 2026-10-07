@@ -10,12 +10,13 @@ import {
   DrawerContent,
   DrawerClose,
 } from '@/components/ui/drawer'
-import { ComprobanteButton, ArchivoButton } from '@/components/ComprobanteButton'
+import { ArchivoButton } from '@/components/ComprobanteButton'
+import { CuotasPagoParticipante } from '@/components/eventos/detalle/CuotasPagoParticipante'
 import { useState, useEffect } from 'react'
 import { getFichaMedica, getContactoEmergencia } from '@/api/participantes.api'
 import { ClipboardList, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { patchEstadoPago, patchZonaCosto } from '@/api/participantes.api'
+import { patchZonaCosto } from '@/api/participantes.api'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -217,7 +218,6 @@ function ContactoEmergenciaDrawer({ participanteId, open, onClose }) {
 export function ParticipanteDrawer({ participante, camposForm = [], evento, open, onClose, cargando, onActualizar }) {
   const [fichaMedicaAbierta, setFichaMedicaAbierta] = useState(false)
   const [contactoEmergenciaAbierto, setContactoEmergenciaAbierto] = useState(false)
-  const [actualizandoPago, setActualizandoPago] = useState(false)
   const [actualizandoZona, setActualizandoZona] = useState(false)
   const [zonaOverride, setZonaOverride] = useState(null)
   const [zonaPendiente, setZonaPendiente] = useState(null)
@@ -244,20 +244,6 @@ export function ParticipanteDrawer({ participante, camposForm = [], evento, open
   const camposConRespuesta = (camposForm || []).filter(
     (campo) => participante?.respuestas_form?.[campo.id] !== undefined
   )
-
-  async function handleCambiarEstadoPago(estadoPago) {
-    setActualizandoPago(true)
-    try {
-      await patchEstadoPago(participante.id, estadoPago)
-      toast.success(estadoPago === 'aprobado' ? 'Pago aprobado.' : 'Pago rechazado.')
-      onActualizar?.()
-      onClose()
-    } catch {
-      toast.error('No pudimos actualizar el estado de pago.')
-    } finally {
-      setActualizandoPago(false)
-    }
-  }
 
   async function handleConfirmarCambioZona() {
     const zonaCostoId = zonaPendiente
@@ -336,7 +322,7 @@ export function ParticipanteDrawer({ participante, camposForm = [], evento, open
                 </p>
 
                 {tieneCosto && (
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="space-y-3">
                     <div className="flex items-center gap-3">
                       <Hash className="h-4 w-4 shrink-0 text-muted-foreground" />
                       <div>
@@ -346,11 +332,9 @@ export function ParticipanteDrawer({ participante, camposForm = [], evento, open
                         </Badge>
                       </div>
                     </div>
-                    {participante.id && <ComprobanteButton
-                      participanteId={participante.id}
-                      estadoPago={participante.estado_pago}
-                      onCambiarEstado={handleCambiarEstadoPago}
-                    />}
+                    {participante.id && (
+                      <CuotasPagoParticipante key={participante.id} participanteId={participante.id} onActualizar={onActualizar} />
+                    )}
                   </div>
                 )}
 

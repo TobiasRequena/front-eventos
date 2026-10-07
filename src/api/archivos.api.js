@@ -54,11 +54,15 @@ export async function subirTemplateAutorizacion(eventoId, archivo) {
   return data
 }
 
-export async function subirComprobantePublico(archivo, participanteId, eventoId) {
+/**
+ * @param {string} [pagoId] cuota a la que corresponde; si no viene, el back usa la primera sin aprobar
+ */
+export async function subirComprobantePublico(archivo, participanteId, eventoId, pagoId) {
   const formData = new FormData()
   formData.append('archivo', archivo)
   formData.append('participanteId', participanteId)
   formData.append('eventoId', eventoId)
+  if (pagoId) formData.append('pagoId', pagoId)
   const { data } = await httpClient.post('/archivos/comprobante', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })

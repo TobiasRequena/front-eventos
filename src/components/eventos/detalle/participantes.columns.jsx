@@ -115,9 +115,19 @@ export function buildColumns({ camposForm, tieneCosto, tieneGrupos, tieneZonas, 
           accessorKey: 'estado_pago',
           header: 'Pago',
           enableHiding: true,
-          cell: ({ getValue }) => {
+          cell: ({ getValue, row }) => {
             const config = ESTADO_PAGO_CONFIG[getValue()] ?? ESTADO_PAGO_CONFIG.pendiente
-            return <Badge variant={config.variant}>{config.label}</Badge>
+            const { cuotas_total: total, cuotas_aprobadas: aprobadas, cuotas_vencidas: vencidas } = row.original
+            return (
+              <div className="flex flex-col items-start gap-0.5">
+                <Badge variant={config.variant}>{config.label}</Badge>
+                {total > 1 && (
+                  <span className={vencidas > 0 ? 'text-xs text-destructive' : 'text-xs text-muted-foreground'}>
+                    {aprobadas}/{total} cuotas{vencidas > 0 && ' · vencida'}
+                  </span>
+                )}
+              </div>
+            )
           },
         },
       ]

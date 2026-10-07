@@ -7,6 +7,7 @@ import { useBreadcrumb } from '@/hooks/useBreadcrumb'
 import { useAuth } from '@/contexts/AuthContext'
 import { eventoSchema } from '@/lib/validators/evento.schemas'
 import { recortarDescripcion } from '@/lib/descripcionFormato'
+import { planFormAApi } from '@/lib/costoEvento'
 import { crearEvento } from '@/api/eventos.api'
 import { subirPortadaEvento, subirTemplateAutorizacion } from '@/api/archivos.api'
 import { getApiErrorMessage } from '@/api/httpClient'
@@ -33,6 +34,8 @@ const VALORES_INICIALES = {
   aliasCobro: '',
   costo: 0,
   zonasCosto: [],
+  planesPago: [],
+  aceptaCuotas: false,
   camposForm: [],
   seccionTalleres: [],
   configFichaMedica: 'no',
@@ -103,6 +106,7 @@ function armarPayload(values) {
     cbuCvu: values.cbuCvu || undefined,
     aliasCobro: values.aliasCobro || undefined,
     costo: values.costo,
+    planesPago: values.aceptaCuotas ? values.planesPago.map(planFormAApi) : [],
     configFichaMedica: values.configFichaMedica,
     configCertificado: values.configCertificado,
     requiereAutorizacionMenores: values.requiereAutorizacionMenores,
@@ -149,10 +153,11 @@ export default function CrearEventoPage() {
   }, [form])
 
   const v = form.watch()
-  const pasos = ['paso-datos', 'paso-adicionales', 'paso-formulario', 'paso-talleres']
+  const pasos = ['paso-datos', 'paso-costos', 'paso-adicionales', 'paso-formulario', 'paso-talleres']
   // Un paso se marca con check cuando su colapsable tiene información cargada.
   const hechos = [
     v.nombre && v.codigo && v.fechaInicio && v.fechaFin && 'paso-datos',
+    (Number(v.costo) > 0 || v.tienePrecioPorZona || v.cbuCvu || v.aliasCobro) && 'paso-costos',
     (v.descripcion || v.cupoMaximo || v.tieneGrupos || v.tieneTalleres || v.politicaMenor !== 'no_aplica' ||
       v.configFichaMedica !== 'no' || v.configCertificado !== 'no' || v.requiereAutorizacionMenores ||
       v.solicitaContactoEmergencia) && 'paso-adicionales',

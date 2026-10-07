@@ -23,9 +23,16 @@ export async function getParticipantePorId(id) {
   return data.participante
 }
 
-export async function getComprobante(participanteId) {
-  const { data } = await httpClient.get(`/participantes/${participanteId}/comprobante`)
-  return data.comprobante
+/** Cuotas del participante, cada una con su comprobante (URL incluida). */
+export async function getCuotasParticipante(participanteId) {
+  const { data } = await httpClient.get(`/participantes/${participanteId}/cuotas`)
+  return data.cuotas
+}
+
+/** @param {'aprobado' | 'rechazado'} estado */
+export async function patchEstadoCuota(pagoId, estado) {
+  const { data } = await httpClient.patch(`/pagos/cuotas/${pagoId}/estado`, { estado })
+  return data
 }
 
 export async function getInscriptosTaller(tallerId) {
@@ -121,11 +128,6 @@ export async function verificarDni(dni, eventoId) {
   const { data } = await httpClient.get('/participantes/verificar-dni', {
     params: { dni, eventoId },
   })
-  return data
-}
-
-export async function patchEstadoPago(participanteId, estadoPago) {
-  const { data } = await httpClient.patch(`/participantes/${participanteId}/estado-pago`, { estadoPago })
   return data
 }
 

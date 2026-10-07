@@ -68,6 +68,7 @@ export function PagosPendientesPanel({ evento, onVolver }) {
                     {evento.tiene_precio_por_zona && (
                       <TableHead className="font-medium text-foreground">Zona</TableHead>
                     )}
+                    <TableHead className="font-medium text-foreground">Cuotas</TableHead>
                     <TableHead className="font-medium text-foreground">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -88,6 +89,9 @@ export function PagosPendientesPanel({ evento, onVolver }) {
                           {p.zona?.nombre ?? '—'}
                         </TableCell>
                       )}
+                      <TableCell className="text-sm text-muted-foreground">
+                        {p.cuotas_total > 1 ? `${p.cuotas_aprobadas}/${p.cuotas_total} pagadas` : 'Pago total'}
+                      </TableCell>
                       <TableCell>
                         <TooltipProvider>
                           <Tooltip>

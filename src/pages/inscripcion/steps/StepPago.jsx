@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { calcularMontosCuotas, formatoPesos, formatoVencimiento } from '@/lib/costoEvento'
 import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
 import { toast } from 'sonner'
 
@@ -23,6 +24,7 @@ export default function StepPago({ evento, wizard }) {
   const [zonaCostoId, setZonaCostoId] = useState(datosWizard.zonaCostoId ?? '')
   const [comprobante, setComprobante] = useState(datosWizard.comprobantePago ?? null)
   const [pagoPostergado, setPagoPostergado] = useState(datosWizard.pagoPostergado ?? false)
+  const [planPagoId, setPlanPagoId] = useState(datosWizard.planPagoId ?? null) // null = pago total
   const [preview, setPreview] = useState(null)
 
   const zonaSeleccionada = zonasCosto.find((z) => z.id === zonaCostoId)
@@ -53,6 +55,10 @@ export default function StepPago({ evento, wizard }) {
       toast.error('Seleccioná tu zona de costo.')
       return
     }
+    if (planPagoId && !planElegido) {
+      toast.error('Ese plan de pago no está disponible para tu zona. Elegí otro.')
+      return
+    }
     if (!comprobante && !pagoPostergado) {
       toast.error('Subí el comprobante de pago o elegí pagar después.')
       return
@@ -60,6 +66,7 @@ export default function StepPago({ evento, wizard }) {
     avanzar({
       comprobantePago: comprobante,
       pagoPostergado,
+      planPagoId: planElegido ? planPagoId : null,
       ...(usaZonas ? { zonaCostoId } : {}),
     })
   }
@@ -67,6 +74,14 @@ export default function StepPago({ evento, wizard }) {
   const puedeAvanzar = comprobante !== null || pagoPostergado
 
   const costo = usaZonas ? parseFloat(zonaSeleccionada?.costo ?? 0) : parseFloat(evento.costo ?? 0)
+
+  // Planes en cuotas que entran en el costo de este participante (con zona, depende de la zona)
+  const planesDisponibles = costo > 0
+    ? (evento.planesPago ?? [])
+      .map((plan) => ({ ...plan, montos: calcularMontosCuotas(costo, plan.cuotas) }))
+      .filter((plan) => plan.montos)
+    : []
+  const planElegido = planesDisponibles.find((p) => p.id === planPagoId) ?? null
 
   return (
     <InscripcionStepLayout evento={evento} titulo="Pago de inscripción">
@@ -94,6 +109,40 @@ export default function StepPago({ evento, wizard }) {
           )}
         </div>
 
+        {planesDisponibles.length > 0 && (
+          <div className="space-y-2" role="radiogroup" aria-label="Forma de pago">
+            <p className="text-sm font-medium text-foreground">Elegí cómo pagar</p>
+            {[{ id: null, nombre: 'Pago total', montos: [costo], cuotas: [{}] }, ...planesDisponibles].map((plan) => {
+              const seleccionado = (planElegido?.id ?? null) === plan.id
+              return (
+                <button
+                  key={plan.id ?? 'total'}
+                  type="button"
+                  role="radio"
+                  aria-checked={seleccionado}
+                  onClick={() => setPlanPagoId(plan.id)}
+                  className={cn(
+                    'w-full rounded-lg border p-3 text-left transition-colors',
+                    seleccionado ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/50'
+                  )}
+                >
+                  <p className="text-sm font-medium text-foreground">{plan.nombre}</p>
+                  {plan.id && (
+                    <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                      {plan.montos.map((monto, i) => (
+                        <li key={i}>
+                          Cuota {i + 1}: {formatoPesos(monto)}
+                          {plan.cuotas[i]?.vencimiento && ` — vence el ${formatoVencimiento(plan.cuotas[i].vencimiento)}`}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        )}
+
         {(evento.cbu_cvu || evento.alias_cobro) && (
           <div className="space-y-2 rounded-md bg-muted/50 p-4">
             <p className="text-xs font-medium text-muted-foreground">
@@ -118,7 +167,9 @@ export default function StepPago({ evento, wizard }) {
 
         <div className="space-y-3">
           <p className="text-sm font-medium text-foreground">
-            ¿Ya realizaste la transferencia?
+            {planElegido
+              ? `¿Ya transferiste la primera cuota (${formatoPesos(planElegido.montos[0])})?`
+              : '¿Ya realizaste la transferencia?'}
           </p>
 
           {!comprobante && !pagoPostergado && (

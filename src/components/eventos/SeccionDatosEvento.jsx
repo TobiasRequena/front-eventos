@@ -26,7 +26,7 @@ import { DateTimePicker } from '@/components/DateTimePicker'
 import { CodigoInput } from '@/components/eventos/CodigoInput'
 import { Separator } from '@/components/ui/separator'
 import { HelpTooltip } from '@/components/ui/help-tooltip'
-import { ZonasCostoCampos } from '@/components/eventos/SeccionZonasCosto'
+import { SeccionCostos } from '@/components/eventos/SeccionCostos'
 import { PasoConNumero } from '@/components/eventos/EventoStepper'
 import { TemplateAutorizacionUploader } from '@/components/eventos/TemplateAutorizacionUploader'
 
@@ -41,7 +41,6 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
   const [abierto, setAbierto] = useState(true)
   const [abiertoAdic, setAbiertoAdic] = useState(false)
   const politicaMenor = form.watch('politicaMenor')
-  const tienePrecioPorZona = form.watch('tienePrecioPorZona')
 
   useEffect(() => {
     if (politicaMenor !== 'no_aplica') {
@@ -50,12 +49,6 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
       form.setValue('tieneGrupos', false)
     }
   }, [politicaMenor])
-
-  // Si el costo pasa a ser por zona, el costo general no se usa — lo reseteamos
-  // para no mandar un valor viejo que el back va a ignorar de todos modos.
-  useEffect(() => {
-    if (tienePrecioPorZona) form.setValue('costo', 0)
-  }, [tienePrecioPorZona])
 
   return (
     <div className="space-y-4">
@@ -66,7 +59,7 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
               <button type="button" className="flex w-full items-center justify-between px-4 py-3 cursor-pointer">
                 <div className="text-left">
                   <h2 className="text-base font-semibold text-foreground">Datos del evento</h2>
-                  <p className="text-sm text-muted-foreground">A continuación podrás completar: portada, nombre, descripción, fechas y cobro.</p>
+                  <p className="text-sm text-muted-foreground">A continuación podrás completar: portada, nombre, descripción y fechas.</p>
                 </div>
                 <ChevronDown
                   className={cn(
@@ -171,7 +164,7 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                 </FormItem>
               </div>
   
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div>
                 <FormField
                   control={form.control}
                   name="cupoMaximo"
@@ -192,86 +185,6 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
                           value={field.value ?? ''}
                           onChange={(e) => field.onChange(e.target.value === '' ? null : parseInt(e.target.value))}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="tienePrecioPorZona"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-1.5">
-                          <FormLabel>Costo diferido por zona</FormLabel>
-                          <HelpTooltip>
-                            En vez de un costo único, cada participante elige su zona al
-                            inscribirse y paga el monto de esa zona. Configurá las zonas
-                            debajo.
-                          </HelpTooltip>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {field.value ? 'El costo se define por zona.' : 'Costo único para todos los participantes.'}
-                        </p>
-                      </div>
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-  
-              {tienePrecioPorZona && <ZonasCostoCampos />}
-
-              <div className={cn('grid gap-4', tienePrecioPorZona ? 'sm:grid-cols-2' : 'sm:grid-cols-3')}>
-                {tienePrecioPorZona ? null : (
-                  <FormField
-                    control={form.control}
-                    name="costo"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Costo de inscripción</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            placeholder="0"
-                            {...field}
-                            value={field.value !== undefined && field.value !== '' ? field.value : ''}
-                            onChange={(e) => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                            onFocus={(e) => { if (Number(field.value) === 0) field.onChange('') }}
-                            onBlur={(e) => { if (e.target.value === '') field.onChange(0) }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-                <FormField
-                  control={form.control}
-                  name="cbuCvu"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CBU/CVU</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Opcional" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="aliasCobro"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Alias de cobro</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Opcional" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -305,6 +218,7 @@ export function SeccionDatosEvento({ imagenPreview, onCambiarImagen, onQuitarIma
           </Collapsible>
         </Card>
       </PasoConNumero>
+      <SeccionCostos />
       <PasoConNumero id="paso-adicionales">
         <Card>
           <Collapsible open={abiertoAdic} onOpenChange={setAbiertoAdic}>

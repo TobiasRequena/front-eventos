@@ -67,7 +67,7 @@ function armarPayload(evento, datosWizard) {
     respuestasForm: datosWizard.respuestasForm ?? {},
     ...(tallerIds.length > 0 ? { tallerIds } : {}),
     ...(usaZonas ? { zonaCostoId: datosWizard.zonaCostoId } : {}),
-    ...(tieneCosto ? { estadoPago: 'pendiente' } : {}),
+    ...(tieneCosto ? { estadoPago: 'pendiente', planPagoId: datosWizard.planPagoId ?? null } : {}),
     ...(datosWizard.fichaMedica ? { fichaMedica: datosWizard.fichaMedica } : {}),
     ...(datosWizard.contactoEmergencia ? { contactoEmergencia: datosWizard.contactoEmergencia } : {}),
   }
@@ -122,6 +122,14 @@ function ResumenInscripcion({ datosWizard, evento, grupoCreado }) {
           <span className="text-muted-foreground">Zona</span>
           <span className="font-medium text-foreground">
             {(evento.zonasCosto ?? []).find((z) => z.id === datosWizard.zonaCostoId)?.nombre ?? '—'}
+          </span>
+        </div>
+      )}
+      {datosWizard.planPagoId && (
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Forma de pago</span>
+          <span className="font-medium text-foreground">
+            {(evento.planesPago ?? []).find((p) => p.id === datosWizard.planPagoId)?.nombre ?? '—'}
           </span>
         </div>
       )}
@@ -339,7 +347,9 @@ export default function StepConfirmacion({ evento, wizard }) {
           <p className="text-sm text-muted-foreground">
             {(evento.tiene_precio_por_zona || parseFloat(evento.costo ?? 0) > 0)
               ? datosWizard.comprobantePago && !datosWizard.pagoPostergado
-                ? 'Comprobante enviado. El organizador lo revisará y recibirás tu credencial por mail.'
+                ? datosWizard.planPagoId
+                  ? 'Comprobante de la primera cuota enviado. Las próximas las subís desde el link de comprobantes; te avisamos por mail antes de cada vencimiento.'
+                  : 'Comprobante enviado. El organizador lo revisará y recibirás tu credencial por mail.'
                 : <>
                   Realizá la transferencia y subí el comprobante en{' '}
                   <a

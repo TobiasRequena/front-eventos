@@ -48,8 +48,16 @@ export function useFiltrosParticipantes({ data, evento, camposForm = [] }) {
       base.push({
         key: 'pago',
         label: 'Estado de pago',
-        opciones: OPCIONES_ESTADO_PAGO,
-        predicate: (p, v) => p.estado_pago === v,
+        opciones: [
+          ...OPCIONES_ESTADO_PAGO,
+          { value: 'debe_cuotas', label: 'Debe cuotas' },
+          { value: 'cuotas_vencidas', label: 'Con cuotas vencidas' },
+        ],
+        predicate: (p, v) => {
+          if (v === 'debe_cuotas') return p.cuotas_total > 1 && p.cuotas_aprobadas < p.cuotas_total
+          if (v === 'cuotas_vencidas') return p.cuotas_vencidas > 0
+          return p.estado_pago === v
+        },
       })
     }
     base.push({

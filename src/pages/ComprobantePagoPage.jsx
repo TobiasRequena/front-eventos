@@ -12,7 +12,7 @@ import { verificarDni } from '@/api/participantes.api'
 import { subirComprobantePublico } from '@/api/archivos.api'
 import { InscripcionLayout } from '@/components/inscripcion/InscripcionLayout'
 import { cn } from '@/lib/utils'
-import { eventoTieneCosto } from '@/lib/costoEvento'
+import { eventoTieneCosto, formatoPesos, formatoVencimiento } from '@/lib/costoEvento'
 
 function CopyButton({ texto }) {
   const [copiado, setCopiado] = useState(false)
@@ -32,6 +32,90 @@ function CopyButton({ texto }) {
   )
 }
 
+const ESTADO_CUOTA = {
+  aprobado: { label: 'Pagada', className: 'bg-success/10 text-success' },
+  en_revision: { label: 'En revisión', className: 'bg-blue-500/10 text-blue-600' },
+  rechazado: { label: 'Rechazada', className: 'bg-destructive/10 text-destructive' },
+  pendiente: { label: 'Pendiente', className: 'bg-orange-500/10 text-orange-600' },
+}
+
+function CuotaItem({ cuota, total, seleccionada, onElegir, onCancelar, archivo, setArchivo, enviando, onEnviar }) {
+  const estado = ESTADO_CUOTA[cuota.estado] ?? ESTADO_CUOTA.pendiente
+  const vencida = cuota.estado !== 'aprobado' && cuota.vencimiento && new Date(cuota.vencimiento) < new Date()
+  return (
+    <div className="space-y-3 rounded-lg border border-border p-3">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-sm font-medium text-foreground">
+            {total > 1 ? `Cuota ${cuota.numero} de ${total}` : 'Pago total'} — {formatoPesos(cuota.monto)}
+          </p>
+          {cuota.vencimiento && (
+            <p className={cn('text-xs', vencida ? 'text-destructive' : 'text-muted-foreground')}>
+              {vencida ? 'Venció' : 'Vence'} el {formatoVencimiento(cuota.vencimiento)}
+            </p>
+          )}
+          {cuota.comprobante && (
+            <p className="text-xs text-muted-foreground">
+              Comprobante cargado el {new Date(cuota.comprobante.subidoEn).toLocaleDateString('es-AR')}
+            </p>
+          )}
+        </div>
+        <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs font-medium', estado.className)}>
+          {estado.label}
+        </span>
+      </div>
+
+      {cuota.estado !== 'aprobado' && !seleccionada && (
+        <Button type="button" variant="outline" size="sm" className="w-full" onClick={onElegir}>
+          <Upload className="h-4 w-4" />
+          {cuota.comprobante ? 'Cargar otro comprobante' : 'Subir comprobante'}
+        </Button>
+      )}
+
+      {seleccionada && (
+        <div className="space-y-2">
+          {!archivo ? (
+            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border p-6 text-center hover:bg-accent/50 transition-colors">
+              <Upload className="h-6 w-6 text-muted-foreground" />
+              <p className="text-sm font-medium text-foreground">Elegir archivo</p>
+              <p className="text-xs text-muted-foreground">JPG, PNG o PDF — hasta 5MB</p>
+              <input
+                type="file"
+                accept="image/*,.pdf"
+                className="hidden"
+                onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
+              />
+            </label>
+          ) : (
+            <div className="flex items-center justify-between rounded-md border border-border bg-muted/50 p-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <Upload className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <p className="truncate text-sm text-foreground">{archivo.name}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setArchivo(null)}
+                className="ml-2 shrink-0 text-muted-foreground hover:text-destructive"
+                aria-label="Quitar archivo"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Button type="button" variant="ghost" className="flex-1" onClick={onCancelar} disabled={enviando}>
+              Cancelar
+            </Button>
+            <Button type="button" className="flex-1" onClick={onEnviar} disabled={enviando || !archivo}>
+              {enviando ? <><Loader2 className="h-4 w-4 animate-spin" /> Enviando...</> : 'Enviar comprobante'}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ComprobantePagoPage() {
   const { codigoEvento } = useParams()
 
@@ -43,9 +127,9 @@ export default function ComprobantePagoPage() {
   const [participante, setParticipante] = useState(null)
   const [errorDni, setErrorDni] = useState(null)
 
+  const [cuotaId, setCuotaId] = useState(null) // cuota a la que se le sube comprobante
   const [archivo, setArchivo] = useState(null)
   const [enviando, setEnviando] = useState(false)
-  const [enviado, setEnviado] = useState(false)
 
   useEffect(() => {
     if (!codigoEvento) return
@@ -54,22 +138,22 @@ export default function ComprobantePagoPage() {
       .catch(() => setStatusEvento('error'))
   }, [codigoEvento])
 
+  async function buscarParticipante() {
+    const data = await verificarDni(dni.trim(), evento.id)
+    if (!data.existe) {
+      setErrorDni('No encontramos tu inscripción en este evento.')
+      return
+    }
+    setParticipante(data)
+  }
+
   async function handleVerificarDni() {
     if (!dni.trim()) return
     setVerificando(true)
     setParticipante(null)
     setErrorDni(null)
     try {
-      const data = await verificarDni(dni.trim(), evento.id)
-      if (data.existe) {
-        if (data.estadoPago === 'aprobado') {
-          setErrorDni('Tu pago ya fue aprobado. No es necesario subir un comprobante.')
-          return
-        }
-        setParticipante(data)
-      } else {
-        setErrorDni('No encontramos tu inscripción en este evento.')
-      }
+      await buscarParticipante()
     } catch {
       setErrorDni('No pudimos verificar tu DNI. Intentá de nuevo.')
     } finally {
@@ -77,12 +161,20 @@ export default function ComprobantePagoPage() {
     }
   }
 
+  function elegirCuota(id) {
+    setCuotaId(id)
+    setArchivo(null)
+  }
+
   async function handleEnviar() {
-    if (!participante || !archivo) return
+    if (!participante || !archivo || !cuotaId) return
     setEnviando(true)
     try {
-      await subirComprobantePublico(archivo, participante.participanteId, evento.id)
-      setEnviado(true)
+      await subirComprobantePublico(archivo, participante.participanteId, evento.id, cuotaId)
+      toast.success('¡Comprobante enviado! El organizador lo va a revisar.')
+      setCuotaId(null)
+      setArchivo(null)
+      await buscarParticipante() // refresca la lista de cuotas
     } catch (err) {
       const msg = err?.response?.data?.error?.message ?? 'No pudimos enviar el comprobante.'
       toast.error(msg)
@@ -113,37 +205,11 @@ export default function ComprobantePagoPage() {
   }
 
   const tieneCosto = eventoTieneCosto(evento)
-  const monto = participante?.zona ? parseFloat(participante.zona.costo) : parseFloat(evento.costo ?? 0)
-
-  if (enviado) {
-    return (
-      <InscripcionLayout>
-        <div className="flex flex-col items-center gap-4 py-12 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-success/15">
-            <CheckCircle2 className="h-7 w-7 text-success" />
-          </div>
-          <div>
-            <p className="text-lg font-semibold text-foreground">¡Comprobante enviado!</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              El organizador lo revisará y confirmará tu pago a la brevedad.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setEnviado(false)
-              setArchivo(null)
-              setParticipante(null)
-              setDni('')
-            }}
-            className="text-sm text-primary underline underline-offset-4 cursor-pointer hover:opacity-70"
-          >
-            Cargar otro comprobante
-          </button>
-        </div>
-      </InscripcionLayout>
-    )
-  }
+  const cuotas = participante?.cuotas ?? []
+  const monto = cuotas.length > 0
+    ? cuotas.reduce((total, c) => total + Number(c.monto), 0)
+    : participante?.zona ? parseFloat(participante.zona.costo) : parseFloat(evento.costo ?? 0)
+  const todoPagado = cuotas.length > 0 && cuotas.every((c) => c.estado === 'aprobado')
 
   return (
     <InscripcionLayout>
@@ -228,23 +294,11 @@ export default function ComprobantePagoPage() {
             </Button>
           </div>
           {participante && (
-            <div className="flex items-center justify-between gap-2 rounded-md bg-muted/50 p-3 text-sm">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
-                <p className="font-medium text-foreground">
-                  {participante.nombre} {participante.apellido}
-                </p>
-              </div>
-              {participante.estadoPago === 'pendiente' && (
-                <span className="shrink-0 rounded-full bg-orange-500/10 px-2 py-0.5 text-xs font-medium text-orange-600">
-                  Pago pendiente
-                </span>
-              )}
-              {participante.estadoPago === 'rechazado' && (
-                <span className="shrink-0 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
-                  Rechazado
-                </span>
-              )}
+            <div className="flex items-center gap-2 rounded-md bg-muted/50 p-3 text-sm">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+              <p className="font-medium text-foreground">
+                {participante.nombre} {participante.apellido}
+              </p>
             </div>
           )}
           {errorDni && (
@@ -252,49 +306,29 @@ export default function ComprobantePagoPage() {
           )}
         </div>
 
-        {/* Subir comprobante */}
+        {/* Cuotas y comprobantes */}
         {participante && (
           <div className="space-y-3">
-            <Label>Comprobante de pago</Label>
-            {!archivo ? (
-              <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border p-6 text-center hover:bg-accent/50 transition-colors">
-                <Upload className="h-6 w-6 text-muted-foreground" />
-                <p className="text-sm font-medium text-foreground">Subir comprobante</p>
-                <p className="text-xs text-muted-foreground">JPG, PNG o PDF — hasta 5MB</p>
-                <input
-                  type="file"
-                  accept="image/*,.pdf"
-                  className="hidden"
-                  onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
-                />
-              </label>
-            ) : (
-              <div className="flex items-center justify-between rounded-md border border-border bg-muted/50 p-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Upload className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <p className="truncate text-sm text-foreground">{archivo.name}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setArchivo(null)}
-                  className="ml-2 shrink-0 text-muted-foreground hover:text-destructive"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
+            <Label>{cuotas.length > 1 ? 'Tus cuotas' : 'Tu pago'}</Label>
+            {todoPagado && (
+              <p className="rounded-md bg-success/10 p-3 text-sm text-success">
+                Tu pago está completo. No tenés que subir más comprobantes.
+              </p>
             )}
-
-            <Button
-              type="button"
-              className="w-full"
-              onClick={handleEnviar}
-              disabled={enviando || !archivo}
-            >
-              {enviando
-                ? <><Loader2 className="h-4 w-4 animate-spin" /> Enviando...</>
-                : 'Enviar comprobante'
-              }
-            </Button>
+            {cuotas.map((cuota) => (
+              <CuotaItem
+                key={cuota.id}
+                cuota={cuota}
+                total={cuotas.length}
+                seleccionada={cuota.id === cuotaId}
+                onElegir={() => elegirCuota(cuota.id)}
+                onCancelar={() => elegirCuota(null)}
+                archivo={archivo}
+                setArchivo={setArchivo}
+                enviando={enviando}
+                onEnviar={handleEnviar}
+              />
+            ))}
           </div>
         )}
       </div>

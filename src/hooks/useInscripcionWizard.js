@@ -90,6 +90,7 @@ const ESTADO_INICIAL = {
 
   // Paso 5
   zonaCostoId: null,
+  planPagoId: null,        // null = pago total
   comprobantePago: null,    // File | null
   pagoPostergado: false,
 
