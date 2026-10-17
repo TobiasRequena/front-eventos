@@ -19,6 +19,7 @@ import AdminPage from '@/pages/admin/AdminPage'
 import RecuperarContrasenaPage from '@/pages/auth/RecuperarContrasenaPage'
 import VerificarEmailPage from '@/pages/auth/VerificarEmailPage'
 import ComprobantePagoPage from '@/pages/ComprobantePagoPage'
+import AutorizacionPage from '@/pages/AutorizacionPage'
 import FacturacionPage from '@/pages/facturacion/FacturacionPage'
 import LandingPage from '@/pages/landing/LandingPage'
 
@@ -30,6 +31,7 @@ export function AppRouter() {
       <Route path="/acreditar/:codigoEvento" element={<AcreditacionPage />} />
       <Route path="/recuperar-contrasena" element={<RecuperarContrasenaPage />} />
       <Route path="/comprobantepago/:codigoEvento" element={<ComprobantePagoPage />} />
+      <Route path="/autorizacion/:codigoEvento" element={<AutorizacionPage />} />
 
       <Route
         path="*"

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+import { ACCEPT_DOCUMENTO, elegirDocumento } from '@/lib/archivos'
 import { InscripcionStepLayout } from '@/components/inscripcion/InscripcionStepLayout'
 
 // Sección de ficha médica
@@ -378,26 +379,7 @@ function FichaMedicaForm({ form, obligatoria }) {
   )
 }
 
-// Mismos tipos y tamaño que acepta el back; validar acá evita fallar recién después de inscribir
-const TIPOS_ARCHIVO_PERMITIDOS = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
-const TAMANO_MAXIMO_BYTES = 5 * 1024 * 1024
-
-function elegirArchivo(e, onArchivo) {
-  const archivo = e.target.files?.[0] ?? null
-  e.target.value = ''
-  if (!archivo) return
-  if (!TIPOS_ARCHIVO_PERMITIDOS.includes(archivo.type)) {
-    toast.error('El archivo debe ser PDF, JPG, PNG o WebP.')
-    return
-  }
-  if (archivo.size > TAMANO_MAXIMO_BYTES) {
-    toast.error('El archivo no puede superar los 5MB.')
-    return
-  }
-  onArchivo(archivo)
-}
-
-function SubirArchivoBtn({ label, archivo, onArchivo, accept = '.pdf,.jpg,.jpeg,.png,.webp' }) {
+function SubirArchivoBtn({ label, archivo, onArchivo, accept = ACCEPT_DOCUMENTO }) {
   return (
     <div className="space-y-2">
       <label className={cn(
@@ -413,7 +395,7 @@ function SubirArchivoBtn({ label, archivo, onArchivo, accept = '.pdf,.jpg,.jpeg,
           type="file"
           accept={accept}
           className="hidden"
-          onChange={(e) => elegirArchivo(e, onArchivo)}
+          onChange={(e) => elegirDocumento(e, onArchivo)}
         />
       </label>
       {archivo && (
