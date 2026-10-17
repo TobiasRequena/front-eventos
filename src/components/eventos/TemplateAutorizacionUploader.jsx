@@ -10,7 +10,12 @@ export function TemplateAutorizacionUploader({ eventoId, urlActual, onSubido, di
 
   async function handleArchivo(e) {
     const archivo = e.target.files?.[0]
+    e.target.value = '' // permite volver a elegir el mismo archivo
     if (!archivo) return
+    if (archivo.type !== 'application/pdf') {
+      toast.error('El template debe ser un PDF.')
+      return
+    }
     setNombreArchivo(archivo.name)
 
     if (!eventoId) {
@@ -25,8 +30,8 @@ export function TemplateAutorizacionUploader({ eventoId, urlActual, onSubido, di
       const data = await subirTemplateAutorizacion(eventoId, archivo)
       onSubido(data.url)
       toast.success('Template subido.')
-    } catch {
-      toast.error('No pudimos subir el template.')
+    } catch (error) {
+      toast.error(error?.response?.data?.error?.message ?? 'No pudimos subir el template.')
     } finally {
       setSubiendo(false)
     }

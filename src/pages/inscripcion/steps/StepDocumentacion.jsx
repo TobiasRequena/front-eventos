@@ -378,7 +378,26 @@ function FichaMedicaForm({ form, obligatoria }) {
   )
 }
 
-function SubirArchivoBtn({ label, archivo, onArchivo, accept = '.pdf,image/*' }) {
+// Mismos tipos y tamaño que acepta el back; validar acá evita fallar recién después de inscribir
+const TIPOS_ARCHIVO_PERMITIDOS = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+const TAMANO_MAXIMO_BYTES = 5 * 1024 * 1024
+
+function elegirArchivo(e, onArchivo) {
+  const archivo = e.target.files?.[0] ?? null
+  e.target.value = ''
+  if (!archivo) return
+  if (!TIPOS_ARCHIVO_PERMITIDOS.includes(archivo.type)) {
+    toast.error('El archivo debe ser PDF, JPG, PNG o WebP.')
+    return
+  }
+  if (archivo.size > TAMANO_MAXIMO_BYTES) {
+    toast.error('El archivo no puede superar los 5MB.')
+    return
+  }
+  onArchivo(archivo)
+}
+
+function SubirArchivoBtn({ label, archivo, onArchivo, accept = '.pdf,.jpg,.jpeg,.png,.webp' }) {
   return (
     <div className="space-y-2">
       <label className={cn(
@@ -394,7 +413,7 @@ function SubirArchivoBtn({ label, archivo, onArchivo, accept = '.pdf,image/*' })
           type="file"
           accept={accept}
           className="hidden"
-          onChange={(e) => onArchivo(e.target.files?.[0] ?? null)}
+          onChange={(e) => elegirArchivo(e, onArchivo)}
         />
       </label>
       {archivo && (
@@ -599,23 +618,15 @@ export function StepDocumentacion({ evento, wizard }) {
             </CardHeader>
             <CardContent className="space-y-3">
               {templateAutorizacionUrl && (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const res = await fetch(templateAutorizacionUrl)
-                    const blob = await res.blob()
-                    const url = URL.createObjectURL(blob)
-                    const a = document.createElement('a')
-                    a.href = url
-                    a.download = `autorizacion-${evento.nombre}.pdf`
-                    a.click()
-                    URL.revokeObjectURL(url)
-                  }}
+                <a
+                  href={templateAutorizacionUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center gap-2 text-sm text-primary underline-offset-4 hover:underline"
                 >
                   <FileText className="h-4 w-4" />
                   Descargar template de autorización
-                </button>
+                </a>
               )}
               <p className="text-xs text-muted-foreground">
                 {templateAutorizacionUrl

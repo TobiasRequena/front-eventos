@@ -127,7 +127,8 @@ export default function CrearEventoPage() {
 
   const form = useForm({
     resolver: zodResolver(eventoSchema),
-    defaultValues: { ...VALORES_INICIALES, ...leerBorrador() },
+    // El archivo del template no viaja en el borrador: si quedó "__pendiente__" hay que volver a elegirlo
+    defaultValues: { ...VALORES_INICIALES, ...leerBorrador(), autorizacionTemplateUrl: null },
     mode: 'onChange',
   })
 

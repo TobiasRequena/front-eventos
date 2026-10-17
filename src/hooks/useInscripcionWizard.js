@@ -126,20 +126,30 @@ export function useInscripcionWizard(evento, codigoGrupoInicial = null) {
     grupoId: codigoGrupoInicial ? 'pendiente' : null,
     rolGrupo: codigoGrupoInicial ? 'integrante' : 'ninguno',
     ...(estadoGuardado?.datosWizard ?? {}),
+    // Estados guardados antes del fix pueden traer {} en lugar del File
+    comprobantePago: null,
+    autorizacionArchivo: null,
+    certificadoArchivo: null,
   })
 
-  const [pasoActualIndex, setPasoActualIndex] = useState(
-    estadoGuardado?.pasoActualIndex ?? 0
-  )
+  // Los archivos no se guardan: si recargó después del paso donde se eligen, volver a ese paso
+  const [pasoActualIndex, setPasoActualIndex] = useState(() => {
+    const guardado = estadoGuardado?.pasoActualIndex ?? 0
+    if (!estadoGuardado || !evento) return guardado
+    const pasosGuardados = calcularPasos(evento, { ...ESTADO_INICIAL, ...(estadoGuardado?.datosWizard ?? {}) })
+    const primerPasoConArchivos = pasosGuardados.findIndex((p) => p === 'documentacion' || p === 'pago')
+    return primerPasoConArchivos >= 0 ? Math.min(guardado, primerPasoConArchivos) : guardado
+  })
 
   // Guardar en sessionStorage cuando cambia el estado
   useEffect(() => {
     if (!evento?.codigo) return
     try {
-      sessionStorage.setItem(storageKey, JSON.stringify({
-        datosWizard,
-        pasoActualIndex,
-      }))
+      // Los File no se serializan (quedan como {}): se omiten y el usuario los vuelve a elegir
+      sessionStorage.setItem(storageKey, JSON.stringify(
+        { datosWizard, pasoActualIndex },
+        (_, valor) => (valor instanceof Blob ? undefined : valor)
+      ))
     } catch { }
   }, [datosWizard, pasoActualIndex, storageKey])
 
