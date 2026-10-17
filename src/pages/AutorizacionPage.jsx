@@ -88,6 +88,19 @@ export default function AutorizacionPage() {
     )
   }
 
+  if (!evento.requiere_autorizacion_menores) {
+    return (
+      <div className="flex min-h-svh items-center justify-center p-6 text-center">
+        <div>
+          <p className="text-base font-medium text-foreground">{evento.nombre}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Este evento no pide autorización de menores.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   const templateUrl = evento.autorizacion_template_url
 
   return (
