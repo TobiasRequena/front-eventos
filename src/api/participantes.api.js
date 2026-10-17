@@ -113,6 +113,12 @@ export async function subirAutorizacion(participanteId, archivo) {
   return data
 }
 
+/** Organizador: aprueba o rechaza la autorización (rechazar la borra y le manda mail al participante). */
+export async function revisarAutorizacion(participanteId, aprobada) {
+  const { data } = await httpClient.patch(`/participantes/${participanteId}/autorizacion/revision`, { aprobada })
+  return data
+}
+
 export async function subirCertificado(participanteId, archivo) {
   const formData = new FormData()
   formData.append('archivo', archivo)

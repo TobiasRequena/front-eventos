@@ -16,7 +16,7 @@ import { useState, useEffect } from 'react'
 import { getFichaMedica, getContactoEmergencia } from '@/api/participantes.api'
 import { ClipboardList, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { patchZonaCosto } from '@/api/participantes.api'
+import { patchZonaCosto, revisarAutorizacion } from '@/api/participantes.api'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -212,6 +212,83 @@ function ContactoEmergenciaDrawer({ participanteId, open, onClose }) {
         </div>
       </DrawerContent>
     </Drawer>
+  )
+}
+
+// Aprobar no avisa nada; rechazar borra la autorización y el back le manda mail para que la vuelva a subir
+function AutorizacionRevision({ participante, onActualizar }) {
+  const [estado, setEstado] = useState(participante.autorizacion_aprobada ? 'aprobada' : 'pendiente')
+  const [confirmandoRechazo, setConfirmandoRechazo] = useState(false)
+  const [revisando, setRevisando] = useState(null)
+
+  async function revisar(aprobada) {
+    setRevisando(aprobada ? 'aprobar' : 'rechazar')
+    try {
+      await revisarAutorizacion(participante.id, aprobada)
+      setEstado(aprobada ? 'aprobada' : 'rechazada')
+      toast.success(aprobada ? 'Autorización aprobada.' : 'Autorización rechazada. Le avisamos por mail para que la vuelva a subir.')
+      onActualizar?.()
+    } catch (error) {
+      toast.error(error?.response?.data?.error?.message ?? 'No pudimos actualizar la autorización.')
+    } finally {
+      setRevisando(null)
+      setConfirmandoRechazo(false)
+    }
+  }
+
+  if (estado === 'rechazada') {
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm text-muted-foreground">Autorización</span>
+          <Badge variant="destructive">Rechazada</Badge>
+        </div>
+        <p className="text-xs text-muted-foreground">Le avisamos por mail para que la vuelva a subir o la lleve impresa.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <ArchivoButton url={participante.autorizacion_url} label="Ver autorización" titulo="Autorización de menor" />
+        {estado === 'aprobada'
+          ? <Badge>Aprobada</Badge>
+          : <Badge variant="outline">Pendiente de revisión</Badge>}
+      </div>
+      {estado === 'pendiente' && !confirmandoRechazo && (
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="text-destructive hover:text-destructive"
+            disabled={revisando !== null}
+            onClick={() => setConfirmandoRechazo(true)}
+          >
+            Rechazar
+          </Button>
+          <Button type="button" size="sm" disabled={revisando !== null} onClick={() => revisar(true)}>
+            {revisando === 'aprobar' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Aprobar'}
+          </Button>
+        </div>
+      )}
+      {confirmandoRechazo && (
+        <div className="flex items-center justify-between gap-3 rounded-md bg-muted/50 p-3">
+          <p className="text-xs text-muted-foreground">
+            Se borra la autorización y le llega un mail para que la vuelva a subir o la lleve impresa.
+          </p>
+          <div className="flex shrink-0 gap-1.5">
+            <Button type="button" size="sm" variant="outline" onClick={() => setConfirmandoRechazo(false)} disabled={revisando !== null}>
+              Cancelar
+            </Button>
+            <Button type="button" size="sm" variant="destructive" onClick={() => revisar(false)} disabled={revisando !== null}>
+              {revisando === 'rechazar' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Rechazar'}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -454,11 +531,7 @@ export function ParticipanteDrawer({ participante, camposForm = [], evento, open
                       </button>
                     )}
                     {participante?.tiene_autorizacion && participante?.autorizacion_url && (
-                      <ArchivoButton
-                        url={participante.autorizacion_url}
-                        label="Ver autorización"
-                        titulo="Autorización de menor"
-                      />
+                      <AutorizacionRevision key={participante.id} participante={participante} onActualizar={onActualizar} />
                     )}
                     {participante?.tiene_certificado && participante?.certificado_url && (
                       <ArchivoButton

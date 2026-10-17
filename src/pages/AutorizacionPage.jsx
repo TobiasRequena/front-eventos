@@ -156,7 +156,7 @@ export default function AutorizacionPage() {
 
         {participante?.tieneAutorizacion && (
           <p className="rounded-md bg-success/10 p-3 text-sm text-success">
-            La autorización ya está cargada. Si necesitás reemplazarla, contactá al organizador.
+            La autorización ya está cargada. Si el organizador la rechaza, te va a llegar un mail para volver a subirla.
           </p>
         )}
 
