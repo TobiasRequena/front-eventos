@@ -622,7 +622,7 @@ export function StepDocumentacion({ evento, wizard }) {
                   href={templateAutorizacionUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-primary underline-offset-4 hover:underline"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-primary underline underline-offset-4 hover:text-primary/80"
                 >
                   <FileText className="h-4 w-4" />
                   Descargar template de autorización
